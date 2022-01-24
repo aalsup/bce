@@ -40,6 +40,13 @@ const char* COMPLETION_COMMAND_SQL =
 " FROM command c "
 " WHERE c.name = ?1 ";
 
+const char* COMPLETION_COMMAND_BY_ALIAS_SQL =
+" SELECT c.uuid, c.name, c.parent_cmd "
+" FROM command c "
+" JOIN command_alias a ON a.cmd_uuid = c.uuid "
+" WHERE a.name = ?1 ";
+
+
 struct completion_command_t {
     char uuid[UUID_FIELD_SIZE + 1];
     char name[NAME_FIELD_SIZE + 1];
@@ -204,6 +211,29 @@ int get_db_command(struct completion_command_t *dest, sqlite3 *conn, char* comma
     return rc;
 }
 
+int get_db_command_by_alias(struct completion_command_t *dest, sqlite3 *conn, char* alias_name) {
+    memset(dest->uuid, 0, UUID_FIELD_SIZE);
+    memset(dest->name, 0, NAME_FIELD_SIZE);
+    memset(dest->parent_cmd_uuid, 0, UUID_FIELD_SIZE);
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare(conn, COMPLETION_COMMAND_BY_ALIAS_SQL, -1, &stmt, 0);
+    if (rc == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, alias_name, -1, NULL);
+        int step = sqlite3_step(stmt);
+        if (step == SQLITE_ROW) {
+            strncpy(dest->uuid, (const char *)sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+            strncpy(dest->name, (const char *)sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
+            if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
+                strncpy(dest->parent_cmd_uuid, (const char *)sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
+            }
+        }
+    }
+    sqlite3_finalize(stmt);
+
+    return rc;
+}
+
 int ensure_schema(sqlite3 *conn) {
     char *err_msg = 0;
     int rc = sqlite3_exec(conn, ENSURE_SCHEMA_SQL, 0, 0, &err_msg);
@@ -272,9 +302,17 @@ int main() {
 
     // search for the command directly
     struct completion_command_t completion_command;
-    result = get_db_command(&completion_command, conn, command_name);
-    if (result == SQLITE_OK) {
-        printf("completion_command: %s", completion_command.uuid);
+    rc = get_db_command(&completion_command, conn, command_name);
+    if (rc == SQLITE_OK) {
+        if (strlen(completion_command.uuid) == 0) {
+            rc = get_db_command_by_alias(&completion_command, conn, command_name);
+        }
+    }
+
+    if (rc == SQLITE_OK) {
+        printf("completion_command (from db): %s\n", completion_command.uuid);
+    } else {
+        printf("get_db_command() return, rc = %d\n", rc);
     }
 
     sqlite3_close(conn);
