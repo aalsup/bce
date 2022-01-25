@@ -3,8 +3,10 @@
 
 linked_list_t* ll_init() {
     linked_list_t* list = malloc(sizeof(linked_list_t));
-    list->size = 0;
-    list->head = NULL;
+    if (list != NULL) {
+        list->size = 0;
+        list->head = NULL;
+    }
     return list;
 }
 
@@ -26,20 +28,22 @@ bool ll_append(linked_list_t* list, void* data) {
     if (list != NULL) {
         // create a new node
         linked_list_node_t *node = malloc(sizeof(linked_list_node_t));
-        node->data = data;
-        node->next = NULL;
-        // find the end of the list
-        linked_list_node_t *last = list->head;
-        if (last == NULL) {
-            list->head = node;
-        } else {
-            while (last->next != NULL) {
-                last = last->next;
+        if (node != NULL) {
+            node->data = data;
+            node->next = NULL;
+            // find the end of the list
+            linked_list_node_t *last = list->head;
+            if (last == NULL) {
+                list->head = node;
+            } else {
+                while (last->next != NULL) {
+                    last = last->next;
+                }
+                last->next = node;
             }
-            last->next = node;
+            list->size++;
+            return true;
         }
-        list->size++;
-        return true;
     }
     return false;
 }

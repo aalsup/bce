@@ -1,4 +1,8 @@
+#include <stdlib.h>
 #include <stdbool.h>
+
+#ifndef LINKED_LIST_H
+#define LINKED_LIST_H
 
 typedef struct linked_list_node_t {
     void *data;
@@ -6,10 +10,12 @@ typedef struct linked_list_node_t {
 } linked_list_node_t;
 
 typedef struct linked_list_t {
-    int size;
+    size_t size;
     linked_list_node_t *head;
 } linked_list_t;
 
 linked_list_t* ll_init();
 bool ll_destroy(linked_list_t* list);
 bool ll_append(linked_list_t* list, void* data);
+
+#endif // LINKED_LIST_H
