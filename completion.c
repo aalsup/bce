@@ -1,9 +1,25 @@
 #include "completion.h"
 #include "linked_list.h"
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
+
+const char* ENSURE_SCHEMA_SQL =
+        " WITH table_count (n) AS "
+        " ( "
+        "     SELECT COUNT(name) AS n "
+        "     FROM sqlite_master "
+        "     WHERE type = 'table' "
+        "     AND name IN ('command', 'command_alias', 'command_arg', 'command_opt') "
+        " ) "
+        " SELECT "
+        "     CASE "
+        "         WHEN table_count.n = 4 THEN 1 "
+        "         ELSE 0 "
+        "     END AS pass "
+        " FROM table_count ";
 
 const char* COMPLETION_COMMAND_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
@@ -20,6 +36,47 @@ const char* COMPLETION_SUB_COMMAND_COUNT_SQL =
         " SELECT count(*) "
         " FROM command c "
         " WHERE c.parent_cmd = ?1 ";
+
+sqlite3* open_database(const char *filename, int *result) {
+    char *err_msg = 0;
+    sqlite3 *conn;
+
+    int rc = sqlite3_open("completion.db", &conn);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(conn));
+        sqlite3_close(conn);
+
+        *result = ERR_OPEN_DATABASE;
+        return NULL;
+    }
+
+    rc = sqlite3_exec(conn, "PRAGMA journal_mode = 'WAL'", 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to set journal_mode pragma\n");
+        sqlite3_close(conn);
+
+        *result = ERR_DATABASE_PRAGMA;
+        return NULL;
+    }
+
+    rc = sqlite3_exec(conn, "PRAGMA foreign_keys = 1", 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to set foreign_keys pragma\n");
+        sqlite3_close(conn);
+
+        *result = ERR_DATABASE_PRAGMA;
+        return NULL;
+    }
+
+    *result = SQLITE_OK;
+    return conn;
+}
+
+bool ensure_schema(sqlite3 *conn) {
+    char *err_msg = 0;
+    int rc = sqlite3_exec(conn, ENSURE_SCHEMA_SQL, 0, 0, &err_msg);
+    return (rc == SQLITE_OK);
+}
 
 void print_command_tree(sqlite3 *conn, completion_command_t *cmd, int level) {
     // indent

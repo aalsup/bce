@@ -11,27 +11,6 @@ const int MAX_LINE_SIZE = 2048;
 const char* BASH_LINE_VAR = "COMP_LINE";
 const char* BASH_CURSOR_VAR = "COMP_POINT";
 
-const int ERR_MISSING_ENV_COMP_LINE = 1;
-const int ERR_MISSING_ENV_COMP_POINT = 2;
-const int ERR_OPEN_DATABASE = 3;
-const int ERR_DATABASE_PRAGMA = 4;
-const int ERR_DATABASE_SCHEMA = 5;
-
-const char* ENSURE_SCHEMA_SQL =
-    " WITH table_count (n) AS "
-    " ( "
-    "     SELECT COUNT(name) AS n "
-    "     FROM sqlite_master "
-    "     WHERE type = 'table' "
-    "     AND name IN ('command', 'command_alias', 'command_arg', 'command_opt') "
-    " ) "
-    " SELECT "
-    "     CASE "
-    "         WHEN table_count.n = 4 THEN 1 "
-    "         ELSE 0 "
-    "     END AS pass "
-    " FROM table_count ";
-
 typedef struct completion_input_t {
     char line[MAX_LINE_SIZE + 1];
     int  cursor_pos;
@@ -157,43 +136,19 @@ int load_completion_input() {
     return 0;
 }
 
-
-int ensure_schema(sqlite3 *conn) {
-    char *err_msg = 0;
-    int rc = sqlite3_exec(conn, ENSURE_SCHEMA_SQL, 0, 0, &err_msg);
-    return rc;
-}
-
 int main() {
     char *err_msg = 0;
 
     printf("SQLite version %s\n", sqlite3_libversion());
 
-    sqlite3 *conn;
-    int rc = sqlite3_open("completion.db", &conn);
+    int rc = 0;
+    sqlite3 *conn = open_database("completion.db", &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(conn));
-        sqlite3_close(conn);
-
-        return ERR_OPEN_DATABASE;
+        fprintf(stderr, "Error %d opening database", rc);
+        return rc;
     }
 
-    rc = sqlite3_exec(conn, "PRAGMA journal_mode = 'WAL'", 0, 0, &err_msg);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to set journal_mode pragma\n");
-        sqlite3_close(conn);
-        return ERR_DATABASE_PRAGMA;
-    }
-
-    rc = sqlite3_exec(conn, "PRAGMA foreign_keys = 1", 0, 0, &err_msg);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to set foreign_keys pragma\n");
-        sqlite3_close(conn);
-        return ERR_DATABASE_PRAGMA;
-    }
-
-    rc = ensure_schema(conn);
-    if (rc != SQLITE_OK) {
+    if (!ensure_schema(conn)) {
         fprintf(stderr, "Invalid database schema\n");
         sqlite3_close(conn);
         return ERR_DATABASE_SCHEMA;
