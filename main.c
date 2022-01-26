@@ -19,105 +19,50 @@ typedef struct completion_input_t {
 // global instance for completion_input
 completion_input_t completion_input;
 
-
-char** get_line_as_array(int max_chars) {
-    // count the argument elements
-    int arg_count = 0;
-    {
-        char str[max_chars + 1];
-        memset(str, 0, max_chars + 1);
-        strncpy(str, completion_input.line, max_chars);
-        char *arg = strtok(str, " ");
-        while (arg != NULL) {
-            arg_count++;
-            arg = strtok(NULL, " ");
-        }
-    }
-
-    // allocate the array
-    char **line_array;
-    {
-        line_array = calloc(arg_count + 1, sizeof(char *));
-        for (int i = 0; i < arg_count; i++) {
-            line_array[i] = calloc(max_chars + 1, sizeof(char *));
-        }
-        line_array[arg_count] = NULL;
-    }
-
-    // iterate through the line again
-    {
-        char str[max_chars + 1];
-        memset(str, 0, max_chars + 1);
-        strncpy(str, completion_input.line, max_chars);
-        char *arg = strtok(str, " ");
-        int i = 0;
-        while (arg != NULL) {
-            strncpy(line_array[i], arg, max_chars);
-            i++;
-            arg = strtok(NULL, " ");
-        }
-    }
-
-    return line_array;
-}
-
-void free_line_array(char** line_array) {
-    if (line_array != NULL) {
-        int i = 0;
-        while (line_array[i] != NULL) {
-            free(line_array[i]);
-            i++;
-        }
-        free(line_array);
-        line_array = NULL;
-    }
-}
-
 bool get_command(char* dest, size_t bufsize) {
+    bool result = false;
     memset(dest, 0, bufsize);
-    char** line_array = get_line_as_array(MAX_LINE_SIZE);
-    if (line_array[0] != NULL) {
-        strncpy(dest, line_array[0], bufsize);
-        free_line_array(line_array);
-        return true;
+    linked_list_t *list = string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
+    if (list != NULL) {
+        if (list->head != NULL) {
+            char *data = (char *)list->head->data;
+            strncpy(dest, data, bufsize);
+            result = true;
+        }
     }
-    free_line_array(line_array);
-    return false;
+    return result;
 }
 
 bool get_current_word(char* dest, size_t bufsize) {
     memset(dest, 0, bufsize);
-    // convert the line into array, up to the current cursor position
-    char** line_array = get_line_as_array(completion_input.cursor_pos);
-    int elements = 0;
-    while (line_array[elements] != NULL) {
-        elements++;
+    bool result = false;
+
+    // build a list of words, up to the current cursor position
+    linked_list_t *list = string_to_list(completion_input.line, " ", completion_input.cursor_pos);
+    if (list != NULL) {
+        int last_word = list->size - 1;
+        char *data = (char *)ll_get_nth_element(list, last_word);
+        strncpy(dest, data, bufsize);
+        result = true;
     }
-    if (elements >= 1) {
-        strncpy(dest, line_array[elements - 1], bufsize);
-        free_line_array(line_array);
-        return true;
-    }
-    free_line_array(line_array);
-    return false;
+    ll_destroy(list);
+    return result;
 }
 
 bool get_previous_word(char* dest, size_t bufsize) {
     memset(dest, 0, bufsize);
-    // convert the line into array, up to the current cursor position
-    char** line_array = get_line_as_array(completion_input.cursor_pos);
-    int elements = 0;
-    while (line_array[elements] != NULL) {
-        elements++;
+    bool result = false;
+
+    // build a list of words, up to the current cursor position
+    linked_list_t *list = string_to_list(completion_input.line, " ", completion_input.cursor_pos);
+    if (list != NULL) {
+        int elem = list->size - 2;
+        char *data = (char *)ll_get_nth_element(list, elem);
+        strncpy(dest, data, bufsize);
+        result = true;
     }
-    if (elements >= 2) {
-        // get the word prior to the current word
-        strncpy(dest, line_array[elements - 2], bufsize);
-        free_line_array(line_array);
-        return true;
-    }
-    free_line_array(line_array);
-    return false;
+    ll_destroy(list);
+    return result;
 }
 
 int load_completion_input() {
@@ -129,7 +74,7 @@ int load_completion_input() {
     const char* str_cursor_pos = getenv(BASH_CURSOR_VAR);
     if (strlen(str_cursor_pos) == 0) {
         printf("No %s env var", BASH_CURSOR_VAR);
-        exit(ERR_MISSING_ENV_COMP_POINT);
+        return(ERR_MISSING_ENV_COMP_POINT);
     }
     strncpy(completion_input.line, line, MAX_LINE_SIZE);
     completion_input.cursor_pos = (int) strtol(str_cursor_pos, (char **)NULL, 10);
@@ -186,8 +131,6 @@ int main() {
         printf("get_db_command() returned %d\n", rc);
         goto done;
     }
-
-    printf("completion_command (from db): %s\n", completion_command.uuid);
 
     print_command_tree(conn, &completion_command, 0);
 
