@@ -83,7 +83,7 @@ int load_completion_input() {
 
 int main() {
     int result = 0;
-    completion_command_t completion_command;
+    completion_command_t *completion_command = NULL;
     char command_name[MAX_LINE_SIZE + 1];
     char current_word[MAX_LINE_SIZE + 1];
     char previous_word[MAX_LINE_SIZE + 1];
@@ -128,16 +128,17 @@ int main() {
     printf("previous_word: %s\n", previous_word);
 
     // search for the command directly (load all descendents)
-    rc = get_db_command(&completion_command, conn, command_name);
+    completion_command = create_completion_command();
+    rc = get_db_command(completion_command, conn, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
         goto done;
     }
 
-    print_command_tree(conn, &completion_command, 0);
+    print_command_tree(conn, completion_command, 0);
 
     done:
-    free_completion_command(&completion_command);
+    free_completion_command(completion_command);
     sqlite3_close(conn);
 
     return result;
