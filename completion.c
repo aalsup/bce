@@ -330,7 +330,7 @@ void free_completion_command(completion_command_t *cmd) {
             node = next_node;
         }
     }
-    ll_destroy(sub_cmd_list);
+    ll_destroy(&sub_cmd_list);
 
     // free command-args
     linked_list_t *arg_list = cmd->command_args;
@@ -345,7 +345,7 @@ void free_completion_command(completion_command_t *cmd) {
             arg_node = next_node;
         }
     }
-    ll_destroy(arg_list);
+    ll_destroy(&arg_list);
 }
 
 void free_completion_command_arg(completion_command_arg_t *arg) {
@@ -363,7 +363,7 @@ void free_completion_command_arg(completion_command_arg_t *arg) {
             opt_node = next_node;
         }
     }
-    ll_destroy(opt_list);
+    ll_destroy(&opt_list);
 }
 
 

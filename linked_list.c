@@ -11,8 +11,9 @@ linked_list_t* ll_create() {
     return list;
 }
 
-bool ll_destroy(linked_list_t* list) {
-    if (list != NULL) {
+bool ll_destroy(linked_list_t **pplist) {
+    if (pplist != NULL) {
+        linked_list_t *list = *pplist;
         linked_list_node_t* node = list->head;
         while (node != NULL) {
             free(node->data);
@@ -21,6 +22,8 @@ bool ll_destroy(linked_list_t* list) {
         }
         list->head = NULL;
         list->size = 0;
+        free(list);
+        *pplist = NULL;
     }
     return true;
 }
