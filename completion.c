@@ -339,14 +339,14 @@ void free_completion_command(completion_command_t **ppcmd) {
     // free command-args
     linked_list_t *arg_list = cmd->command_args;
     if (arg_list != NULL) {
-        linked_list_node_t *arg_node = (linked_list_node_t *)arg_list->head;
-        while (arg_node != NULL) {
-            completion_command_arg_t *arg = (completion_command_arg_t *)arg_node->data;
+        linked_list_node_t *node = (linked_list_node_t *)arg_list->head;
+        while (node != NULL) {
+            completion_command_arg_t *arg = (completion_command_arg_t *)node->data;
             free_completion_command_arg(&arg);
-            linked_list_node_t *next_node = arg_node->next;
-            arg_node->data = NULL;
-            arg_node->next = NULL;
-            arg_node = next_node;
+            linked_list_node_t *next_node = node->next;
+            node->data = NULL;
+            node->next = NULL;
+            node = next_node;
         }
     }
     ll_destroy(&arg_list);
@@ -366,14 +366,14 @@ void free_completion_command_arg(completion_command_arg_t **pparg) {
 
     linked_list_t *opt_list = arg->opts;
     if (opt_list != NULL) {
-        linked_list_node_t *opt_node = (linked_list_node_t *)opt_list->head;
-        while (opt_node != NULL) {
-            completion_command_opt_t *opt = (completion_command_opt_t *)opt_node->data;
+        linked_list_node_t *node = (linked_list_node_t *)opt_list->head;
+        while (node != NULL) {
+            completion_command_opt_t *opt = (completion_command_opt_t *)node->data;
             free_completion_command_opt(&opt);
-            linked_list_node_t *next_node = opt_node->next;
-            opt_node->data = NULL;
-            opt_node->next = NULL;
-            opt_node = next_node;
+            linked_list_node_t *next_node = node->next;
+            node->data = NULL;
+            node->next = NULL;
+            node = next_node;
         }
     }
     ll_destroy(&opt_list);
@@ -390,6 +390,8 @@ void free_completion_command_opt(completion_command_opt_t **ppopt) {
     if (opt == NULL) {
         return;
     }
+
+    // no internal data to free here
 
     free(opt);
     *ppopt = NULL;
