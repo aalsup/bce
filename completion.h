@@ -1,6 +1,7 @@
 #include "linked_list.h"
 #include <stdbool.h>
 #include <sqlite3.h>
+#include "error.h"
 
 #ifndef COMPLETION_H
 #define COMPLETION_H
@@ -9,12 +10,6 @@ static const int UUID_FIELD_SIZE = 36;
 static const int NAME_FIELD_SIZE = 50;
 static const int SHORTNAME_FIELD_SIZE = 5;
 static const int CMD_TYPE_FIELD_SIZE = 20;
-
-static const int ERR_MISSING_ENV_COMP_LINE = 1;
-static const int ERR_MISSING_ENV_COMP_POINT = 2;
-static const int ERR_OPEN_DATABASE = 3;
-static const int ERR_DATABASE_PRAGMA = 4;
-static const int ERR_DATABASE_SCHEMA = 5;
 
 extern const char* ENSURE_SCHEMA_SQL;
 extern const char* COMPLETION_COMMAND_SQL;

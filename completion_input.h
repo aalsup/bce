@@ -19,6 +19,6 @@ completion_input_t completion_input;
 int load_completion_input();
 bool get_command(char* dest, size_t bufsize);
 bool get_current_word(char* dest, size_t bufsize);
-
+bool get_previous_word(char* dest, size_t bufsize);
 
 #endif // COMPLETION_INPUT_H

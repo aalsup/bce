@@ -7,22 +7,7 @@
 #include "linked_list.h"
 #include "completion.h"
 #include "completion_input.h"
-
-bool get_previous_word(char* dest, size_t bufsize) {
-    memset(dest, 0, bufsize);
-    bool result = false;
-
-    // build a list of words, up to the current cursor position
-    linked_list_t *list = string_to_list(completion_input.line, " ", completion_input.cursor_pos);
-    if (list != NULL) {
-        int elem = list->size - 2;
-        char *data = (char *)ll_get_nth_element(list, elem);
-        strncat(dest, data, bufsize);
-        result = true;
-    }
-    ll_destroy(&list);
-    return result;
-}
+#include "error.h"
 
 int main() {
     int result = 0;
