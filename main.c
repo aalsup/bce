@@ -10,7 +10,8 @@
 #include "error.h"
 
 int main() {
-    int result = 0;
+    int err = 0;    // custom error values
+    int rc = 0;     // SQLite return values
     completion_command_t *completion_command = NULL;
     char command_name[MAX_LINE_SIZE + 1];
     char current_word[MAX_LINE_SIZE + 1];
@@ -18,35 +19,37 @@ int main() {
 
     printf("SQLite version %s\n", sqlite3_libversion());
 
-    int rc = 0;
     sqlite3 *conn = open_database("completion.db", &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Error %d opening database", rc);
-        result = ERR_OPEN_DATABASE;
+        err = ERR_OPEN_DATABASE;
         goto done;
     }
 
     if (!ensure_schema(conn)) {
         fprintf(stderr, "Invalid database schema\n");
-        result = ERR_DATABASE_SCHEMA;
+        err = ERR_DATABASE_SCHEMA;
         goto done;
     }
 
-    result = load_completion_input();
-    if (result != 0) {
-        switch (result) {
+    err = load_completion_input();
+    if (err != 0) {
+        switch (err) {
             case ERR_MISSING_ENV_COMP_LINE:
                 fprintf(stderr, "No %s env var\n", BASH_LINE_VAR);
             case ERR_MISSING_ENV_COMP_POINT:
                 fprintf(stderr, "No %s env var\n", BASH_CURSOR_VAR);
             default:
-                fprintf(stderr, "Unknown error: %d\n", result);
+                fprintf(stderr, "Unknown error: %d\n", err);
         }
         goto done;
     }
 
     // load the data provided by environment
-    get_command(command_name, MAX_LINE_SIZE);
+    if (!get_command(command_name, MAX_LINE_SIZE)) {
+        fprintf(stderr, "Unable to determine command\n");
+        goto done;
+    }
     get_current_word(current_word, MAX_LINE_SIZE);
     get_previous_word(previous_word, MAX_LINE_SIZE);
 
@@ -69,7 +72,7 @@ int main() {
     free_completion_command(completion_command);
     sqlite3_close(conn);
 
-    return result;
+    return err;
 }
 
 
