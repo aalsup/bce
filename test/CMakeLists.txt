@@ -11,7 +11,7 @@ add_executable(
     tests
     linked_list_tests.cpp
     ../linked_list.c
-)
+        ../completion_input.c ../completion_input.h)
 
 set_target_properties(tests PROPERTIES LINKER_LANGUAGE CXX)
 

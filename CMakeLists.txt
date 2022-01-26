@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 99)
 add_executable(auto_complete_c
     main.c
     completion.c
-    linked_list.c)
+    linked_list.c completion_input.c completion_input.h)
 
 add_subdirectory(test)
 
