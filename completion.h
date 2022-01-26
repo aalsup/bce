@@ -16,8 +16,6 @@ static const int ERR_OPEN_DATABASE = 3;
 static const int ERR_DATABASE_PRAGMA = 4;
 static const int ERR_DATABASE_SCHEMA = 5;
 
-
-
 extern const char* ENSURE_SCHEMA_SQL;
 extern const char* COMPLETION_COMMAND_SQL;
 extern const char* COMPLETION_SUB_COMMAND_SQL;
@@ -53,6 +51,9 @@ int get_db_command(completion_command_t *dest, struct sqlite3 *conn, const char*
 int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_command_args(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_arg);
+completion_command_t* create_completion_command();
+completion_command_arg_t* create_completion_command_arg();
+completion_command_opt_t* create_completion_command_opt();
 void free_completion_command(completion_command_t *cmd);
 void free_completion_command_arg(completion_command_arg_t *arg);
 

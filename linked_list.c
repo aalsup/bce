@@ -71,11 +71,11 @@ linked_list_t *string_to_list(const char *str, const char *delim, size_t max_len
 
     char search_str[max_len + 1];
     memset(search_str, 0, max_len + 1);
-    strncpy(search_str, str, max_len);
+    strncat(search_str, str, max_len);
     char *tok = strtok(search_str, delim);
     while (tok != NULL) {
         char *data = calloc(strlen(tok) + 1, sizeof(char));
-        strncpy(data, tok, strlen(tok));
+        strncat(data, tok, strlen(tok));
         ll_append(list, data);
         tok = strtok(NULL, delim);
     }

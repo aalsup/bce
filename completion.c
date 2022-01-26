@@ -133,9 +133,11 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, i
 }
 
 int get_db_command(completion_command_t *dest, struct sqlite3 *conn, const char* command_name) {
-    memset(dest->uuid, 0, UUID_FIELD_SIZE);
-    memset(dest->name, 0, NAME_FIELD_SIZE);
-    memset(dest->parent_cmd_uuid, 0, UUID_FIELD_SIZE);
+    memset(dest->uuid, 0, UUID_FIELD_SIZE + 1);
+    memset(dest->name, 0, NAME_FIELD_SIZE + 1);
+    memset(dest->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
+    dest->sub_commands = NULL;
+    dest->command_args = NULL;
 
     sqlite3_stmt *stmt;
     // try to find the command by name
@@ -145,12 +147,12 @@ int get_db_command(completion_command_t *dest, struct sqlite3 *conn, const char*
         sqlite3_bind_text(stmt, 2, command_name, -1, NULL);
         int step = sqlite3_step(stmt);
         if (step == SQLITE_ROW) {
-            strncpy(dest->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
-            strncpy(dest->name, (const char *) sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
+            strncat(dest->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+            strncat(dest->name, (const char *) sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
             if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
-                strncpy(dest->parent_cmd_uuid, (const char *) sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
+                strncat(dest->parent_cmd_uuid, (const char *) sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
             } else {
-                memset(dest->parent_cmd_uuid, 0, UUID_FIELD_SIZE);
+                memset(dest->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
             }
             dest->sub_commands = ll_create();
             dest->command_args = ll_create();
@@ -175,13 +177,13 @@ int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd) 
         int step = sqlite3_step(stmt);
         while (step == SQLITE_ROW) {
             // create completion_command_t
-            completion_command_t *sub_cmd = malloc(sizeof(completion_command_t));
-            strncpy(sub_cmd->uuid, (const char *)sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
-            strncpy(sub_cmd->name, (const char *)sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
+            completion_command_t *sub_cmd = create_completion_command();
+            strncat(sub_cmd->uuid, (const char *)sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+            strncat(sub_cmd->name, (const char *)sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
             if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
-                strncpy(sub_cmd->parent_cmd_uuid, (const char *)sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
+                strncat(sub_cmd->parent_cmd_uuid, (const char *)sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
             } else {
-                memset(sub_cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE);
+                memset(sub_cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
             }
             sub_cmd->sub_commands = ll_create();
             sub_cmd->command_args = ll_create();
@@ -220,20 +222,20 @@ int get_db_command_args(sqlite3 *conn, completion_command_t *parent_cmd) {
         sqlite3_bind_text(stmt, 1, command_uuid, -1, NULL);
         int step = sqlite3_step(stmt);
         while (step == SQLITE_ROW) {
-            completion_command_arg_t *arg = malloc(sizeof(completion_command_arg_t));
+            completion_command_arg_t *arg = create_completion_command_arg();
             // ca.uuid, ca.cmd_uuid, ca.cmd_type, ca.long_name, ca.short_name
-            strncpy(arg->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
-            strncpy(arg->cmd_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
-            strncpy(arg->cmd_type, (const char *) sqlite3_column_text(stmt, 2), CMD_TYPE_FIELD_SIZE);
+            strncat(arg->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+            strncat(arg->cmd_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
+            strncat(arg->cmd_type, (const char *) sqlite3_column_text(stmt, 2), CMD_TYPE_FIELD_SIZE);
             if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) {
-                strncpy(arg->long_name, (const char *) sqlite3_column_text(stmt, 3), NAME_FIELD_SIZE);
+                strncat(arg->long_name, (const char *) sqlite3_column_text(stmt, 3), NAME_FIELD_SIZE);
             } else {
-                memset(arg->long_name, 0, NAME_FIELD_SIZE);
+                memset(arg->long_name, 0, NAME_FIELD_SIZE + 1);
             }
             if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) {
-                strncpy(arg->short_name, (const char *) sqlite3_column_text(stmt, 4), SHORTNAME_FIELD_SIZE);
+                strncat(arg->short_name, (const char *) sqlite3_column_text(stmt, 4), SHORTNAME_FIELD_SIZE);
             } else {
-                memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE);
+                memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
             }
             rc = get_db_command_opts(conn, arg);
 
@@ -252,8 +254,6 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
         return -1;
     }
 
-    parent_arg->opts = ll_create();
-
     char *arg_uuid = parent_arg->uuid;
     sqlite3_stmt *stmt;
     // try to find the command by name
@@ -262,11 +262,11 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
         sqlite3_bind_text(stmt, 1, arg_uuid, -1, NULL);
         int step = sqlite3_step(stmt);
         while (step == SQLITE_ROW) {
-            completion_command_opt_t *opt = malloc(sizeof(completion_command_opt_t));
+            completion_command_opt_t *opt = create_completion_command_opt();
             // co.uuid, co.cmd_arg_uuid, co.name
-            strncpy(opt->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
-            strncpy(opt->cmd_arg_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
-            strncpy(opt->name, (const char *) sqlite3_column_text(stmt, 2), NAME_FIELD_SIZE);
+            strncat(opt->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+            strncat(opt->cmd_arg_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
+            strncat(opt->name, (const char *) sqlite3_column_text(stmt, 2), NAME_FIELD_SIZE);
             ll_append(parent_arg->opts, opt);
 
             step = sqlite3_step(stmt);
@@ -275,6 +275,41 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
     sqlite3_finalize(stmt);
 
     return rc;
+}
+
+completion_command_t* create_completion_command() {
+    completion_command_t *cmd = malloc(sizeof(completion_command_t));
+    if (cmd != NULL) {
+        memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
+        memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
+        memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
+        cmd->sub_commands = ll_create();
+        cmd->command_args = ll_create();
+    }
+    return cmd;
+}
+
+completion_command_arg_t* create_completion_command_arg() {
+    completion_command_arg_t *arg = malloc(sizeof(completion_command_arg_t));
+    if (arg != NULL) {
+        memset(arg->uuid, 0, UUID_FIELD_SIZE + 1);
+        memset(arg->cmd_uuid, 0, UUID_FIELD_SIZE + 1);
+        memset(arg->long_name, 0, NAME_FIELD_SIZE + 1);
+        memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
+        memset(arg->cmd_type, 0, CMD_TYPE_FIELD_SIZE + 1);
+        arg->opts = ll_create();
+    }
+    return arg;
+}
+
+completion_command_opt_t* create_completion_command_opt() {
+    completion_command_opt_t *opt = malloc(sizeof(completion_command_opt_t));
+    if (opt != NULL) {
+        memset(opt->uuid, 0, UUID_FIELD_SIZE + 1);
+        memset(opt->name, 0, NAME_FIELD_SIZE + 1);
+        memset(opt->cmd_arg_uuid, 0, UUID_FIELD_SIZE + 1);
+    }
+    return opt;
 }
 
 void free_completion_command(completion_command_t *cmd) {
