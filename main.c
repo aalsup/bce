@@ -69,7 +69,7 @@ int main() {
     print_command_tree(conn, completion_command, 0);
 
     done:
-    free_completion_command(completion_command);
+    free_completion_command(&completion_command);
     sqlite3_close(conn);
 
     return err;

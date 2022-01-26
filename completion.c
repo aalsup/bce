@@ -312,7 +312,11 @@ completion_command_opt_t* create_completion_command_opt() {
     return opt;
 }
 
-void free_completion_command(completion_command_t *cmd) {
+void free_completion_command(completion_command_t **ppcmd) {
+    if (ppcmd == NULL) {
+        return;
+    }
+    completion_command_t *cmd = *ppcmd;
     if (cmd == NULL) {
         return;
     }
@@ -323,7 +327,7 @@ void free_completion_command(completion_command_t *cmd) {
         linked_list_node_t *node = (linked_list_node_t *)sub_cmd_list->head;
         while (node != NULL) {
             completion_command_t *sub_cmd = (completion_command_t *)node->data;
-            free_completion_command(sub_cmd);
+            free_completion_command(&sub_cmd);
             linked_list_node_t *next_node = node->next;
             node->data = NULL;
             node->next = NULL;
@@ -338,7 +342,7 @@ void free_completion_command(completion_command_t *cmd) {
         linked_list_node_t *arg_node = (linked_list_node_t *)arg_list->head;
         while (arg_node != NULL) {
             completion_command_arg_t *arg = (completion_command_arg_t *)arg_node->data;
-            free_completion_command_arg(arg);
+            free_completion_command_arg(&arg);
             linked_list_node_t *next_node = arg_node->next;
             arg_node->data = NULL;
             arg_node->next = NULL;
@@ -346,9 +350,16 @@ void free_completion_command(completion_command_t *cmd) {
         }
     }
     ll_destroy(&arg_list);
+
+    free(cmd);
+    *ppcmd = NULL;
 }
 
-void free_completion_command_arg(completion_command_arg_t *arg) {
+void free_completion_command_arg(completion_command_arg_t **pparg) {
+    if (pparg == NULL) {
+        return;
+    }
+    completion_command_arg_t *arg = *pparg;
     if (arg == NULL) {
         return;
     }
@@ -357,6 +368,8 @@ void free_completion_command_arg(completion_command_arg_t *arg) {
     if (opt_list != NULL) {
         linked_list_node_t *opt_node = (linked_list_node_t *)opt_list->head;
         while (opt_node != NULL) {
+            completion_command_opt_t *opt = (completion_command_opt_t *)opt_node->data;
+            free_completion_command_opt(&opt);
             linked_list_node_t *next_node = opt_node->next;
             opt_node->data = NULL;
             opt_node->next = NULL;
@@ -364,6 +377,22 @@ void free_completion_command_arg(completion_command_arg_t *arg) {
         }
     }
     ll_destroy(&opt_list);
+
+    free(arg);
+    *pparg = NULL;
+}
+
+void free_completion_command_opt(completion_command_opt_t **ppopt) {
+    if (ppopt == NULL) {
+        return;
+    }
+    completion_command_opt_t *opt = *ppopt;
+    if (opt == NULL) {
+        return;
+    }
+
+    free(opt);
+    *ppopt = NULL;
 }
 
 

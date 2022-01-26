@@ -49,7 +49,8 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
 completion_command_t* create_completion_command();
 completion_command_arg_t* create_completion_command_arg();
 completion_command_opt_t* create_completion_command_opt();
-void free_completion_command(completion_command_t *cmd);
-void free_completion_command_arg(completion_command_arg_t *arg);
+void free_completion_command(completion_command_t **ppcmd);
+void free_completion_command_arg(completion_command_arg_t **pparg);
+void free_completion_command_opt(completion_command_opt_t **ppopt);
 
 #endif // COMPLETION_H
