@@ -7,9 +7,9 @@
 #include "linked_list.h"
 #include "completion.h"
 
-const int MAX_LINE_SIZE = 2048;
-const char* BASH_LINE_VAR = "COMP_LINE";
-const char* BASH_CURSOR_VAR = "COMP_POINT";
+static const int MAX_LINE_SIZE = 2048;
+static const char* BASH_LINE_VAR = "COMP_LINE";
+static const char* BASH_CURSOR_VAR = "COMP_POINT";
 
 typedef struct completion_input_t {
     char line[MAX_LINE_SIZE + 1];
@@ -40,7 +40,7 @@ bool get_current_word(char* dest, size_t bufsize) {
     // build a list of words, up to the current cursor position
     linked_list_t *list = string_to_list(completion_input.line, " ", completion_input.cursor_pos);
     if (list != NULL) {
-        int last_word = list->size - 1;
+        size_t last_word = list->size - 1;
         char *data = (char *)ll_get_nth_element(list, last_word);
         strncpy(dest, data, bufsize);
         result = true;
@@ -82,8 +82,6 @@ int load_completion_input() {
 }
 
 int main() {
-    char *err_msg = 0;
-
     printf("SQLite version %s\n", sqlite3_libversion());
 
     int rc = 0;

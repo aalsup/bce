@@ -49,7 +49,7 @@ sqlite3* open_database(const char *filename, int *result) {
     char *err_msg = 0;
     sqlite3 *conn;
 
-    int rc = sqlite3_open("completion.db", &conn);
+    int rc = sqlite3_open(filename, &conn);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(conn));
         sqlite3_close(conn);
@@ -188,6 +188,9 @@ int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd) 
 
             // recurse for sub-commands
             rc = get_db_sub_commands(conn, sub_cmd);
+            if (rc != SQLITE_OK) {
+                goto done;
+            }
             ll_append(parent_cmd->sub_commands, sub_cmd);
 
             // get command-args
@@ -196,6 +199,7 @@ int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd) 
             step = sqlite3_step(stmt);
         }
     }
+    done:
     sqlite3_finalize(stmt);
 
     return rc;
@@ -318,7 +322,6 @@ void free_completion_command_arg(completion_command_arg_t *arg) {
     if (opt_list != NULL) {
         linked_list_node_t *opt_node = (linked_list_node_t *)opt_list->head;
         while (opt_node != NULL) {
-            completion_command_opt_t *opt = (completion_command_opt_t *)opt_node->data;
             linked_list_node_t *next_node = opt_node->next;
             opt_node->data = NULL;
             opt_node->next = NULL;

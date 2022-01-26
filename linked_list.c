@@ -49,7 +49,7 @@ bool ll_append(linked_list_t* list, void* data) {
     return false;
 }
 
-void* ll_get_nth_element(const linked_list_t* list, int elem) {
+void* ll_get_nth_element(const linked_list_t* list, size_t elem) {
     if (list == NULL) {
         return NULL;
     }
