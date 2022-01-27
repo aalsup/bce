@@ -4,9 +4,13 @@ project(auto_complete_c C)
 set(CMAKE_C_STANDARD 99)
 
 add_executable(auto_complete_c
-    main.c
-    completion.c
-    linked_list.c completion_input.c completion_input.h error.h)
+        main.c
+        completion.h completion.c
+        linked_list.h linked_list.c
+        completion_input.h completion_input.c
+        error.h
+        prune.h prune.c
+        uuid4.h uuid4.c)
 
 add_subdirectory(test)
 

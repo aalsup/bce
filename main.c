@@ -1,3 +1,5 @@
+#define VERBOSE_OUTPUT
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +10,7 @@
 #include "completion.h"
 #include "completion_input.h"
 #include "error.h"
+#include "prune.h"
 
 int main() {
     int err = 0;    // custom error values
@@ -17,7 +20,9 @@ int main() {
     char current_word[MAX_LINE_SIZE + 1];
     char previous_word[MAX_LINE_SIZE + 1];
 
+#ifdef VERBOSE_OUTPUT
     printf("SQLite version %s\n", sqlite3_libversion());
+#endif
 
     sqlite3 *conn = open_database("completion.db", &rc);
     if (rc != SQLITE_OK) {
@@ -46,17 +51,19 @@ int main() {
     }
 
     // load the data provided by environment
-    if (!get_command(command_name, MAX_LINE_SIZE)) {
+    if (!get_command_input(command_name, MAX_LINE_SIZE)) {
         fprintf(stderr, "Unable to determine command\n");
         goto done;
     }
     get_current_word(current_word, MAX_LINE_SIZE);
     get_previous_word(previous_word, MAX_LINE_SIZE);
 
+#ifdef VERBOSE_OUTPUT
     printf("input: %s\n", completion_input.line);
     printf("command: %s\n", command_name);
     printf("current_word: %s\n", current_word);
     printf("previous_word: %s\n", previous_word);
+#endif
 
     // search for the command directly (load all descendents)
     completion_command = create_completion_command();
@@ -66,7 +73,17 @@ int main() {
         goto done;
     }
 
+#ifdef VERBOSE_OUTPUT
+    printf("\nCommand Tree (Raw from DB)\n");
     print_command_tree(conn, completion_command, 0);
+#endif
+
+    prune_command(completion_command);
+
+#ifdef VERBOSE_OUTPUT
+    printf("\nCommand Tree (Pruned)\n");
+    print_command_tree(conn, completion_command, 0);
+#endif
 
     done:
     free_completion_command(&completion_command);

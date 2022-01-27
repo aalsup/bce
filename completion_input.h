@@ -10,14 +10,14 @@ static const char* BASH_CURSOR_VAR = "COMP_POINT";
 
 typedef struct completion_input_t {
     char line[MAX_LINE_SIZE + 1];
-    int  cursor_pos;
+    int cursor_pos;
 } completion_input_t;
 
 // global instance for completion_input
 completion_input_t completion_input;
 
 int load_completion_input();
-bool get_command(char* dest, size_t bufsize);
+bool get_command_input(char* dest, size_t bufsize);
 bool get_current_word(char* dest, size_t bufsize);
 bool get_previous_word(char* dest, size_t bufsize);
 

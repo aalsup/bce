@@ -6,7 +6,7 @@
 #include <string.h>
 #include <sqlite3.h>
 
-const char* ENSURE_SCHEMA_SQL =
+static const char* ENSURE_SCHEMA_SQL =
         " WITH table_count (n) AS "
         " ( "
         "     SELECT COUNT(name) AS n "
@@ -21,24 +21,24 @@ const char* ENSURE_SCHEMA_SQL =
         "     END AS pass "
         " FROM table_count ";
 
-const char* COMPLETION_COMMAND_SQL =
+static const char* COMPLETION_COMMAND_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
         " FROM command c "
         " JOIN command_alias a ON a.cmd_uuid = c.uuid "
         " WHERE c.name = ?1 OR a.name = ?2 ";
 
-const char* COMPLETION_SUB_COMMAND_SQL =
+static const char* COMPLETION_SUB_COMMAND_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
         " FROM command c "
         " WHERE c.parent_cmd = ?1 ";
 
-const char* COMPLETION_COMMAND_ARG_SQL =
+static const char* COMPLETION_COMMAND_ARG_SQL =
         " SELECT ca.uuid, ca.cmd_uuid, ca.cmd_type, ca.long_name, ca.short_name "
         " FROM command_arg ca "
         " JOIN command c ON c.uuid = ca.cmd_uuid "
         " WHERE c.uuid = ?1 ";
 
-const char* COMPLETION_COMMAND_OPT_SQL =
+static const char* COMPLETION_COMMAND_OPT_SQL =
         " SELECT co.uuid, co.cmd_arg_uuid, co.name "
         " FROM command_opt co "
         " JOIN command_arg ca ON ca.uuid = co.cmd_arg_uuid "
@@ -51,7 +51,6 @@ sqlite3* open_database(const char *filename, int *result) {
 
     int rc = sqlite3_open(filename, &conn);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(conn));
         sqlite3_close(conn);
 
         *result = ERR_OPEN_DATABASE;
@@ -60,7 +59,6 @@ sqlite3* open_database(const char *filename, int *result) {
 
     rc = sqlite3_exec(conn, "PRAGMA journal_mode = 'WAL'", 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to set journal_mode pragma\n");
         sqlite3_close(conn);
 
         *result = ERR_DATABASE_PRAGMA;
@@ -69,7 +67,6 @@ sqlite3* open_database(const char *filename, int *result) {
 
     rc = sqlite3_exec(conn, "PRAGMA foreign_keys = 1", 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to set foreign_keys pragma\n");
         sqlite3_close(conn);
 
         *result = ERR_DATABASE_PRAGMA;
@@ -193,7 +190,7 @@ int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd) 
             if (rc != SQLITE_OK) {
                 goto done;
             }
-            ll_append(parent_cmd->sub_commands, sub_cmd);
+            ll_append_item(parent_cmd->sub_commands, sub_cmd);
 
             // get command-args
             rc = get_db_command_args(conn, sub_cmd);
@@ -239,7 +236,7 @@ int get_db_command_args(sqlite3 *conn, completion_command_t *parent_cmd) {
             }
             rc = get_db_command_opts(conn, arg);
 
-            ll_append(parent_cmd->command_args, arg);
+            ll_append_item(parent_cmd->command_args, arg);
 
             step = sqlite3_step(stmt);
         }
@@ -267,7 +264,7 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
             strncat(opt->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
             strncat(opt->cmd_arg_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
             strncat(opt->name, (const char *) sqlite3_column_text(stmt, 2), NAME_FIELD_SIZE);
-            ll_append(parent_arg->opts, opt);
+            ll_append_item(parent_arg->opts, opt);
 
             step = sqlite3_step(stmt);
         }

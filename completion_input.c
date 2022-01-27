@@ -1,18 +1,15 @@
 #include "completion_input.h"
 #include "completion.h"
 #include <string.h>
-#include <stdio.h>
 #include <errno.h>
 
 int load_completion_input() {
     const char* line = getenv(BASH_LINE_VAR);
     if (line == NULL || strlen(line) == 0) {
-        fprintf(stderr, "No %s env var\n", BASH_LINE_VAR);
         return(ERR_MISSING_ENV_COMP_LINE);
     }
     const char* str_cursor_pos = getenv(BASH_CURSOR_VAR);
     if (str_cursor_pos == NULL || strlen(str_cursor_pos) == 0) {
-        fprintf(stderr, "No %s env var\n", BASH_CURSOR_VAR);
         return(ERR_MISSING_ENV_COMP_POINT);
     }
     strncat(completion_input.line, line, MAX_LINE_SIZE);
@@ -23,10 +20,10 @@ int load_completion_input() {
     return 0;
 }
 
-bool get_command(char* dest, size_t bufsize) {
+bool get_command_input(char* dest, size_t bufsize) {
     bool result = false;
     memset(dest, 0, bufsize);
-    linked_list_t *list = string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
+    linked_list_t *list = ll_string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
     if (list != NULL) {
         if (list->head != NULL) {
             char *data = (char *)list->head->data;
@@ -42,11 +39,11 @@ bool get_current_word(char* dest, size_t bufsize) {
     bool result = false;
 
     // build a list of words, up to the current cursor position
-    linked_list_t *list = string_to_list(completion_input.line, " ", completion_input.cursor_pos);
+    linked_list_t *list = ll_string_to_list(completion_input.line, " ", completion_input.cursor_pos);
     if (list != NULL) {
         if (list->size > 0) {
             size_t elem = list->size - 1;
-            char *data = (char *) ll_get_nth_element(list, elem);
+            char *data = (char *) ll_get_nth_item(list, elem);
             strncat(dest, data, bufsize);
             result = true;
         }
@@ -60,11 +57,11 @@ bool get_previous_word(char* dest, size_t bufsize) {
     bool result = false;
 
     // build a list of words, up to the current cursor position
-    linked_list_t *list = string_to_list(completion_input.line, " ", completion_input.cursor_pos);
+    linked_list_t *list = ll_string_to_list(completion_input.line, " ", completion_input.cursor_pos);
     if (list != NULL) {
         if (list->size > 1) {
             size_t elem = list->size - 2;
-            char *data = (char *)ll_get_nth_element(list, elem);
+            char *data = (char *) ll_get_nth_item(list, elem);
             strncat(dest, data, bufsize);
             result = true;
         }
