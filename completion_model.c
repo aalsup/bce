@@ -95,6 +95,20 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, i
     }
     printf("command: %s (%s)\n", cmd->name, cmd->uuid);
 
+    if ((cmd->aliases != NULL) && (cmd->aliases->size > 0)) {
+        for (int i = 0; i < level; i++) {
+            printf("  ");
+        }
+        printf("  aliases: ");
+        linked_list_node_t *alias_node = cmd->aliases->head;
+        while (alias_node != NULL) {
+            char *str = (char *)alias_node->data;
+            printf("%s ", str);
+            alias_node = alias_node->next;
+        }
+        printf("\n");
+    }
+
     if (cmd->command_args != NULL) {
         linked_list_node_t *arg_node = cmd->command_args->head;
         while (arg_node != NULL) {
