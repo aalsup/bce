@@ -22,5 +22,6 @@ bool ll_remove_item(linked_list_t *list, linked_list_node_t *node);
 void* ll_get_nth_item(const linked_list_t* list, size_t elem);
 linked_list_t *ll_string_to_list(const char *str, const char *delim, size_t max_len);
 bool ll_is_string_in_list(const linked_list_t* list, const char *str);
+bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* str_list);
 
 #endif // LINKED_LIST_H

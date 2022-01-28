@@ -1,4 +1,4 @@
-#include "completion.h"
+#include "completion_model.h"
 #include "linked_list.h"
 #include <stdlib.h>
 #include <stdbool.h>
@@ -26,6 +26,11 @@ static const char* COMPLETION_COMMAND_SQL =
         " FROM command c "
         " JOIN command_alias a ON a.cmd_uuid = c.uuid "
         " WHERE c.name = ?1 OR a.name = ?2 ";
+
+static const char* COMPLETION_COMMAND_ALIAS_SQL =
+        " SELECT a.uuid, a.cmd_uuid, a.name "
+        " FROM command_alias a "
+        " WHERE a.cmd_uuid = ?1 ";
 
 static const char* COMPLETION_SUB_COMMAND_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
@@ -129,12 +134,13 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, i
     }
 }
 
-int get_db_command(completion_command_t *dest, struct sqlite3 *conn, const char* command_name) {
-    memset(dest->uuid, 0, UUID_FIELD_SIZE + 1);
-    memset(dest->name, 0, NAME_FIELD_SIZE + 1);
-    memset(dest->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
-    dest->sub_commands = NULL;
-    dest->command_args = NULL;
+int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* command_name) {
+    memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
+    memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
+    memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
+    cmd->aliases = NULL;
+    cmd->sub_commands = NULL;
+    cmd->command_args = NULL;
 
     sqlite3_stmt *stmt;
     // try to find the command by name
@@ -144,25 +150,62 @@ int get_db_command(completion_command_t *dest, struct sqlite3 *conn, const char*
         sqlite3_bind_text(stmt, 2, command_name, -1, NULL);
         int step = sqlite3_step(stmt);
         if (step == SQLITE_ROW) {
-            strncat(dest->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
-            strncat(dest->name, (const char *) sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
+            strncat(cmd->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+            strncat(cmd->name, (const char *) sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
             if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
-                strncat(dest->parent_cmd_uuid, (const char *) sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
+                strncat(cmd->parent_cmd_uuid, (const char *) sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
             } else {
-                memset(dest->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
+                memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
             }
-            dest->sub_commands = ll_create();
-            dest->command_args = ll_create();
-            rc = get_db_sub_commands(conn, dest);
+            cmd->aliases = ll_create();
+            cmd->sub_commands = ll_create();
+            cmd->command_args = ll_create();
+
+            // populate child aliases
+            rc = get_db_command_aliases(conn, cmd);
             if (rc != SQLITE_OK) {
                 goto done;
             }
-            rc = get_db_command_args(conn, dest);
+
+            // populate child args
+            rc = get_db_command_args(conn, cmd);
+            if (rc != SQLITE_OK) {
+                goto done;
+            }
+
+            // populate child sub-cmds
+            rc = get_db_sub_commands(conn, cmd);
+            if (rc != SQLITE_OK) {
+                goto done;
+            }
         }
     }
 
 done:
     sqlite3_finalize(stmt);
+    return rc;
+}
+
+int get_db_command_aliases(struct sqlite3 *conn, completion_command_t *parent_cmd) {
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare(conn, COMPLETION_COMMAND_ALIAS_SQL, -1, &stmt, 0);
+    if (rc == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, parent_cmd->uuid, -1, NULL);
+        int step = sqlite3_step(stmt);
+        while (step == SQLITE_ROW) {
+            // 'name' field is all we need
+            char *alias_name = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
+            strncat(alias_name, (const char *)sqlite3_column_text(stmt, 2), NAME_FIELD_SIZE);
+
+            // add this alias to the parent
+            ll_append_item(parent_cmd->aliases, alias_name);
+
+            step = sqlite3_step(stmt);
+        }
+    }
+    done:
+    sqlite3_finalize(stmt);
+
     return rc;
 }
 
@@ -182,18 +225,30 @@ int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd) 
             } else {
                 memset(sub_cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
             }
+            sub_cmd->aliases = ll_create();
             sub_cmd->sub_commands = ll_create();
             sub_cmd->command_args = ll_create();
 
-            // recurse for sub-commands
+            // populate child aliases
+            rc = get_db_command_aliases(conn, sub_cmd);
+            if (rc != SQLITE_OK) {
+                goto done;
+            }
+
+            // populate child args
+            rc = get_db_command_args(conn, sub_cmd);
+            if (rc != SQLITE_OK) {
+                goto done;
+            }
+
+            // populate child sub-cmds
             rc = get_db_sub_commands(conn, sub_cmd);
             if (rc != SQLITE_OK) {
                 goto done;
             }
-            ll_append_item(parent_cmd->sub_commands, sub_cmd);
 
-            // get command-args
-            rc = get_db_command_args(conn, sub_cmd);
+            // add this sub_cmd to the parent
+            ll_append_item(parent_cmd->sub_commands, sub_cmd);
 
             step = sqlite3_step(stmt);
         }
@@ -280,6 +335,7 @@ completion_command_t* create_completion_command() {
         memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
         memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
         memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
+        cmd->aliases = ll_create();
         cmd->sub_commands = ll_create();
         cmd->command_args = ll_create();
     }
@@ -317,6 +373,10 @@ void free_completion_command(completion_command_t **ppcmd) {
     if (cmd == NULL) {
         return;
     }
+
+    // free aliases
+    linked_list_t *alias_list = cmd->aliases;
+    ll_destroy(&alias_list);
 
     // free sub-commands
     linked_list_t *sub_cmd_list = cmd->sub_commands;

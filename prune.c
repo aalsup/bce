@@ -1,5 +1,5 @@
 #include "prune.h"
-#include "completion.h"
+#include "completion_model.h"
 #include "completion_input.h"
 #include "linked_list.h"
 
@@ -17,8 +17,6 @@ bool prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
     // prune the arguments
     prune_arguments(cmd, word_list);
 
-    // TODO: enhance command struct to support matching on aliases
-
     if (cmd->sub_commands != NULL) {
         // prune sibling sub-commands
         linked_list_t *sub_cmds = cmd->sub_commands;
@@ -26,7 +24,12 @@ bool prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
         while (check_node != NULL) {
             completion_command_t *sub_cmd = (completion_command_t *)check_node->data;
             // check if cmd_name is in word_list
-            if (ll_is_string_in_list(word_list, sub_cmd->name)) {
+            sub_cmd->is_present_on_cmdline = ll_is_string_in_list(word_list, sub_cmd->name);
+            if (!sub_cmd->is_present_on_cmdline) {
+                // try harder - examine the aliases
+                sub_cmd->is_present_on_cmdline = ll_is_any_in_list(word_list, sub_cmd->aliases);
+            }
+            if (sub_cmd->is_present_on_cmdline) {
                 // remove the sub_command's siblings
                 linked_list_node_t *candidate_node = sub_cmds->head;
                 while (candidate_node != NULL) {
@@ -56,8 +59,9 @@ bool prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
         while (sub_node != NULL) {
             bool node_deleted = false;
             completion_command_t *sub_cmd = (completion_command_t *)sub_node->data;
-            // if a sub-command is has no children, it has been used and should be pruned
-            if ((sub_cmd->sub_commands != NULL) && (sub_cmd->sub_commands->size == 0)
+            // if a sub-command is present and has no children, it has been used and should be pruned
+            if ((sub_cmd->is_present_on_cmdline)
+                && (sub_cmd->sub_commands != NULL) && (sub_cmd->sub_commands->size == 0)
                 && (sub_cmd->command_args != NULL) && (sub_cmd->command_args->size == 0))
             {
                 linked_list_node_t *next_node = sub_node->next;

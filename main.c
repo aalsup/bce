@@ -7,7 +7,7 @@
 #include <sqlite3.h>
 #include <wordexp.h>
 #include "linked_list.h"
-#include "completion.h"
+#include "completion_model.h"
 #include "completion_input.h"
 #include "error.h"
 #include "prune.h"
@@ -74,7 +74,7 @@ int main() {
     }
 
 #ifdef VERBOSE_OUTPUT
-    printf("\nCommand Tree (Raw from DB)\n");
+    printf("\nCommand Tree (Database)\n");
     print_command_tree(conn, completion_command, 0);
 #endif
 

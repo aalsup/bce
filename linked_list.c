@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int node_id_seq = 1;
+static unsigned long node_id_seq = 1;
 
 linked_list_t* ll_create() {
     linked_list_t* list = malloc(sizeof(linked_list_t));
@@ -90,16 +90,34 @@ linked_list_t *ll_string_to_list(const char *str, const char *delim, size_t max_
 }
 
 bool ll_is_string_in_list(const linked_list_t* list, const char *str) {
-    if ((list != NULL) && (str != NULL)) {
-        size_t len = strlen(str);
-        linked_list_node_t *node = list->head;
-        while (node != NULL) {
-            const char *data = (char *)node->data;
-            if (strncmp(str, data, len) == 0) {
-                return true;
-            }
-            node = node->next;
+    if ((list == NULL) || (str == NULL)) {
+        return false;
+    }
+
+    size_t len = strlen(str);
+    linked_list_node_t *node = list->head;
+    while (node != NULL) {
+        const char *data = (char *)node->data;
+        if (strncmp(str, data, len) == 0) {
+            return true;
         }
+        node = node->next;
+    }
+    return false;
+}
+
+bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* str_list) {
+    if ((search_list == NULL) || (str_list == NULL)) {
+        return false;
+    }
+
+    linked_list_node_t *node = str_list->head;
+    while (node != NULL) {
+        const char *str = (char *)node->data;
+        if (ll_is_string_in_list(search_list, str)) {
+            return true;
+        }
+        node = node->next;
     }
     return false;
 }

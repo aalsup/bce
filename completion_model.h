@@ -3,8 +3,8 @@
 #include <sqlite3.h>
 #include "error.h"
 
-#ifndef COMPLETION_H
-#define COMPLETION_H
+#ifndef COMPLETION_MODEL_H
+#define COMPLETION_MODEL_H
 
 static const int UUID_FIELD_SIZE = 36;
 static const int NAME_FIELD_SIZE = 50;
@@ -15,8 +15,10 @@ typedef struct completion_command_t {
     char uuid[UUID_FIELD_SIZE + 1];
     char name[NAME_FIELD_SIZE + 1];
     char parent_cmd_uuid[UUID_FIELD_SIZE + 1];
+    struct linked_list_t* aliases;
     struct linked_list_t* sub_commands;
     struct linked_list_t* command_args;
+    bool is_present_on_cmdline;
 } completion_command_t;
 
 typedef struct completion_command_arg_t {
@@ -36,7 +38,8 @@ typedef struct completion_command_opt_t {
 
 struct sqlite3* open_database(const char *filename, int *result);
 bool ensure_schema(struct sqlite3 *conn);
-int get_db_command(completion_command_t *dest, struct sqlite3 *conn, const char* command_name);
+int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* command_name);
+int get_db_command_aliases(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_command_args(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_arg);
@@ -48,4 +51,4 @@ void free_completion_command_arg(completion_command_arg_t **pparg);
 void free_completion_command_opt(completion_command_opt_t **ppopt);
 void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, int level);
 
-#endif // COMPLETION_H
+#endif // COMPLETION_MODEL_H

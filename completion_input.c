@@ -1,5 +1,5 @@
 #include "completion_input.h"
-#include "completion.h"
+#include "completion_model.h"
 #include <string.h>
 #include <errno.h>
 

@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 99)
 
 add_executable(auto_complete_c
         main.c
-        completion.h completion.c
+        completion_model.h completion_model.c
         linked_list.h linked_list.c
         completion_input.h completion_input.c
         error.h
