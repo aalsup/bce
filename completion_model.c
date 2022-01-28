@@ -6,21 +6,6 @@
 #include <string.h>
 #include <sqlite3.h>
 
-static const char* ENSURE_SCHEMA_SQL =
-        " WITH table_count (n) AS "
-        " ( "
-        "     SELECT COUNT(name) AS n "
-        "     FROM sqlite_master "
-        "     WHERE type = 'table' "
-        "     AND name IN ('command', 'command_alias', 'command_arg', 'command_opt') "
-        " ) "
-        " SELECT "
-        "     CASE "
-        "         WHEN table_count.n = 4 THEN 1 "
-        "         ELSE 0 "
-        "     END AS pass "
-        " FROM table_count ";
-
 static const char* COMPLETION_COMMAND_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
         " FROM command c "
@@ -80,12 +65,6 @@ sqlite3* open_database(const char *filename, int *result) {
 
     *result = SQLITE_OK;
     return conn;
-}
-
-bool ensure_schema(struct sqlite3 *conn) {
-    char *err_msg = 0;
-    int rc = sqlite3_exec(conn, ENSURE_SCHEMA_SQL, 0, 0, &err_msg);
-    return (rc == SQLITE_OK);
 }
 
 void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, int level) {

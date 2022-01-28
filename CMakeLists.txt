@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
-project(auto_complete_c C)
+project(bash_complete_extension C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(auto_complete_c
+add_executable(bash_complete_extension
         main.c
+        schema.h schema.c
         completion_model.h completion_model.c
         linked_list.h linked_list.c
         completion_input.h completion_input.c
@@ -18,5 +19,5 @@ include_directories(/usr/local/include)
 include_directories(/usr/include)
 
 link_directories(/usr/lib)
-target_link_libraries(auto_complete_c sqlite3)
+target_link_libraries(bash_complete_extension sqlite3)
 

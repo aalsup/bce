@@ -1,12 +1,11 @@
 #define VERBOSE_OUTPUT
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include <sqlite3.h>
 #include <wordexp.h>
 #include "linked_list.h"
+#include "schema.h"
 #include "completion_model.h"
 #include "completion_input.h"
 #include "error.h"
@@ -32,9 +31,11 @@ int main() {
     }
 
     if (!ensure_schema(conn)) {
-        fprintf(stderr, "Invalid database schema\n");
-        err = ERR_DATABASE_SCHEMA;
-        goto done;
+        if (!create_schema(conn, &rc)) {
+            fprintf(stderr, "Unable to create database schema\n");
+            err = ERR_DATABASE_SCHEMA;
+            goto done;
+        }
     }
 
     err = load_completion_input();

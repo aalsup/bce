@@ -37,7 +37,6 @@ typedef struct completion_command_opt_t {
 } completion_command_opt_t;
 
 struct sqlite3* open_database(const char *filename, int *result);
-bool ensure_schema(struct sqlite3 *conn);
 int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* command_name);
 int get_db_command_aliases(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd);

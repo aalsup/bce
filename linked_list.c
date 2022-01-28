@@ -30,13 +30,13 @@ bool ll_destroy(linked_list_t **pplist) {
     return true;
 }
 
-bool ll_append_item(linked_list_t* list, void* data) {
+bool ll_append_item(linked_list_t* list, const void* data) {
     if (list != NULL) {
         // create a new node
         linked_list_node_t *node = malloc(sizeof(linked_list_node_t));
         if (node != NULL) {
             node->id = node_id_seq++;
-            node->data = data;
+            node->data = (void *)data;
             node->next = NULL;
             // find the end of the list
             linked_list_node_t *last = list->head;

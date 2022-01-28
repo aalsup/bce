@@ -10,14 +10,21 @@ CREATE TABLE IF NOT EXISTS command (
 CREATE UNIQUE INDEX command_name_idx
     ON command (name);
 
+CREATE INDEX command_parent_idx
+    ON command (parent_cmd);
+
 CREATE TABLE IF NOT EXISTS command_alias (
     uuid TEXT PRIMARY KEY,
     cmd_uuid TEXT NOT NULL,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid)
 );
 
 CREATE UNIQUE INDEX command_alias_name_idx
     ON command_alias (name);
+
+CREATE INDEX command_alias_cmd_uuid_idx
+    ON command_alias (cmd_uuid);
 
 CREATE TABLE IF NOT EXISTS command_arg (
     uuid TEXT PRIMARY KEY,
@@ -114,10 +121,3 @@ INSERT INTO command_opt
     ('00000000-0000-0000-2222-000000000003', '00000000-0000-0000-1111-000000000001', 'yaml');
 
 COMMIT;
-
-
-SELECT *
-FROM command_opt co
-JOIN command_arg ca ON ca.uuid = co.cmd_arg_uuid
-WHERE ca.long_name = ?
-OR ca.short_name = ?
