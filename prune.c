@@ -3,15 +3,15 @@
 #include "completion_input.h"
 #include "linked_list.h"
 
-bool prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list);
-bool prune_arguments(completion_command_t* cmd, const linked_list_t *word_list);
+void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list);
+void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list);
 
 /*
  * Iterate over the sub-commands and prune any sibling sub-commands.
  */
-bool prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list) {
+void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list) {
     if (cmd == NULL) {
-        return false;
+        return;
     }
 
     // prune the arguments
@@ -74,17 +74,15 @@ bool prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
             }
         }
     }
-
-    return true;
 }
 
 /*
  * Find the arguments related to the current command.
  * Remove any arguments (without options) that have already been used.
  */
-bool prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) {
+void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) {
     if (cmd == NULL) {
-        return false;
+        return;
     }
 
     linked_list_t *args = cmd->command_args;
@@ -135,12 +133,12 @@ bool prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
  * Find the sub-commands and arguments related to the given command.
  * Prune the results based on the current command_line
  */
-bool prune_command(completion_command_t* cmd) {
+void prune_command(completion_command_t* cmd) {
     // build a list of words from the command line
     linked_list_t *word_list = ll_string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
 
     prune_sub_commands(cmd, word_list);
 
     ll_destroy(&word_list);
-    return true;
+    return;
 }
