@@ -23,7 +23,7 @@ int load_completion_input() {
 bool get_command_input(char* dest, size_t bufsize) {
     bool result = false;
     memset(dest, 0, bufsize);
-    linked_list_t *list = ll_string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
+    linked_list_t *list = bash_input_to_list(completion_input.line, MAX_LINE_SIZE);
     if (list != NULL) {
         if (list->head != NULL) {
             char *data = (char *)list->head->data;
@@ -39,7 +39,7 @@ bool get_current_word(char* dest, size_t bufsize) {
     bool result = false;
 
     // build a list of words, up to the current cursor position
-    linked_list_t *list = ll_string_to_list(completion_input.line, " ", completion_input.cursor_pos);
+    linked_list_t *list = bash_input_to_list(completion_input.line, completion_input.cursor_pos);
     if (list != NULL) {
         if (list->size > 0) {
             size_t elem = list->size - 1;
@@ -57,7 +57,7 @@ bool get_previous_word(char* dest, size_t bufsize) {
     bool result = false;
 
     // build a list of words, up to the current cursor position
-    linked_list_t *list = ll_string_to_list(completion_input.line, " ", completion_input.cursor_pos);
+    linked_list_t *list = bash_input_to_list(completion_input.line, completion_input.cursor_pos);
     if (list != NULL) {
         if (list->size > 1) {
             size_t elem = list->size - 2;
@@ -70,3 +70,11 @@ bool get_previous_word(char* dest, size_t bufsize) {
     return result;
 }
 
+linked_list_t* bash_input_to_list(const char *str, const size_t max_len) {
+    // POSIX whitespace characters and equals
+    char delim[] = " \t\r\n\v\f=";
+
+    linked_list_t *list = ll_string_to_list(str, delim, max_len);
+
+    return list;
+}

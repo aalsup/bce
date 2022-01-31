@@ -7,6 +7,20 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
 void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list);
 
 /*
+ * Find the sub-commands and arguments related to the given command.
+ * Prune the results based on the current command_line
+ */
+void prune_command(completion_command_t* cmd) {
+    // build a list of words from the command line
+    linked_list_t *word_list = ll_string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
+
+    prune_sub_commands(cmd, word_list);
+
+    ll_destroy(&word_list);
+    return;
+}
+
+/*
  * Iterate over the sub-commands and prune any sibling sub-commands.
  */
 void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list) {
@@ -129,16 +143,3 @@ void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
     }
 }
 
-/*
- * Find the sub-commands and arguments related to the given command.
- * Prune the results based on the current command_line
- */
-void prune_command(completion_command_t* cmd) {
-    // build a list of words from the command line
-    linked_list_t *word_list = ll_string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
-
-    prune_sub_commands(cmd, word_list);
-
-    ll_destroy(&word_list);
-    return;
-}

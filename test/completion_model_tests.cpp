@@ -1,5 +1,4 @@
 #include "catch.hpp"
-#include <string.h>
 
 extern "C" {
 #include <stdio.h>
