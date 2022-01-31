@@ -55,6 +55,26 @@ INSERT INTO command_arg
 VALUES
     ('00000000-0000-0000-1111-000000000003', '00000000-0000-0000-0000-000000000001', 'TEXT', '--namespace', '-n');
 
+INSERT INTO command_arg
+(uuid, cmd_uuid, cmd_type, long_name, short_name)
+VALUES
+    ('00000000-0000-0000-1111-000000000004', '00000000-0000-0000-0000-000000000001', 'TEXT', '--all-namespaces', '-A');
+
+INSERT INTO command_arg
+(uuid, cmd_uuid, cmd_type, long_name, short_name)
+VALUES
+    ('00000000-0000-0000-1111-000000000005', '00000000-0000-0000-0000-000000000002', 'TEXT', '--kustomize', '-k');
+
+INSERT INTO command_arg
+(uuid, cmd_uuid, cmd_type, long_name, short_name)
+VALUES
+    ('00000000-0000-0000-1111-000000000006', '00000000-0000-0000-0000-000000000002', 'TEXT', '--label-columns', '-L');
+
+INSERT INTO command_arg
+(uuid, cmd_uuid, cmd_type, long_name, short_name)
+VALUES
+    ('00000000-0000-0000-1111-000000000003', '00000000-0000-0000-0000-000000000001', 'TEXT', '--namespace', '-n');
+
 INSERT INTO command_opt
 (uuid, cmd_arg_uuid, name)
 VALUES
