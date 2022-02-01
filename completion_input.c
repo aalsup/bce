@@ -70,6 +70,19 @@ bool get_previous_word(char* dest, size_t bufsize) {
     return result;
 }
 
+/*
+ * TODO: Implement the following logic
+ *
+ * [1] Split on quotes
+ *     beep --boop="/home/robot/fav sounds" -v
+ *     [beep --boop=] [/home/robot/fav sounds] [-v]
+ *     [    false   ] [        true          ] [ f]
+ *
+ * [2] Split on whitespace or equals (where not quoted)
+ *     [beep] [--boop] [/home/robot/fav sounds] [-v]
+ *
+ * TODO: How to handle nested, escaped quotes?
+ */
 linked_list_t* bash_input_to_list(const char *str, const size_t max_len) {
     // POSIX whitespace characters and equals
     char delim[] = " \t\r\n\v\f=";
