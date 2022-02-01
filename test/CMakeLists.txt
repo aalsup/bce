@@ -14,7 +14,7 @@ add_executable(
         completion_input_tests.cpp
         completion_model_tests.cpp
         ../linked_list.c ../linked_list.h
-        ../schema.c ../schema.h
+        ../dbutil.c ../dbutil.h
         ../completion_input.c ../completion_input.h
         ../completion_model.c ../completion_model.h
         ../error.h

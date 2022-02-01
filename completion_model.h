@@ -24,7 +24,8 @@ typedef struct completion_command_t {
 typedef struct completion_command_arg_t {
     char uuid[UUID_FIELD_SIZE + 1];
     char cmd_uuid[UUID_FIELD_SIZE + 1];
-    char cmd_type[CMD_TYPE_FIELD_SIZE + 1];
+    char arg_type[CMD_TYPE_FIELD_SIZE + 1];
+    char description[NAME_FIELD_SIZE + 1];
     char long_name[NAME_FIELD_SIZE + 1];
     char short_name[SHORTNAME_FIELD_SIZE + 1];
     struct linked_list_t* opts;

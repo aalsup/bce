@@ -1,4 +1,4 @@
-#include "schema.h"
+#include "dbutil.h"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -51,7 +51,7 @@ static const char* CREATE_COMPLETION_COMMAND_ARG_SQL =
         " CREATE TABLE IF NOT EXISTS command_arg ( "
         "    uuid TEXT PRIMARY KEY, "
         "    cmd_uuid TEXT NOT NULL, "
-        "    cmd_type TEXT NOT NULL, "
+        "    arg_type TEXT NOT NULL, "
         "    long_name TEXT, "
         "    short_name TEXT, "
         "    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid) "

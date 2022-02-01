@@ -5,7 +5,7 @@
 #include <sqlite3.h>
 #include <wordexp.h>
 #include "linked_list.h"
-#include "schema.h"
+#include "dbutil.h"
 #include "completion_model.h"
 #include "completion_input.h"
 #include "error.h"

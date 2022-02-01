@@ -1,10 +1,19 @@
-PRAGMA journal_mode = 'WAL';
+PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = 1;
+
+-- This value allows us to upgrade determine if the schema needs to be upgraded
+PRAGMA user_version = 1;
+
+DROP TABLE IF EXISTS command_opt;
+DROP TABLE IF EXISTS command_arg;
+DROP TABLE IF EXISTS command_alias;
+DROP TABLE IF EXISTS command;
 
 CREATE TABLE IF NOT EXISTS command (
     uuid TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    parent_cmd TEXT
+    parent_cmd TEXT,
+    FOREIGN KEY(parent_cmd) REFERENCES command(uuid)
 );
 
 CREATE UNIQUE INDEX command_name_idx
@@ -20,23 +29,34 @@ CREATE TABLE IF NOT EXISTS command_alias (
     FOREIGN KEY(cmd_uuid) REFERENCES command(uuid)
 );
 
-CREATE UNIQUE INDEX command_alias_name_idx
+CREATE INDEX command_alias_name_idx
     ON command_alias (name);
 
 CREATE INDEX command_alias_cmd_uuid_idx
     ON command_alias (cmd_uuid);
 
+CREATE UNIQUE INDEX command_alias_cmd_name_idx
+    ON command_alias (cmd_uuid, name);
+
 CREATE TABLE IF NOT EXISTS command_arg (
     uuid TEXT PRIMARY KEY,
     cmd_uuid TEXT NOT NULL,
-    cmd_type TEXT NOT NULL,
+    arg_type TEXT NOT NULL
+        -- valid arg_type values
+        CHECK (arg_type IN ('NONE', 'OPTION', 'FILE', 'TEXT')),
+    description TEXT NOT NULL,
     long_name TEXT,
     short_name TEXT,
-    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid)
+    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid),
+    -- ensure either long_name or short_name has data
+    CHECK ( (long_name IS NOT NULL) OR (short_name IS NOT NULL) )
 );
 
 CREATE INDEX command_arg_cmd_uuid_idx
     ON command_arg (cmd_uuid);
+
+CREATE UNIQUE INDEX command_arg_longname_idx
+    ON command_arg (cmd_uuid, long_name);
 
 CREATE TABLE IF NOT EXISTS command_opt (
     uuid TEXT PRIMARY KEY,
@@ -48,76 +68,5 @@ CREATE TABLE IF NOT EXISTS command_opt (
 CREATE INDEX command_opt_cmd_arg_idx
     ON command_opt (cmd_arg_uuid);
 
-BEGIN TRANSACTION;
-
-INSERT INTO command
-    (uuid, name, parent_cmd)
-    VALUES
-    ('00000000-0000-0000-0000-000000000001', 'kubectl', NULL);
-
-INSERT INTO command
-    (uuid, name, parent_cmd)
-    VALUES
-    ('00000000-0000-0000-0000-000000000002', 'get', '00000000-0000-0000-0000-000000000001');
-
-INSERT INTO command
-    (uuid, name, parent_cmd)
-    VALUES
-    ('00000000-0000-0000-0000-000000000003', 'pods', '00000000-0000-0000-0000-000000000002');
-
-INSERT INTO command
-    (uuid, name, parent_cmd)
-    VALUES
-    ('00000000-0000-0000-0000-000000000004', 'replicasets', '00000000-0000-0000-0000-000000000002');
-
-INSERT INTO command_alias
-    (uuid, cmd_uuid, name)
-    VALUES
-    ('00000000-0000-0000-0003-000000000000', '00000000-0000-0000-0000-000000000003', 'pod');
-
-INSERT INTO command_alias
-    (uuid, cmd_uuid, name)
-    VALUES
-    ('00000000-0000-0000-0003-000000000002', '00000000-0000-0000-0000-000000000003', 'po');
-
-INSERT INTO command_alias
-    (uuid, cmd_uuid, name)
-    VALUES
-    ('00000000-0000-0000-0003-000000000003', '00000000-0000-0000-0000-000000000004', 'replicaset');
-
-INSERT INTO command_alias
-    (uuid, cmd_uuid, name)
-    VALUES
-    ('00000000-0000-0000-0003-000000000004', '00000000-0000-0000-0000-000000000004', 'rs');
-
-INSERT INTO command_arg
-    (uuid, cmd_uuid, cmd_type, long_name, short_name)
-    VALUES
-    ('00000000-0000-0000-1111-000000000001', '00000000-0000-0000-0000-000000000002', 'OPTION', '--output', '-o');
-
-INSERT INTO command_arg
-    (uuid, cmd_uuid, cmd_type, long_name, short_name)
-    VALUES
-    ('00000000-0000-0000-1111-000000000002', '00000000-0000-0000-0000-000000000001', 'FILE', '--file', '-f');
-
-INSERT INTO command_arg
-    (uuid, cmd_uuid, cmd_type, long_name, short_name)
-    VALUES
-    ('00000000-0000-0000-1111-000000000003', '00000000-0000-0000-0000-000000000001', 'TEXT', '--namespace', '-n');
-
-INSERT INTO command_opt
-    (uuid, cmd_arg_uuid, name)
-    VALUES
-    ('00000000-0000-0000-2222-000000000001', '00000000-0000-0000-1111-000000000001', 'json');
-
-INSERT INTO command_opt
-    (uuid, cmd_arg_uuid, name)
-    VALUES
-    ('00000000-0000-0000-2222-000000000002', '00000000-0000-0000-1111-000000000001', 'wide');
-
-INSERT INTO command_opt
-    (uuid, cmd_arg_uuid, name)
-    VALUES
-    ('00000000-0000-0000-2222-000000000003', '00000000-0000-0000-1111-000000000001', 'yaml');
-
-COMMIT;
+CREATE UNIQUE INDEX command_opt_arg_name_idx
+    ON command_opt (cmd_arg_uuid, name);

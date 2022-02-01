@@ -23,7 +23,7 @@ static const char* COMPLETION_SUB_COMMAND_SQL =
         " WHERE c.parent_cmd = ?1 ";
 
 static const char* COMPLETION_COMMAND_ARG_SQL =
-        " SELECT ca.uuid, ca.cmd_uuid, ca.cmd_type, ca.long_name, ca.short_name "
+        " SELECT ca.uuid, ca.cmd_uuid, ca.arg_type, ca.description, ca.long_name, ca.short_name "
         " FROM command_arg ca "
         " JOIN command c ON c.uuid = ca.cmd_uuid "
         " WHERE c.uuid = ?1 ";
@@ -72,7 +72,7 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, i
     for (int i = 0; i < level; i++) {
         printf("  ");
     }
-    printf("command: %s (%s)\n", cmd->name, cmd->uuid);
+    printf("command: %s\n", cmd->name);
 
     if ((cmd->aliases != NULL) && (cmd->aliases->size > 0)) {
         for (int i = 0; i < level; i++) {
@@ -96,7 +96,7 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, i
                 for (int i = 0; i < level; i++) {
                     printf("  ");
                 }
-                printf("  arg: %s (%s)\n", arg->long_name, arg->uuid);
+                printf("  arg: %s (%s): %s\n", arg->long_name, arg->short_name, arg->arg_type);
 
                 // print opts
                 if (arg->opts != NULL) {
@@ -107,7 +107,7 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, i
                             for (int i = 0; i < level; i++) {
                                 printf("  ");
                             }
-                            printf("    opt: %s (%s)\n", opt->name, opt->uuid);
+                            printf("    opt: %s\n", opt->name);
                         }
                         opt_node = opt_node->next;
                     }
@@ -268,17 +268,18 @@ int get_db_command_args(sqlite3 *conn, completion_command_t *parent_cmd) {
         int step = sqlite3_step(stmt);
         while (step == SQLITE_ROW) {
             completion_command_arg_t *arg = create_completion_command_arg();
-            // ca.uuid, ca.cmd_uuid, ca.cmd_type, ca.long_name, ca.short_name
+            // ca.uuid, ca.cmd_uuid, ca.arg_type, ca.long_name, ca.short_name
             strncat(arg->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
             strncat(arg->cmd_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
-            strncat(arg->cmd_type, (const char *) sqlite3_column_text(stmt, 2), CMD_TYPE_FIELD_SIZE);
-            if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) {
-                strncat(arg->long_name, (const char *) sqlite3_column_text(stmt, 3), NAME_FIELD_SIZE);
+            strncat(arg->arg_type, (const char *) sqlite3_column_text(stmt, 2), CMD_TYPE_FIELD_SIZE);
+            strncat(arg->description, (const char *) sqlite3_column_text(stmt, 3), NAME_FIELD_SIZE);
+            if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) {
+                strncat(arg->long_name, (const char *) sqlite3_column_text(stmt, 4), NAME_FIELD_SIZE);
             } else {
                 memset(arg->long_name, 0, NAME_FIELD_SIZE + 1);
             }
-            if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) {
-                strncat(arg->short_name, (const char *) sqlite3_column_text(stmt, 4), SHORTNAME_FIELD_SIZE);
+            if (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) {
+                strncat(arg->short_name, (const char *) sqlite3_column_text(stmt, 5), SHORTNAME_FIELD_SIZE);
             } else {
                 memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
             }
@@ -340,9 +341,10 @@ completion_command_arg_t* create_completion_command_arg() {
     if (arg != NULL) {
         memset(arg->uuid, 0, UUID_FIELD_SIZE + 1);
         memset(arg->cmd_uuid, 0, UUID_FIELD_SIZE + 1);
+        memset(arg->arg_type, 0, CMD_TYPE_FIELD_SIZE + 1);
+        memset(arg->description, 0, NAME_FIELD_SIZE + 1);
         memset(arg->long_name, 0, NAME_FIELD_SIZE + 1);
         memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
-        memset(arg->cmd_type, 0, CMD_TYPE_FIELD_SIZE + 1);
         arg->opts = ll_create();
     }
     return arg;

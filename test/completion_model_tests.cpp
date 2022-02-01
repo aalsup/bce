@@ -3,7 +3,7 @@
 extern "C" {
 #include <stdio.h>
 #include <sqlite3.h>
-#include "../schema.h"
+#include "../dbutil.h"
 #include "../completion_model.h"
 };
 
