@@ -44,7 +44,7 @@ TEST_CASE("LinkedList ops") {
 TEST_CASE("LinkedList destroy") {
     bool retval;
     linked_list_t *list = ll_create();
-    retval = ll_destroy(&list);
+    retval = ll_destroy(&list, NULL);
     CHECK(retval == true);
     CHECK(list == NULL);
 }

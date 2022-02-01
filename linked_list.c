@@ -13,12 +13,16 @@ linked_list_t* ll_create() {
     return list;
 }
 
-bool ll_destroy(linked_list_t **pplist) {
+bool ll_destroy(linked_list_t **pplist, void (*free_data)(void *)) {
     if (pplist != NULL) {
         linked_list_t *list = *pplist;
         linked_list_node_t* node = list->head;
         while (node != NULL) {
-            free(node->data);
+            if (free_data != NULL) {
+                free_data(node->data);
+            } else {
+                free(node->data);
+            }
             node->data = NULL;
             node = node->next;
         }
@@ -122,7 +126,7 @@ bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* st
     return false;
 }
 
-bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
+bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove, void (*free_data)(void *)) {
     bool result = false;
     if (list != NULL) {
         linked_list_node_t *prev_node = NULL;
@@ -130,7 +134,11 @@ bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
         while (node != NULL) {
             if (node->id == node_to_remove->id) {
                 // free the node
-                free(node->data);
+                if (free_data != NULL) {
+                    free_data(&node->data);
+                } else {
+                    free(node->data);
+                }
                 node->data = NULL;
                 // point prev -> next
                 if (prev_node != NULL) {

@@ -371,7 +371,7 @@ void free_completion_command(completion_command_t **ppcmd) {
 
     // free aliases
     linked_list_t *alias_list = cmd->aliases;
-    ll_destroy(&alias_list);
+    ll_destroy(&alias_list, NULL);
 
     // free sub-commands
     linked_list_t *sub_cmd_list = cmd->sub_commands;
@@ -386,7 +386,7 @@ void free_completion_command(completion_command_t **ppcmd) {
             node = next_node;
         }
     }
-    ll_destroy(&sub_cmd_list);
+    ll_destroy(&sub_cmd_list, NULL);
 
     // free command-args
     linked_list_t *arg_list = cmd->command_args;
@@ -401,7 +401,7 @@ void free_completion_command(completion_command_t **ppcmd) {
             node = next_node;
         }
     }
-    ll_destroy(&arg_list);
+    ll_destroy(&arg_list, NULL);
 
     free(cmd);
     *ppcmd = NULL;
@@ -428,7 +428,7 @@ void free_completion_command_arg(completion_command_arg_t **pparg) {
             node = next_node;
         }
     }
-    ll_destroy(&opt_list);
+    ll_destroy(&opt_list, NULL);
 
     free(arg);
     *pparg = NULL;

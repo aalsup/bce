@@ -16,7 +16,7 @@ void prune_command(completion_command_t* cmd) {
 
     prune_sub_commands(cmd, word_list);
 
-    ll_destroy(&word_list);
+    ll_destroy(&word_list, NULL);
     return;
 }
 
@@ -53,7 +53,8 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
                     } else {
                         // remove candidate_node
                         linked_list_node_t *next_node = candidate_node->next;
-                        ll_remove_item(sub_cmds, candidate_node);
+                        void (*free_func)(completion_command_t **) = free_completion_command;
+                        ll_remove_item(sub_cmds, candidate_node, (void *)free_func);
                         candidate_node = next_node;
                     }
                 }
@@ -79,7 +80,8 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
                 && (sub_cmd->command_args != NULL) && (sub_cmd->command_args->size == 0))
             {
                 linked_list_node_t *next_node = sub_node->next;
-                ll_remove_item(sub_cmds, sub_node);
+                void (*free_func)(completion_command_t **) = free_completion_command;
+                ll_remove_item(sub_cmds, sub_node, free_func);
                 sub_node = next_node;
                 node_deleted = true;
             }
@@ -129,7 +131,8 @@ void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
                     }
                     if (should_remove_arg) {
                         linked_list_node_t *next_node = arg_node->next;
-                        ll_remove_item(args, arg_node);
+                        void (*free_func)(completion_command_arg_t **) = free_completion_command_arg;
+                        ll_remove_item(args, arg_node, free_func);
                         arg_node = next_node;
                         arg_removed = true;
                     }
