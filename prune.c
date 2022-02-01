@@ -119,19 +119,19 @@ void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
                         linked_list_node_t *opt_node = opts->head;
                         while (opt_node != NULL) {
                             should_remove_arg = false;
-                            completion_command_opt_t *opt = (completion_command_opt_t *)opt_node->data;
+                            completion_command_opt_t *opt = (completion_command_opt_t *) opt_node->data;
                             if (ll_is_string_in_list(word_list, opt->name)) {
                                 should_remove_arg = true;
                                 break;
                             }
                             opt_node = opt_node->next;
                         }
-                        if (should_remove_arg) {
-                            linked_list_node_t *next_node = arg_node->next;
-                            ll_remove_item(args, arg_node);
-                            arg_node = next_node;
-                            arg_removed = true;
-                        }
+                    }
+                    if (should_remove_arg) {
+                        linked_list_node_t *next_node = arg_node->next;
+                        ll_remove_item(args, arg_node);
+                        arg_node = next_node;
+                        arg_removed = true;
                     }
                 }
             }
