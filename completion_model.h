@@ -28,6 +28,7 @@ typedef struct completion_command_arg_t {
     char description[NAME_FIELD_SIZE + 1];
     char long_name[NAME_FIELD_SIZE + 1];
     char short_name[SHORTNAME_FIELD_SIZE + 1];
+    bool is_present_on_cmdline;
     struct linked_list_t* opts;
 } completion_command_arg_t;
 

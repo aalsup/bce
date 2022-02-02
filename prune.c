@@ -80,8 +80,8 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
                 && (sub_cmd->command_args != NULL) && (sub_cmd->command_args->size == 0))
             {
                 linked_list_node_t *next_node = sub_node->next;
-                void (*free_func)(completion_command_t **) = free_completion_command;
-                ll_remove_item(sub_cmds, sub_node, free_func);
+                //void (*free_func)(completion_command_t **) = free_completion_command;
+                ll_remove_item(sub_cmds, sub_node, NULL);
                 sub_node = next_node;
                 node_deleted = true;
             }
@@ -109,6 +109,7 @@ void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
             completion_command_arg_t *arg = (completion_command_arg_t *)arg_node->data;
             // check if arg_name is in word_list
             if (ll_is_string_in_list(word_list, arg->short_name) || ll_is_string_in_list(word_list, arg->long_name)) {
+                arg->is_present_on_cmdline = true;
                 // check if the arg has options
                 if (arg->opts != NULL) {
                     linked_list_t *opts = arg->opts;
@@ -131,8 +132,8 @@ void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
                     }
                     if (should_remove_arg) {
                         linked_list_node_t *next_node = arg_node->next;
-                        void (*free_func)(completion_command_arg_t **) = free_completion_command_arg;
-                        ll_remove_item(args, arg_node, free_func);
+                        //void (*free_func)(completion_command_arg_t **) = free_completion_command_arg;
+                        ll_remove_item(args, arg_node, NULL);
                         arg_node = next_node;
                         arg_removed = true;
                     }

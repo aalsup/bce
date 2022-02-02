@@ -332,6 +332,7 @@ completion_command_t* create_completion_command() {
         cmd->aliases = ll_create();
         cmd->sub_commands = ll_create();
         cmd->command_args = ll_create();
+        cmd->is_present_on_cmdline = false;
     }
     return cmd;
 }
@@ -345,6 +346,7 @@ completion_command_arg_t* create_completion_command_arg() {
         memset(arg->description, 0, NAME_FIELD_SIZE + 1);
         memset(arg->long_name, 0, NAME_FIELD_SIZE + 1);
         memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
+        arg->is_present_on_cmdline = false;
         arg->opts = ll_create();
     }
     return arg;
