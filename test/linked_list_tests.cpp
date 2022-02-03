@@ -7,14 +7,14 @@ extern "C" {
 };
 
 TEST_CASE("LinkedList create") {
-    linked_list_t *list = ll_create();
+    linked_list_t *list = ll_create(NULL);
     CHECK(list != NULL);
     CHECK(list->size == 0);
     CHECK(list->head == NULL);
 }
 
 TEST_CASE("LinkedList ops") {
-    linked_list_t *list = ll_create();
+    linked_list_t *list = ll_create(NULL);
 
     SECTION("append string") {
         bool retval;
@@ -43,8 +43,8 @@ TEST_CASE("LinkedList ops") {
 
 TEST_CASE("LinkedList destroy") {
     bool retval;
-    linked_list_t *list = ll_create();
-    retval = ll_destroy(&list, NULL);
+    linked_list_t *list = ll_create(NULL);
+    retval = ll_destroy(&list);
     CHECK(retval == true);
     CHECK(list == NULL);
 }

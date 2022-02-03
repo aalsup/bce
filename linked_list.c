@@ -7,22 +7,22 @@ static unsigned long node_id_seq = 1;
 /*
  * Create a new linked list.
  * Allocates dynamic memory for the struct. Caller should use `ll_destroy()` when done.
- * If `free_func` is not NULL, this function will be called to free items from the list.
+ * If `free_node_func` is not NULL, this function will be called to free items from the list.
  */
 linked_list_t* ll_create(void (*free_func)(void *)) {
     linked_list_t* list = malloc(sizeof(linked_list_t));
     if (list != NULL) {
         list->size = 0;
         list->head = NULL;
-        list->free_func = free_func;
+        list->free_node_func = free_func;
     }
     return list;
 }
 
 /*
  * Frees the memory used by the linked list and sets the list pointer = NULL.
- * free_func is a function pointer to perform any custom logic to free each node's data.
- * If free_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
+ * free_node_func is a function pointer to perform any custom logic to free each node's data.
+ * If free_node_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
  */
 bool ll_destroy(linked_list_t **pplist) {
     if (pplist == NULL) {
@@ -36,8 +36,8 @@ bool ll_destroy(linked_list_t **pplist) {
     linked_list_node_t* node = list->head;
     while (node != NULL) {
         // free tbe node's data
-        if (list->free_func != NULL) {
-            list->free_func(&node->data);
+        if (list->free_node_func != NULL) {
+            list->free_node_func(&node->data);
         } else {
             free(node->data);
         }
@@ -176,8 +176,8 @@ bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
     while (node != NULL) {
         if (node->id == node_to_remove->id) {
             // free the node's data
-            if (list->free_func != NULL) {
-                list->free_func(&node->data);
+            if (list->free_node_func != NULL) {
+                list->free_node_func(&node->data);
             } else {
                 free(node->data);
             }

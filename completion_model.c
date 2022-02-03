@@ -150,11 +150,11 @@ int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* 
             } else {
                 memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
             }
-            void (*free_command)(completion_command_t **) = free_completion_command;
-            void (*free_arg)(completion_command_arg_t **) = free_completion_command_arg;
+            ll_free_node_func free_command = (ll_free_node_func) &free_completion_command;
+            ll_free_node_func free_arg = (ll_free_node_func) &free_completion_command_arg;
             cmd->aliases = ll_create(NULL);
-            cmd->sub_commands = ll_create((void *)free_command);
-            cmd->args = ll_create((void *)free_arg);
+            cmd->sub_commands = ll_create(free_command);
+            cmd->args = ll_create(free_arg);
 
             // populate child aliases
             rc = get_db_command_aliases(conn, cmd);
@@ -198,7 +198,6 @@ int get_db_command_aliases(struct sqlite3 *conn, completion_command_t *parent_cm
             step = sqlite3_step(stmt);
         }
     }
-    done:
     sqlite3_finalize(stmt);
 
     return rc;
@@ -258,8 +257,8 @@ int get_db_command_args(sqlite3 *conn, completion_command_t *parent_cmd) {
 
     // ensure cmd->args is fresh
     ll_destroy(&parent_cmd->args);
-    void (*free_arg)(completion_command_arg_t **) = free_completion_command_arg;
-    parent_cmd->args = ll_create((void *)free_arg);
+    ll_free_node_func free_arg = (ll_free_node_func) &free_completion_command_arg;
+    parent_cmd->args = ll_create(free_arg);
 
     char *command_uuid = parent_cmd->uuid;
     sqlite3_stmt *stmt;
@@ -304,8 +303,8 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
 
     // ensure arg->opts is fresh
     ll_destroy(&parent_arg->opts);
-    void (*free_opt)(completion_command_opt_t **) = free_completion_command_opt;
-    parent_arg->opts = ll_create((void *)free_opt);
+    ll_free_node_func free_opt = (ll_free_node_func) &free_completion_command_opt;
+    parent_arg->opts = ll_create(free_opt);
 
     char *arg_uuid = parent_arg->uuid;
     sqlite3_stmt *stmt;
@@ -337,12 +336,12 @@ completion_command_t* create_completion_command() {
         memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
         memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
 
-        void (*free_command)(completion_command_t **) = free_completion_command;
-        void (*free_arg)(completion_command_arg_t **) = free_completion_command_arg;
+        ll_free_node_func free_command = (ll_free_node_func) &free_completion_command;
+        ll_free_node_func free_arg = (ll_free_node_func) &free_completion_command_arg;
 
         cmd->aliases = ll_create(NULL);
-        cmd->sub_commands = ll_create((void *)free_command);
-        cmd->args = ll_create((void *)free_arg);
+        cmd->sub_commands = ll_create(free_command);
+        cmd->args = ll_create(free_arg);
         cmd->is_present_on_cmdline = false;
     }
     return cmd;
@@ -359,8 +358,8 @@ completion_command_arg_t* create_completion_command_arg() {
         memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
         arg->is_present_on_cmdline = false;
 
-        void (*free_opt)(completion_command_opt_t **) = free_completion_command_opt;
-        arg->opts = ll_create((void *)free_opt);
+        ll_free_node_func free_opt = (ll_free_node_func) free_completion_command_opt;
+        arg->opts = ll_create(free_opt);
     }
     return arg;
 }
