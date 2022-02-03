@@ -4,6 +4,10 @@
 
 static unsigned long node_id_seq = 1;
 
+/*
+ * Create a new linked list.
+ * Allocates dynamic memory for the struct. Caller should use `ll_destroy()` when done.
+ */
 linked_list_t* ll_create() {
     linked_list_t* list = malloc(sizeof(linked_list_t));
     if (list != NULL) {
@@ -13,13 +17,18 @@ linked_list_t* ll_create() {
     return list;
 }
 
-bool ll_destroy(linked_list_t **pplist, void (*free_data)(void *)) {
+/*
+ * Frees the memory used by the linked list and sets the list pointer = NULL.
+ * free_func is a function pointer to perform any custom logic to free each node's data.
+ * If free_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
+ */
+bool ll_destroy(linked_list_t **pplist, void (*free_func)(void *)) {
     if (pplist != NULL) {
         linked_list_t *list = *pplist;
         linked_list_node_t* node = list->head;
         while (node != NULL) {
-            if (free_data != NULL) {
-                free_data(node->data);
+            if (free_func != NULL) {
+                free_func(node->data);
             } else {
                 free(node->data);
             }
@@ -34,6 +43,9 @@ bool ll_destroy(linked_list_t **pplist, void (*free_data)(void *)) {
     return true;
 }
 
+/*
+ * Appends a new node to the end of the list.
+ */
 bool ll_append_item(linked_list_t* list, const void* data) {
     if (list != NULL) {
         // create a new node
@@ -59,6 +71,9 @@ bool ll_append_item(linked_list_t* list, const void* data) {
     return false;
 }
 
+/*
+ * Retrieves a particular data item from the list.
+ */
 void* ll_get_nth_item(const linked_list_t* list, size_t elem) {
     if (list == NULL) {
         return NULL;
@@ -76,6 +91,9 @@ void* ll_get_nth_item(const linked_list_t* list, size_t elem) {
     return node->data;
 }
 
+/*
+ * Creates a new linked list from the provided string.
+ */
 linked_list_t *ll_string_to_list(const char *str, const char *delim, size_t max_len) {
     linked_list_t *list = ll_create();
 
@@ -93,6 +111,9 @@ linked_list_t *ll_string_to_list(const char *str, const char *delim, size_t max_
     return list;
 }
 
+/*
+ * Iterate over the items in a list, searching for a particular string.
+ */
 bool ll_is_string_in_list(const linked_list_t* list, const char *str) {
     if ((list == NULL) || (str == NULL)) {
         return false;
@@ -110,6 +131,9 @@ bool ll_is_string_in_list(const linked_list_t* list, const char *str) {
     return false;
 }
 
+/*
+ * Iterate over a list searching for any matching string from the 2nd list
+ */
 bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* str_list) {
     if ((search_list == NULL) || (str_list == NULL)) {
         return false;
@@ -126,6 +150,11 @@ bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* st
     return false;
 }
 
+/*
+ * Removes a particular node from the list.
+ * free_func is a function pointer to perform any custom logic to free the node's data.
+ * If free_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
+ */
 bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove, void (*free_func)(void *)) {
     bool result = false;
     if (list != NULL) {
