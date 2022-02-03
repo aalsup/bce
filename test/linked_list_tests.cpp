@@ -1,6 +1,5 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
-#include <string.h>
 
 extern "C" {
 #include "../linked_list.h"
@@ -44,6 +43,11 @@ TEST_CASE("LinkedList ops") {
 TEST_CASE("LinkedList destroy") {
     bool retval;
     linked_list_t *list = ll_create(NULL);
+    // allocate a dynamic variable
+    char *data = (char *)calloc(10, sizeof(char));
+    strcat(data, "yada yada");
+    ll_append_item(list, data);
+    CHECK(list->size == 1);
     retval = ll_destroy(&list);
     CHECK(retval == true);
     CHECK(list == NULL);
