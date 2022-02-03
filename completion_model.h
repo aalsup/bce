@@ -17,7 +17,7 @@ typedef struct completion_command_t {
     char parent_cmd_uuid[UUID_FIELD_SIZE + 1];
     struct linked_list_t* aliases;
     struct linked_list_t* sub_commands;
-    struct linked_list_t* command_args;
+    struct linked_list_t* args;
     bool is_present_on_cmdline;
 } completion_command_t;
 

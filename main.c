@@ -89,10 +89,10 @@ int main() {
     print_command_tree(conn, completion_command, 0);
 #endif
 
-    linked_list_t *recommendation_list = ll_create();
+    linked_list_t *recommendation_list = ll_create(NULL);
     collect_recommendations(recommendation_list, completion_command);
     print_recommendations(recommendation_list);
-    ll_destroy(&recommendation_list, NULL);
+    ll_destroy(&recommendation_list);
 
     done:
     free_completion_command(&completion_command);
@@ -145,7 +145,7 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
     }
 
     // collect all the args
-    linked_list_t *arg_list = cmd->command_args;
+    linked_list_t *arg_list = cmd->args;
     if (arg_list != NULL) {
         linked_list_node_t *arg_node = arg_list->head;
         while (arg_node != NULL) {

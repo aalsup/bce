@@ -88,8 +88,8 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, i
         printf("\n");
     }
 
-    if (cmd->command_args != NULL) {
-        linked_list_node_t *arg_node = cmd->command_args->head;
+    if (cmd->args != NULL) {
+        linked_list_node_t *arg_node = cmd->args->head;
         while (arg_node != NULL) {
             completion_command_arg_t *arg = (completion_command_arg_t *)arg_node->data;
             if (arg != NULL) {
@@ -133,7 +133,7 @@ int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* 
     memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
     cmd->aliases = NULL;
     cmd->sub_commands = NULL;
-    cmd->command_args = NULL;
+    cmd->args = NULL;
 
     sqlite3_stmt *stmt;
     // try to find the command by name
@@ -150,9 +150,11 @@ int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* 
             } else {
                 memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
             }
-            cmd->aliases = ll_create();
-            cmd->sub_commands = ll_create();
-            cmd->command_args = ll_create();
+            void (*free_command)(completion_command_t **) = free_completion_command;
+            void (*free_arg)(completion_command_arg_t **) = free_completion_command_arg;
+            cmd->aliases = ll_create(NULL);
+            cmd->sub_commands = ll_create((void *)free_command);
+            cmd->args = ll_create((void *)free_arg);
 
             // populate child aliases
             rc = get_db_command_aliases(conn, cmd);
@@ -218,9 +220,6 @@ int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd) 
             } else {
                 memset(sub_cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
             }
-            sub_cmd->aliases = ll_create();
-            sub_cmd->sub_commands = ll_create();
-            sub_cmd->command_args = ll_create();
 
             // populate child aliases
             rc = get_db_command_aliases(conn, sub_cmd);
@@ -257,7 +256,10 @@ int get_db_command_args(sqlite3 *conn, completion_command_t *parent_cmd) {
         return -1;
     }
 
-    parent_cmd->command_args = ll_create();
+    // ensure cmd->args is fresh
+    ll_destroy(&parent_cmd->args);
+    void (*free_arg)(completion_command_arg_t **) = free_completion_command_arg;
+    parent_cmd->args = ll_create((void *)free_arg);
 
     char *command_uuid = parent_cmd->uuid;
     sqlite3_stmt *stmt;
@@ -285,7 +287,7 @@ int get_db_command_args(sqlite3 *conn, completion_command_t *parent_cmd) {
             }
             rc = get_db_command_opts(conn, arg);
 
-            ll_append_item(parent_cmd->command_args, arg);
+            ll_append_item(parent_cmd->args, arg);
 
             step = sqlite3_step(stmt);
         }
@@ -299,6 +301,11 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
     if (parent_arg == NULL) {
         return -1;
     }
+
+    // ensure arg->opts is fresh
+    ll_destroy(&parent_arg->opts);
+    void (*free_opt)(completion_command_opt_t **) = free_completion_command_opt;
+    parent_arg->opts = ll_create((void *)free_opt);
 
     char *arg_uuid = parent_arg->uuid;
     sqlite3_stmt *stmt;
@@ -329,9 +336,13 @@ completion_command_t* create_completion_command() {
         memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
         memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
         memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
-        cmd->aliases = ll_create();
-        cmd->sub_commands = ll_create();
-        cmd->command_args = ll_create();
+
+        void (*free_command)(completion_command_t **) = free_completion_command;
+        void (*free_arg)(completion_command_arg_t **) = free_completion_command_arg;
+
+        cmd->aliases = ll_create(NULL);
+        cmd->sub_commands = ll_create((void *)free_command);
+        cmd->args = ll_create((void *)free_arg);
         cmd->is_present_on_cmdline = false;
     }
     return cmd;
@@ -347,7 +358,9 @@ completion_command_arg_t* create_completion_command_arg() {
         memset(arg->long_name, 0, NAME_FIELD_SIZE + 1);
         memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
         arg->is_present_on_cmdline = false;
-        arg->opts = ll_create();
+
+        void (*free_opt)(completion_command_opt_t **) = free_completion_command_opt;
+        arg->opts = ll_create((void *)free_opt);
     }
     return arg;
 }
@@ -371,39 +384,10 @@ void free_completion_command(completion_command_t **ppcmd) {
         return;
     }
 
-    // free aliases
-    linked_list_t *alias_list = cmd->aliases;
-    ll_destroy(&alias_list, NULL);
-
-    // free sub-commands
-    linked_list_t *sub_cmd_list = cmd->sub_commands;
-    if (sub_cmd_list != NULL) {
-        linked_list_node_t *node = (linked_list_node_t *)sub_cmd_list->head;
-        while (node != NULL) {
-            completion_command_t *sub_cmd = (completion_command_t *)node->data;
-            free_completion_command(&sub_cmd);
-            linked_list_node_t *next_node = node->next;
-            node->data = NULL;
-            node->next = NULL;
-            node = next_node;
-        }
-    }
-    ll_destroy(&sub_cmd_list, NULL);
-
-    // free command-args
-    linked_list_t *arg_list = cmd->command_args;
-    if (arg_list != NULL) {
-        linked_list_node_t *node = (linked_list_node_t *)arg_list->head;
-        while (node != NULL) {
-            completion_command_arg_t *arg = (completion_command_arg_t *)node->data;
-            free_completion_command_arg(&arg);
-            linked_list_node_t *next_node = node->next;
-            node->data = NULL;
-            node->next = NULL;
-            node = next_node;
-        }
-    }
-    ll_destroy(&arg_list, NULL);
+    // free dynamic internals
+    ll_destroy(&cmd->aliases);
+    ll_destroy(&cmd->sub_commands);
+    ll_destroy(&cmd->args);
 
     free(cmd);
     *ppcmd = NULL;
@@ -418,19 +402,7 @@ void free_completion_command_arg(completion_command_arg_t **pparg) {
         return;
     }
 
-    linked_list_t *opt_list = arg->opts;
-    if (opt_list != NULL) {
-        linked_list_node_t *node = (linked_list_node_t *)opt_list->head;
-        while (node != NULL) {
-            completion_command_opt_t *opt = (completion_command_opt_t *)node->data;
-            free_completion_command_opt(&opt);
-            linked_list_node_t *next_node = node->next;
-            node->data = NULL;
-            node->next = NULL;
-            node = next_node;
-        }
-    }
-    ll_destroy(&opt_list, NULL);
+    ll_destroy(&arg->opts);
 
     free(arg);
     *pparg = NULL;

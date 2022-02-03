@@ -7,12 +7,14 @@ static unsigned long node_id_seq = 1;
 /*
  * Create a new linked list.
  * Allocates dynamic memory for the struct. Caller should use `ll_destroy()` when done.
+ * If `free_func` is not NULL, this function will be called to free items from the list.
  */
-linked_list_t* ll_create() {
+linked_list_t* ll_create(void (*free_func)(void *)) {
     linked_list_t* list = malloc(sizeof(linked_list_t));
     if (list != NULL) {
         list->size = 0;
         list->head = NULL;
+        list->free_func = free_func;
     }
     return list;
 }
@@ -22,24 +24,35 @@ linked_list_t* ll_create() {
  * free_func is a function pointer to perform any custom logic to free each node's data.
  * If free_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
  */
-bool ll_destroy(linked_list_t **pplist, void (*free_func)(void *)) {
-    if (pplist != NULL) {
-        linked_list_t *list = *pplist;
-        linked_list_node_t* node = list->head;
-        while (node != NULL) {
-            if (free_func != NULL) {
-                free_func(node->data);
-            } else {
-                free(node->data);
-            }
-            node->data = NULL;
-            node = node->next;
-        }
-        list->head = NULL;
-        list->size = 0;
-        free(list);
-        *pplist = NULL;
+bool ll_destroy(linked_list_t **pplist) {
+    if (pplist == NULL) {
+        return true;
     }
+    linked_list_t *list = *pplist;
+    if (list == NULL) {
+        return true;
+    }
+
+    linked_list_node_t* node = list->head;
+    while (node != NULL) {
+        // free tbe node's data
+        if (list->free_func != NULL) {
+            list->free_func(&node->data);
+        } else {
+            free(node->data);
+        }
+        node->data = NULL;
+        // store the next node
+        linked_list_node_t* next_node = node->next;
+        // free the node
+        free(node);
+        // point to next
+        node = next_node;
+    }
+    list->head = NULL;
+    list->size = 0;
+    free(list);
+    *pplist = NULL;
     return true;
 }
 
@@ -95,7 +108,7 @@ void* ll_get_nth_item(const linked_list_t* list, size_t elem) {
  * Creates a new linked list from the provided string.
  */
 linked_list_t *ll_string_to_list(const char *str, const char *delim, size_t max_len) {
-    linked_list_t *list = ll_create();
+    linked_list_t *list = ll_create(NULL);
 
     char search_str[max_len + 1];
     memset(search_str, 0, max_len + 1);
@@ -152,41 +165,40 @@ bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* st
 
 /*
  * Removes a particular node from the list.
- * free_func is a function pointer to perform any custom logic to free the node's data.
- * If free_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
  */
-bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove, void (*free_func)(void *)) {
+bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
+    if ((list == NULL) || (node_to_remove == NULL)) {
+        return false;
+    }
     bool result = false;
-    if (list != NULL) {
-        linked_list_node_t *prev_node = NULL;
-        linked_list_node_t *node = list->head;
-        while (node != NULL) {
-            if (node->id == node_to_remove->id) {
-                // free the node's data
-                if (free_func != NULL) {
-                    free_func(&node->data);
-                } else {
-                    free(node->data);
-                }
-                node->data = NULL;
-                // point prev -> next
-                if (prev_node != NULL) {
-                    // remove node from middle
-                    prev_node->next = node->next;
-                } else {
-                    // remove node from head
-                    list->head = node->next;
-                }
-                // free the node
-                free(node);
-                node = NULL;
-                list->size--;
-                result = true;
-                break;
+    linked_list_node_t *prev_node = NULL;
+    linked_list_node_t *node = list->head;
+    while (node != NULL) {
+        if (node->id == node_to_remove->id) {
+            // free the node's data
+            if (list->free_func != NULL) {
+                list->free_func(&node->data);
+            } else {
+                free(node->data);
             }
-            prev_node = node;
-            node = node->next;
+            node->data = NULL;
+            // point prev -> next
+            if (prev_node != NULL) {
+                // remove node from middle
+                prev_node->next = node->next;
+            } else {
+                // remove node from head
+                list->head = node->next;
+            }
+            // free the node
+            free(node);
+            node = NULL;
+            list->size--;
+            result = true;
+            break;
         }
+        prev_node = node;
+        node = node->next;
     }
     return result;
 }
