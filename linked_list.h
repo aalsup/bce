@@ -18,7 +18,7 @@ typedef struct linked_list_t {
 void (*ll_free_data)(void *);
 
 linked_list_t* ll_create();
-bool ll_destroy(linked_list_t **list, void (*free_data)(void *));
+bool ll_destroy(linked_list_t **list, void (*free_func)(void *));
 bool ll_append_item(linked_list_t *list, const void *data);
 bool ll_remove_item(linked_list_t *list, linked_list_node_t *node, void (*free_func)(void *));
 void* ll_get_nth_item(const linked_list_t* list, size_t elem);

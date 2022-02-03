@@ -126,16 +126,16 @@ bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* st
     return false;
 }
 
-bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove, void (*free_data)(void *)) {
+bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove, void (*free_func)(void *)) {
     bool result = false;
     if (list != NULL) {
         linked_list_node_t *prev_node = NULL;
         linked_list_node_t *node = list->head;
         while (node != NULL) {
             if (node->id == node_to_remove->id) {
-                // free the node
-                if (free_data != NULL) {
-                    free_data(&node->data);
+                // free the node's data
+                if (free_func != NULL) {
+                    free_func(&node->data);
                 } else {
                     free(node->data);
                 }
@@ -148,6 +148,9 @@ bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove, voi
                     // remove node from head
                     list->head = node->next;
                 }
+                // free the node
+                free(node);
+                node = NULL;
                 list->size--;
                 result = true;
                 break;
