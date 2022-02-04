@@ -74,7 +74,7 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, c
     }
     printf("command: %s\n", cmd->name);
 
-    if ((cmd->aliases != NULL) && (cmd->aliases->size > 0)) {
+    if (cmd->aliases && (cmd->aliases->size > 0)) {
         for (int i = 0; i < level; i++) {
             printf("  ");
         }
@@ -88,22 +88,22 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, c
         printf("\n");
     }
 
-    if (cmd->args != NULL) {
+    if (cmd->args) {
         linked_list_node_t *arg_node = cmd->args->head;
-        while (arg_node != NULL) {
+        while (arg_node) {
             completion_command_arg_t *arg = (completion_command_arg_t *)arg_node->data;
-            if (arg != NULL) {
+            if (arg) {
                 for (int i = 0; i < level; i++) {
                     printf("  ");
                 }
                 printf("  arg: %s (%s): %s\n", arg->long_name, arg->short_name, arg->arg_type);
 
                 // print opts
-                if (arg->opts != NULL) {
+                if (arg->opts) {
                     linked_list_node_t *opt_node = arg->opts->head;
-                    while (opt_node != NULL) {
+                    while (opt_node) {
                         completion_command_opt_t *opt = (completion_command_opt_t *)opt_node->data;
-                        if (opt != NULL) {
+                        if (opt) {
                             for (int i = 0; i < level; i++) {
                                 printf("  ");
                             }
@@ -117,9 +117,9 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, c
         }
     }
 
-    if (cmd->sub_commands != NULL) {
+    if (cmd->sub_commands) {
         linked_list_node_t *node = cmd->sub_commands->head;
-        while (node != NULL) {
+        while (node) {
             completion_command_t *sub_cmd = (completion_command_t *) node->data;
             print_command_tree(conn, sub_cmd, level + 1);
             node = node->next;
@@ -331,7 +331,7 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
 
 completion_command_t* create_completion_command() {
     completion_command_t *cmd = malloc(sizeof(completion_command_t));
-    if (cmd != NULL) {
+    if (cmd) {
         memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
         memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
         memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
@@ -349,7 +349,7 @@ completion_command_t* create_completion_command() {
 
 completion_command_arg_t* create_completion_command_arg() {
     completion_command_arg_t *arg = malloc(sizeof(completion_command_arg_t));
-    if (arg != NULL) {
+    if (arg) {
         memset(arg->uuid, 0, UUID_FIELD_SIZE + 1);
         memset(arg->cmd_uuid, 0, UUID_FIELD_SIZE + 1);
         memset(arg->arg_type, 0, CMD_TYPE_FIELD_SIZE + 1);
@@ -366,7 +366,7 @@ completion_command_arg_t* create_completion_command_arg() {
 
 completion_command_opt_t* create_completion_command_opt() {
     completion_command_opt_t *opt = malloc(sizeof(completion_command_opt_t));
-    if (opt != NULL) {
+    if (opt) {
         memset(opt->uuid, 0, UUID_FIELD_SIZE + 1);
         memset(opt->name, 0, NAME_FIELD_SIZE + 1);
         memset(opt->cmd_arg_uuid, 0, UUID_FIELD_SIZE + 1);
@@ -375,11 +375,11 @@ completion_command_opt_t* create_completion_command_opt() {
 }
 
 void free_completion_command(completion_command_t **ppcmd) {
-    if (ppcmd == NULL) {
+    if (!ppcmd) {
         return;
     }
     completion_command_t *cmd = *ppcmd;
-    if (cmd == NULL) {
+    if (!cmd) {
         return;
     }
 
@@ -393,11 +393,11 @@ void free_completion_command(completion_command_t **ppcmd) {
 }
 
 void free_completion_command_arg(completion_command_arg_t **pparg) {
-    if (pparg == NULL) {
+    if (!pparg) {
         return;
     }
     completion_command_arg_t *arg = *pparg;
-    if (arg == NULL) {
+    if (!arg) {
         return;
     }
 
@@ -408,11 +408,11 @@ void free_completion_command_arg(completion_command_arg_t **pparg) {
 }
 
 void free_completion_command_opt(completion_command_opt_t **ppopt) {
-    if (ppopt == NULL) {
+    if (!ppopt) {
         return;
     }
     completion_command_opt_t *opt = *ppopt;
-    if (opt == NULL) {
+    if (!opt) {
         return;
     }
 
@@ -421,6 +421,3 @@ void free_completion_command_opt(completion_command_opt_t **ppopt) {
     free(opt);
     *ppopt = NULL;
 }
-
-
-

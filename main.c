@@ -42,7 +42,7 @@ int main() {
     }
 
     err = load_completion_input();
-    if (err != 0) {
+    if (err) {
         switch (err) {
             case ERR_MISSING_ENV_COMP_LINE:
                 fprintf(stderr, "No %s env var\n", BASH_LINE_VAR);
@@ -104,24 +104,24 @@ int main() {
 // TODO: prioritize recommendations, bubble up most relevant to earlier in the list.
 // For example: `kubectl get pods <tab>` should show args/opts for `pods`, then `get`, and finally `kubectl`
 void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd) {
-    if (cmd == NULL) {
+    if (!cmd) {
         return;
     }
 
     // collect all the sub-commands
     linked_list_t *sub_cmd_list = cmd->sub_commands;
-    if (sub_cmd_list != NULL) {
+    if (sub_cmd_list) {
         linked_list_node_t *sub_cmd_node = sub_cmd_list->head;
-        while (sub_cmd_node != NULL) {
+        while (sub_cmd_node) {
             completion_command_t *sub_cmd = (completion_command_t *) sub_cmd_node->data;
-            if ((sub_cmd != NULL) && (!sub_cmd->is_present_on_cmdline)) {
+            if (sub_cmd && !sub_cmd->is_present_on_cmdline) {
                 char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
                 strncat(data, sub_cmd->name, NAME_FIELD_SIZE);
-                if (sub_cmd->aliases != NULL) {
+                if (sub_cmd->aliases) {
                     char *shortest = NULL;
                     linked_list_node_t *alias_node = sub_cmd->aliases->head;
-                    while (alias_node != NULL) {
-                        if (shortest == NULL) {
+                    while (alias_node) {
+                        if (!shortest) {
                             shortest = alias_node->data;
                         } else {
                             if (strlen(alias_node->data) < strlen(shortest)) {
@@ -131,7 +131,7 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
                         alias_node = alias_node->next;
                     }
                     // show the shortest alias
-                    if (shortest != NULL) {
+                    if (shortest) {
                         strcat(data, " (");
                         strncat(data, shortest, NAME_FIELD_SIZE);
                         strcat(data, ")");
@@ -146,11 +146,11 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
 
     // collect all the args
     linked_list_t *arg_list = cmd->args;
-    if (arg_list != NULL) {
+    if (arg_list) {
         linked_list_node_t *arg_node = arg_list->head;
-        while (arg_node != NULL) {
+        while (arg_node) {
             completion_command_arg_t *arg = (completion_command_arg_t *) arg_node->data;
-            if (arg != NULL) {
+            if (arg) {
                 if (!arg->is_present_on_cmdline) {
                     char *arg_str = calloc(MAX_LINE_SIZE, sizeof(char));
                     if (strlen(arg->long_name) > 0) {
@@ -167,11 +167,11 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
                 } else {
                     // collect all the options
                     linked_list_t *opt_list = arg->opts;
-                    if (opt_list != NULL) {
+                    if (opt_list) {
                         linked_list_node_t *opt_node = opt_list->head;
-                        while (opt_node != NULL) {
+                        while (opt_node) {
                             completion_command_opt_t *opt = (completion_command_opt_t *) opt_node->data;
-                            if (opt != NULL) {
+                            if (opt) {
                                 char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
                                 strncat(data, opt->name, NAME_FIELD_SIZE);
                                 ll_append_item(recommendation_list, data);
@@ -187,14 +187,13 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
 }
 
 void print_recommendations(linked_list_t *recommendation_list) {
-    if (recommendation_list == NULL) {
+    if (!recommendation_list) {
         return;
     }
 
     linked_list_node_t* node = recommendation_list->head;
-    while (node != NULL) {
+    while (node) {
         printf("%s\n", (char *)node->data);
         node = node->next;
     }
-
 }

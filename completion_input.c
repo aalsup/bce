@@ -5,11 +5,11 @@
 
 int load_completion_input() {
     const char* line = getenv(BASH_LINE_VAR);
-    if (line == NULL || strlen(line) == 0) {
+    if (!line || strlen(line) == 0) {
         return(ERR_MISSING_ENV_COMP_LINE);
     }
     const char* str_cursor_pos = getenv(BASH_CURSOR_VAR);
-    if (str_cursor_pos == NULL || strlen(str_cursor_pos) == 0) {
+    if (!str_cursor_pos || strlen(str_cursor_pos) == 0) {
         return(ERR_MISSING_ENV_COMP_POINT);
     }
     strncat(completion_input.line, line, MAX_LINE_SIZE);
@@ -24,8 +24,8 @@ bool get_command_input(char* dest, size_t bufsize) {
     bool result = false;
     memset(dest, 0, bufsize);
     linked_list_t *list = bash_input_to_list(completion_input.line, MAX_LINE_SIZE);
-    if (list != NULL) {
-        if (list->head != NULL) {
+    if (list) {
+        if (list->head) {
             char *data = (char *)list->head->data;
             strncat(dest, data, bufsize);
             result = true;
@@ -40,7 +40,7 @@ bool get_current_word(char* dest, size_t bufsize) {
 
     // build a list of words, up to the current cursor position
     linked_list_t *list = bash_input_to_list(completion_input.line, completion_input.cursor_pos);
-    if (list != NULL) {
+    if (list) {
         if (list->size > 0) {
             size_t elem = list->size - 1;
             char *data = (char *) ll_get_nth_item(list, elem);
@@ -58,7 +58,7 @@ bool get_previous_word(char* dest, size_t bufsize) {
 
     // build a list of words, up to the current cursor position
     linked_list_t *list = bash_input_to_list(completion_input.line, completion_input.cursor_pos);
-    if (list != NULL) {
+    if (list) {
         if (list->size > 1) {
             size_t elem = list->size - 2;
             char *data = (char *) ll_get_nth_item(list, elem);

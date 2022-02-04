@@ -11,7 +11,7 @@ static unsigned long node_id_seq = 1;
  */
 linked_list_t* ll_create(void (*free_func)(void *)) {
     linked_list_t* list = malloc(sizeof(linked_list_t));
-    if (list != NULL) {
+    if (list) {
         list->size = 0;
         list->head = NULL;
         list->free_node_func = free_func;
@@ -25,18 +25,18 @@ linked_list_t* ll_create(void (*free_func)(void *)) {
  * If free_node_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
  */
 void ll_destroy(linked_list_t **pplist) {
-    if (pplist == NULL) {
+    if (!pplist) {
         return;
     }
     linked_list_t *list = *pplist;
-    if (list == NULL) {
+    if (!list) {
         return;
     }
 
     linked_list_node_t* node = list->head;
-    while (node != NULL) {
+    while (node) {
         // free tbe node's data
-        if (list->free_node_func != NULL) {
+        if (list->free_node_func) {
             list->free_node_func(&node->data);
         } else {
             free(node->data);
@@ -59,19 +59,19 @@ void ll_destroy(linked_list_t **pplist) {
  * Appends a new node to the end of the list.
  */
 bool ll_append_item(linked_list_t* list, const void* data) {
-    if (list != NULL) {
+    if (list) {
         // create a new node
         linked_list_node_t *node = malloc(sizeof(linked_list_node_t));
-        if (node != NULL) {
+        if (node) {
             node->id = node_id_seq++;
             node->data = (void *)data;
             node->next = NULL;
             // find the end of the list
             linked_list_node_t *last = list->head;
-            if (last == NULL) {
+            if (!last) {
                 list->head = node;
             } else {
-                while (last->next != NULL) {
+                while (last->next) {
                     last = last->next;
                 }
                 last->next = node;
@@ -87,7 +87,7 @@ bool ll_append_item(linked_list_t* list, const void* data) {
  * Retrieves a particular data item from the list.
  */
 void* ll_get_nth_item(const linked_list_t* list, size_t elem) {
-    if (list == NULL) {
+    if (!list) {
         return NULL;
     }
     if (elem < 0) {
@@ -113,7 +113,7 @@ linked_list_t *ll_string_to_list(const char *str, const char *delim, size_t max_
     memset(search_str, 0, max_len + 1);
     strncat(search_str, str, max_len);
     char *tok = strtok(search_str, delim);
-    while (tok != NULL) {
+    while (tok) {
         char *data = calloc(strlen(tok) + 1, sizeof(char));
         strncat(data, tok, strlen(tok));
         ll_append_item(list, data);
@@ -127,13 +127,13 @@ linked_list_t *ll_string_to_list(const char *str, const char *delim, size_t max_
  * Iterate over the items in a list, searching for a particular string.
  */
 bool ll_is_string_in_list(const linked_list_t* list, const char *str) {
-    if ((list == NULL) || (str == NULL)) {
+    if (!list || !str) {
         return false;
     }
 
     size_t len = strlen(str);
     linked_list_node_t *node = list->head;
-    while (node != NULL) {
+    while (node) {
         const char *data = (char *)node->data;
         if (strncmp(str, data, len) == 0) {
             return true;
@@ -147,12 +147,12 @@ bool ll_is_string_in_list(const linked_list_t* list, const char *str) {
  * Iterate over a list searching for any matching string from the 2nd list
  */
 bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* str_list) {
-    if ((search_list == NULL) || (str_list == NULL)) {
+    if (!search_list || !str_list) {
         return false;
     }
 
     linked_list_node_t *node = str_list->head;
-    while (node != NULL) {
+    while (node) {
         const char *str = (char *)node->data;
         if (ll_is_string_in_list(search_list, str)) {
             return true;
@@ -166,23 +166,23 @@ bool ll_is_any_in_list(const linked_list_t* search_list, const linked_list_t* st
  * Removes a particular node from the list.
  */
 bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
-    if ((list == NULL) || (node_to_remove == NULL)) {
+    if (!list || !node_to_remove) {
         return false;
     }
     bool result = false;
     linked_list_node_t *prev_node = NULL;
     linked_list_node_t *node = list->head;
-    while (node != NULL) {
+    while (node) {
         if (node->id == node_to_remove->id) {
             // free the node's data
-            if (list->free_node_func != NULL) {
+            if (list->free_node_func) {
                 list->free_node_func(&node->data);
             } else {
                 free(node->data);
             }
             node->data = NULL;
             // point prev -> next
-            if (prev_node != NULL) {
+            if (prev_node) {
                 // remove node from middle
                 prev_node->next = node->next;
             } else {
@@ -201,4 +201,3 @@ bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
     }
     return result;
 }
-
