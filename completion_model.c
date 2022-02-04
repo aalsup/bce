@@ -67,7 +67,7 @@ sqlite3* open_database(const char *filename, int *result) {
     return conn;
 }
 
-void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, int level) {
+void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, const int level) {
     // indent
     for (int i = 0; i < level; i++) {
         printf("  ");

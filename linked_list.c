@@ -24,13 +24,13 @@ linked_list_t* ll_create(void (*free_func)(void *)) {
  * free_node_func is a function pointer to perform any custom logic to free each node's data.
  * If free_node_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
  */
-bool ll_destroy(linked_list_t **pplist) {
+void ll_destroy(linked_list_t **pplist) {
     if (pplist == NULL) {
-        return true;
+        return;
     }
     linked_list_t *list = *pplist;
     if (list == NULL) {
-        return true;
+        return;
     }
 
     linked_list_node_t* node = list->head;
@@ -53,7 +53,6 @@ bool ll_destroy(linked_list_t **pplist) {
     list->size = 0;
     free(list);
     *pplist = NULL;
-    return true;
 }
 
 /*

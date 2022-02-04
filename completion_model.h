@@ -50,6 +50,6 @@ completion_command_opt_t* create_completion_command_opt();
 void free_completion_command(completion_command_t **ppcmd);
 void free_completion_command_arg(completion_command_arg_t **pparg);
 void free_completion_command_opt(completion_command_opt_t **ppopt);
-void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, int level);
+void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, const int level);
 
 #endif // COMPLETION_MODEL_H
