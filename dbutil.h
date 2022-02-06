@@ -4,8 +4,9 @@
 #include <stdbool.h>
 #include <sqlite3.h>
 
-// TODO: migrate old to new schema, using `PRAGMA user_version`
+static const int SCHEMA_VERSION = 1;
 
+int get_schema_version(struct sqlite3 *conn);
 bool ensure_schema(struct sqlite3 *conn);
 bool create_schema(struct sqlite3 *conn, int *result);
 bool read_file_into_buffer(const char *filename, char **ppbuffer);

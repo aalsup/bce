@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(bash_complete_extension C)
-
+project(bash_complete_extension LANGUAGES C VERSION 1.0)
 set(CMAKE_C_STANDARD 99)
 
 add_executable(bash_complete_extension

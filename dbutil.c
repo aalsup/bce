@@ -5,6 +5,9 @@
 #include <sqlite3.h>
 #include "error.h"
 
+static const char* SCHEMA_VERSION_SQL =
+        " PRAGMA user_version ";
+
 static const char* ENSURE_SCHEMA_SQL =
         " WITH table_count (n) AS "
         " ( "
@@ -71,10 +74,18 @@ static const char* CREATE_COMPLETION_COMMAND_OPT_SQL =
         " CREATE INDEX command_opt_cmd_arg_idx "
         "    ON command_opt (cmd_arg_uuid); ";
 
+// TODO: migrate old to new schema.
 bool ensure_schema(struct sqlite3 *conn) {
+    // get the schema version from the DB `user_version` pragma
+    int schema_version = get_schema_version(conn);
+    if (schema_version != SCHEMA_VERSION) {
+        // TODO: should we upgrade the schema?
+        return false;
+    }
+
+    // query the database to ensure the expected tables exist
     bool result = false;
     sqlite3_stmt *stmt;
-    // try to find the command by name
     int rc = sqlite3_prepare(conn, ENSURE_SCHEMA_SQL, -1, &stmt, 0);
     if (rc == SQLITE_OK) {
         int step = sqlite3_step(stmt);
@@ -85,6 +96,21 @@ bool ensure_schema(struct sqlite3 *conn) {
     }
     sqlite3_finalize(stmt);
     return result;
+}
+
+int get_schema_version(struct sqlite3 *conn) {
+    int version = 0;
+    sqlite3_stmt *stmt;
+    // try to find the command by name
+    int rc = sqlite3_prepare(conn, SCHEMA_VERSION_SQL, -1, &stmt, 0);
+    if (rc == SQLITE_OK) {
+        int step = sqlite3_step(stmt);
+        if (step == SQLITE_ROW) {
+            version = sqlite3_column_int(stmt, 0);
+        }
+    }
+    sqlite3_finalize(stmt);
+    return version;
 }
 
 bool create_schema(struct sqlite3 *conn, int *result) {
