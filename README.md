@@ -46,6 +46,20 @@ Tests are written in C++, since the the `Catch2` framework is C++.
 
 The build system is CMake (3.21+).
 
+## Project dependencies
+
+The project requires the following for linking:
+
+- sqlite
+- catch2
+
+On MacOS, you should be able to satisfy these dependencies using `brew`.
+
+```
+brew install sqlite
+brew install catch2
+```
+
 ## High-level design
 
 Logically, the representation of a `command` is as follows:
