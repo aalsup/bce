@@ -12,7 +12,7 @@
 void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd);
 void print_recommendations(linked_list_t *recommendation_list);
 
-int main() {
+int main(void) {
     int err = 0;    // custom error values
     int rc = 0;     // SQLite return values
     completion_command_t *completion_command = NULL;
