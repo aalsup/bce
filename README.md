@@ -60,6 +60,26 @@ brew install sqlite
 brew install catch2
 ```
 
+## Build/Run configuration
+
+The project should build and run as-is. However, without passing in
+the expected environment variables, nothing interesting will be displayed.
+
+#### Example run configuration
+
+```
+Executable: bash_completion_extension
+Working Directory: /Users/<yada>/Projects/bash_complete_extension
+Environment Variables: COMP_LINE="kubectl --namespace=public get pods -o wide";COMP_POINT=16
+```
+
+#### Example test configuration
+
+```
+Target: tests
+Working Directory: /Users/<yada>/Projects/bash_complete_extension
+```
+
 ## High-level design
 
 Logically, the representation of a `command` is as follows:
