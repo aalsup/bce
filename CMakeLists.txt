@@ -14,6 +14,8 @@ add_executable(bash_complete_extension
 
 add_subdirectory(test)
 
+option(DEBUG "Output additional debug information" OFF)
+
 include_directories(/usr/local/include)
 include_directories(/usr/include)
 
