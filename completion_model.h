@@ -44,12 +44,12 @@ int get_db_command_aliases(struct sqlite3 *conn, completion_command_t *parent_cm
 int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_command_args(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_arg);
-completion_command_t* create_completion_command();
-completion_command_arg_t* create_completion_command_arg();
-completion_command_opt_t* create_completion_command_opt();
+completion_command_t* create_completion_command(void);
+completion_command_arg_t* create_completion_command_arg(void);
+completion_command_opt_t* create_completion_command_opt(void);
 void free_completion_command(completion_command_t **ppcmd);
 void free_completion_command_arg(completion_command_arg_t **pparg);
 void free_completion_command_opt(completion_command_opt_t **ppopt);
-void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, const int level);
+void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, int level);
 
 #endif // COMPLETION_MODEL_H

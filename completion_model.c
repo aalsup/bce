@@ -329,7 +329,7 @@ int get_db_command_opts(struct sqlite3 *conn, completion_command_arg_t *parent_a
     return rc;
 }
 
-completion_command_t* create_completion_command() {
+completion_command_t* create_completion_command(void) {
     completion_command_t *cmd = malloc(sizeof(completion_command_t));
     if (cmd) {
         memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -347,7 +347,7 @@ completion_command_t* create_completion_command() {
     return cmd;
 }
 
-completion_command_arg_t* create_completion_command_arg() {
+completion_command_arg_t* create_completion_command_arg(void) {
     completion_command_arg_t *arg = malloc(sizeof(completion_command_arg_t));
     if (arg) {
         memset(arg->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -364,7 +364,7 @@ completion_command_arg_t* create_completion_command_arg() {
     return arg;
 }
 
-completion_command_opt_t* create_completion_command_opt() {
+completion_command_opt_t* create_completion_command_opt(void) {
     completion_command_opt_t *opt = malloc(sizeof(completion_command_opt_t));
     if (opt) {
         memset(opt->uuid, 0, UUID_FIELD_SIZE + 1);

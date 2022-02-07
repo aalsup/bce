@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 
-int load_completion_input() {
+int load_completion_input(void) {
     const char* line = getenv(BASH_LINE_VAR);
     if (!line || strlen(line) == 0) {
         return(ERR_MISSING_ENV_COMP_LINE);
