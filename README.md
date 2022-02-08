@@ -96,12 +96,24 @@ command
       ├── options
 ```
 
+### Future capabilities
 
-bce --export kubectl > file.db
-bce --export kubectl > file.json
+#### Import/Export configurations
 
-$ bce --import < kubectl.json
-$ complete -c /path/to/bce kubectl
+```
+$ bce --export kubectl --format=sqlite --file=kubectl.db
+$ bce --export kubectl --format=json --file=kubectl.json
 
-kubectl get pods<tab><tab>
+$ bce --import --format=sqlite --file=kubectl.db 
+$ bce --import --format=json --file=kubectl.json
+```
+
+#### Multiple completion databases
+
+Currently, the application utilizes a single SQLite database. This is probably fine, but it does require import/export
+logic in order to load new completion information. Alternatively, we could use discrete SQLite database files for each
+command. The application could dynamically load the correct database file (based on the command name). This offers a
+clean way to import/export configurations, since each command is self-contained within its own DB file. However, this
+would present a challenge for aliases. How would the application know which DB to open if the command-line contains 
+an alias (rather than the actual command name).
 
