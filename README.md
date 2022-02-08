@@ -96,3 +96,12 @@ command
       ├── options
 ```
 
+
+bce --export kubectl > file.db
+bce --export kubectl > file.json
+
+$ bce --import < kubectl.json
+$ complete -c /path/to/bce kubectl
+
+kubectl get pods<tab><tab>
+

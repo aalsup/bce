@@ -20,7 +20,7 @@ int load_completion_input(void) {
     return 0;
 }
 
-bool get_command_input(char* dest, size_t bufsize) {
+bool get_command_from_input(char* dest, size_t bufsize) {
     bool result = false;
     memset(dest, 0, bufsize);
     linked_list_t *list = bash_input_to_list(completion_input.line, MAX_LINE_SIZE);

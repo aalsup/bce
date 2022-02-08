@@ -50,7 +50,7 @@ TEST_CASE("completion_input") {
     }
 }
 
-TEST_CASE("get_command_input") {
+TEST_CASE("get_command_from_input") {
     const size_t BUF_SIZE = 1024;
     const char *line = "kubectl get pods -o wide";
     setenv(BASH_LINE_VAR, line, 1);
@@ -58,7 +58,7 @@ TEST_CASE("get_command_input") {
     CHECK(retval == 0);
 
     char cmd[BUF_SIZE];
-    bool result = get_command_input(cmd, BUF_SIZE);
+    bool result = get_command_from_input(cmd, BUF_SIZE);
     CHECK(result == true);
     CHECK(strncmp("kubectl", cmd, BUF_SIZE) == 0);
 }

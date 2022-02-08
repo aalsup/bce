@@ -12,6 +12,18 @@
 void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd);
 void print_recommendations(linked_list_t *recommendation_list);
 
+typedef struct person {
+    int age;
+    char first_name[20];
+    char last_name[20];
+} person;
+
+typedef struct animal {
+    char species[10];
+    int height;
+    int weight;
+} animal;
+
 int main(void) {
     int err = 0;    // custom error values
     int rc = 0;     // SQLite return values
@@ -53,7 +65,7 @@ int main(void) {
     }
 
     // load the data provided by environment
-    if (!get_command_input(command_name, MAX_LINE_SIZE)) {
+    if (!get_command_from_input(command_name, MAX_LINE_SIZE)) {
         fprintf(stderr, "Unable to determine command\n");
         goto done;
     }
