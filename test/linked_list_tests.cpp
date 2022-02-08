@@ -48,8 +48,7 @@ TEST_CASE("LinkedList destroy") {
     strcat(data, "yada yada");
     ll_append_item(list, data);
     CHECK(list->size == 1);
-    retval = ll_destroy(&list);
-    CHECK(retval == true);
+    ll_destroy(&list);
     CHECK(list == NULL);
 }
 
