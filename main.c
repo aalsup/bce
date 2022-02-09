@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
-#include <wordexp.h>
+#include <argp.h>
 #include "linked_list.h"
 #include "dbutil.h"
 #include "completion_model.h"

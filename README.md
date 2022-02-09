@@ -52,12 +52,14 @@ The project requires the following for linking:
 
 - sqlite
 - catch2
+- argp
 
 On MacOS, you should be able to satisfy these dependencies using `brew`.
 
 ```
 brew install sqlite
 brew install catch2
+brew install argp-standalone
 ```
 
 ## Build/Run configuration
