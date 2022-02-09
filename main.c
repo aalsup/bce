@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
-#include <argp.h>
 #include "linked_list.h"
 #include "dbutil.h"
 #include "completion_model.h"
@@ -9,17 +8,24 @@
 #include "error.h"
 #include "prune.h"
 
-typedef enum operation {
+typedef enum operation_t {
     OP_NONE,
+    OP_HELP,
     OP_EXPORT,
     OP_IMPORT
-} operation;
+} operation_t;
 
-static const char* EXPORT_ARG_NAME = "--export";
-static const char* IMPORT_ARG_NAME = "--import";
-static const char* FILE_ARG_NAME = "--file";
+static const char* HELP_ARG_LONGNAME = "--help";
+static const char* HELP_ARG_SHORTNAME = "-h";
+static const char* EXPORT_ARG_LONGNAME = "--export";
+static const char* EXPORT_ARG_SHORTNAME = "-e";
+static const char* IMPORT_ARG_LONGNAME = "--import";
+static const char* IMPORT_ARG_SHORTNAME = "-i";
+static const char* FILE_ARG_LONGNAME = "--file";
+static const char* FILE_ARG_SHORTNAME = "-f";
 
-int process_completion();
+void show_usage(void);
+int process_completion(void);
 int process_import(const char *filename);
 int process_export(const char *command_name, const char *filename);
 void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd);
@@ -31,19 +37,33 @@ int main(int argc, char **argv) {
         return process_completion();
     }
 
-    operation op = OP_NONE;
+    operation_t op = OP_NONE;
     char filename[FILENAME_MAX] = "";
     char command_name[NAME_FIELD_SIZE + 1] = "";
     for (int i = 1; i < argc; i++) {
-        if (strncmp(EXPORT_ARG_NAME, argv[i], strlen(EXPORT_ARG_NAME)) == 0) {
+        if ((strncmp(HELP_ARG_LONGNAME, argv[i], strlen(HELP_ARG_LONGNAME)) == 0)
+            || (strncmp(HELP_ARG_SHORTNAME, argv[i], strlen(HELP_ARG_SHORTNAME)) == 0))
+        {
+            op = OP_HELP;
+            break;
+        }
+        else if ((strncmp(EXPORT_ARG_LONGNAME, argv[i], strlen(EXPORT_ARG_LONGNAME)) == 0)
+            || (strncmp(EXPORT_ARG_SHORTNAME, argv[i], strlen(EXPORT_ARG_SHORTNAME)) == 0))
+        {
             op = OP_EXPORT;
             // next parameter should be the command name
             if ((i+1) < argc) {
                 strncpy(command_name, argv[++i], NAME_FIELD_SIZE);
             }
-        } else if (strncmp(IMPORT_ARG_NAME, argv[i], strlen(IMPORT_ARG_NAME)) == 0) {
+        }
+        else if ((strncmp(IMPORT_ARG_LONGNAME, argv[i], strlen(IMPORT_ARG_LONGNAME)) == 0)
+            || (strncmp(IMPORT_ARG_SHORTNAME, argv[i], strlen(IMPORT_ARG_SHORTNAME)) == 0))
+        {
             op = OP_IMPORT;
-        } else if (strncmp(FILE_ARG_NAME, argv[i], strlen(FILE_ARG_NAME)) == 0) {
+        }
+        else if ((strncmp(FILE_ARG_LONGNAME, argv[i], strlen(FILE_ARG_LONGNAME)) == 0)
+            || (strncmp(FILE_ARG_SHORTNAME, argv[i], strlen(FILE_ARG_SHORTNAME)) == 0))
+        {
             // next parameter should be the filename
             if ((i+1) < argc) {
                 strncpy(filename, argv[++i], FILENAME_MAX);
@@ -51,17 +71,34 @@ int main(int argc, char **argv) {
         }
     }
 
+    int result = 0;
     switch (op) {
         case OP_EXPORT:
-            return process_export(command_name, filename);
+            result = process_export(command_name, filename);
             break;
         case OP_IMPORT:
-            return process_import(filename);
+            result = process_import(filename);
             break;
+        case OP_NONE:
+            fprintf(stderr, "Invalid arguments\n");
+            result = ERR_INVALID_ARGUMENT;
         default:
-            fprintf(stderr, "No valid operation provided");
-            return 1;
+            // OP_NONE or OP_HELP
+            show_usage();
     }
+    return result;
+}
+
+void show_usage(void) {
+    printf("\nbce (bash_complete_extension)\n");
+    printf("usage:\n");
+    printf("  bce --export <command> --file <filename>\n");
+    printf("  bce --import --file <filename>\n");
+    printf("\narguments:\n");
+    printf("  %s (%s) : export command data to file\n", EXPORT_ARG_LONGNAME, EXPORT_ARG_SHORTNAME);
+    printf("  %s (%s) : import command data from file\n", IMPORT_ARG_LONGNAME, IMPORT_ARG_SHORTNAME);
+    printf("  %s (%s) : filename to import/export\n", FILE_ARG_LONGNAME, FILE_ARG_SHORTNAME);
+    printf("\n");
 }
 
 int process_import(const char *filename) {
@@ -74,7 +111,7 @@ int process_export(const char *command_name, const char *filename) {
     return 0;
 }
 
-int process_completion() {
+int process_completion(void) {
     int err = 0;    // custom error values
     int rc = 0;     // SQLite return values
     completion_command_t *completion_command = NULL;
