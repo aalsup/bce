@@ -40,6 +40,7 @@ static const char* CREATE_COMPLETION_COMMAND_ARG_SQL =
         "    uuid TEXT PRIMARY KEY, "
         "    cmd_uuid TEXT NOT NULL, "
         "    arg_type TEXT NOT NULL, "
+        "    description TEXT, "
         "    long_name TEXT, "
         "    short_name TEXT, "
         "    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid) "
@@ -59,11 +60,43 @@ static const char* CREATE_COMPLETION_COMMAND_OPT_SQL =
         " CREATE INDEX command_opt_cmd_arg_idx "
         "    ON command_opt (cmd_arg_uuid); ";
 
+sqlite3* open_database(const char *filename, int *result) {
+    char *err_msg = 0;
+    sqlite3 *conn;
+
+    int rc = sqlite3_open(filename, &conn);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(conn);
+
+        *result = ERR_OPEN_DATABASE;
+        return NULL;
+    }
+
+    rc = sqlite3_exec(conn, "PRAGMA journal_mode = 'WAL'", 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(conn);
+
+        *result = ERR_DATABASE_PRAGMA;
+        return NULL;
+    }
+
+    rc = sqlite3_exec(conn, "PRAGMA foreign_keys = 1", 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(conn);
+
+        *result = ERR_DATABASE_PRAGMA;
+        return NULL;
+    }
+
+    *result = SQLITE_OK;
+    return conn;
+}
+
 int get_schema_version(struct sqlite3 *conn) {
     int version = 0;
     sqlite3_stmt *stmt;
     // try to find the command by name
-    int rc = sqlite3_prepare(conn, SCHEMA_VERSION_SQL, -1, &stmt, 0);
+    int rc = sqlite3_prepare(conn, SCHEMA_VERSION_SQL, -1, &stmt, NULL);
     if (rc == SQLITE_OK) {
         int step = sqlite3_step(stmt);
         if (step == SQLITE_ROW) {
@@ -99,6 +132,12 @@ bool create_schema(struct sqlite3 *conn, int *result) {
     rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_OPT_SQL, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         *result = ERR_DATABASE_CREATE_TABLE;
+        return false;
+    }
+
+    rc = sqlite3_exec(conn, "PRAGMA user_version = 1;", 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        *result = ERR_DATABASE_PRAGMA;
         return false;
     }
 

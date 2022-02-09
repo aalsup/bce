@@ -1,10 +1,14 @@
 #include "user_ops.h"
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
+#include <sqlite3.h>
 #include "error.h"
+#include "dbutil.h"
+#include "completion_model.h"
 
 static const int CMD_NAME_SIZE = 50;
+
+sqlite3* open_and_prepare_db(const char *filename, int *rc);
 
 int parse_args(int argc, char **argv) {
     if (argc <= 1) {
@@ -59,8 +63,7 @@ int parse_args(int argc, char **argv) {
         case OP_NONE:
             fprintf(stderr, "Invalid arguments\n");
             result = ERR_INVALID_ARGUMENT;
-        default:
-            // OP_NONE or OP_HELP
+        default: // OP_NONE or OP_HELP
             show_usage();
     }
     return result;
@@ -85,6 +88,83 @@ int process_import(const char *filename) {
 
 int process_export(const char *command_name, const char *filename) {
     printf("process_export() called: command_name=%s, filename=%s\n", command_name, filename);
-    return 0;
+    int rc = SQLITE_OK;
+    int err = 0;
+
+    // open the source database
+    sqlite3 *src_db = open_and_prepare_db("completion.db", &rc);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
+        err = ERR_OPEN_DATABASE;
+        goto done;
+    }
+
+    // open the destination database
+    remove(filename);
+    sqlite3 *dest_db = open_and_prepare_db(filename, &rc);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
+        err = ERR_OPEN_DATABASE;
+        goto done;
+    }
+
+    completion_command_t *completion_command = create_completion_command();
+    rc = get_db_command(completion_command, src_db, command_name);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "get_db_command() returned %d\n", rc);
+        goto done;
+    }
+
+    rc = write_db_command(completion_command, dest_db);
+    if (rc != SQLITE_OK) {
+        err = ERR_SQLITE_ERROR;
+        goto done;
+    }
+
+    // commit transaction
+    rc = sqlite3_exec(dest_db, "COMMIT;", NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to commit transaction, error: %d, database: %s\n", rc, filename);
+        err = ERR_SQLITE_ERROR;
+        goto done;
+    }
+
+done:
+    sqlite3_close(src_db);
+    sqlite3_close(dest_db);
+    return err;
+}
+
+sqlite3* open_and_prepare_db(const char *filename, int *rc) {
+    // open the completion database
+    sqlite3 *conn = open_database(filename, rc);
+    if (*rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", *rc, filename);
+        return NULL;
+    }
+
+    // check schema version
+    int schema_version = get_schema_version(conn);
+    if (schema_version == 0) {
+        // create the schema
+        if (!create_schema(conn, rc)) {
+            fprintf(stderr, "Unable to create database schema. database: %s\n", filename);
+            return NULL;
+        }
+        schema_version = get_schema_version(conn);
+    }
+    if (schema_version != SCHEMA_VERSION) {
+        fprintf(stderr, "Schema version mismatch. database: %s, expected: %d, found: %d\n", filename, SCHEMA_VERSION, schema_version);
+        return NULL;
+    }
+
+    // explicitly start a transaction, since this will be done automatically (per statement) otherwise
+    *rc = sqlite3_exec(conn, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    if (*rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to begin transaction, error: %d, database: %s\n", *rc, filename);
+        return NULL;
+    }
+
+    return conn;
 }
 

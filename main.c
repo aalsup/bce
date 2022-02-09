@@ -85,11 +85,22 @@ int process_completion(void) {
     printf("previous_word: %s\n", previous_word);
 #endif
 
+    // explicitly start a transaction, since this will be done automatically (per statement) otherwise
+    rc = sqlite3_exec(conn, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "begin transaction returned %d\n", rc);
+        goto done;
+    }
     // search for the command directly (load all descendents)
     completion_command = create_completion_command();
     rc = get_db_command(completion_command, conn, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
+        goto done;
+    }
+    rc = sqlite3_exec(conn, "COMMIT;", NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "commit transaction returned %d\n", rc);
         goto done;
     }
 
