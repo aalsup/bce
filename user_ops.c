@@ -9,7 +9,7 @@ static const int CMD_NAME_SIZE = 50;
 int parse_args(int argc, char **argv) {
     if (argc <= 1) {
         // called from BASH (for completion help)
-        return false;
+        return 0;
     }
 
     // collect the command-line arguments
