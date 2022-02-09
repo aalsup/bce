@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 project(bash_complete_extension LANGUAGES C VERSION 1.0)
 set(CMAKE_C_STANDARD 99)
 
-add_executable(bash_complete_extension
+add_executable(bce
         main.c
         dbutil.h dbutil.c
         completion_model.h completion_model.c
@@ -20,5 +20,5 @@ include_directories(/usr/local/include)
 include_directories(/usr/include)
 
 link_directories(/usr/lib)
-target_link_libraries(bash_complete_extension sqlite3)
+target_link_libraries(bce sqlite3)
 

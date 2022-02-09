@@ -43,12 +43,20 @@ int main(void) {
         goto done;
     }
 
-    if (!ensure_schema(conn)) {
+    int schema_version = get_schema_version(conn);
+    if (schema_version == 0) {
+        // create the schema
         if (!create_schema(conn, &rc)) {
             fprintf(stderr, "Unable to create database schema\n");
             err = ERR_DATABASE_SCHEMA;
             goto done;
         }
+        schema_version = get_schema_version(conn);
+    }
+    if (schema_version != SCHEMA_VERSION) {
+        fprintf(stderr, "Schema version %d does not match expected version %d\n", schema_version, SCHEMA_VERSION);
+        err = ERR_DATABASE_SCHEMA;
+        goto done;
     }
 
     err = load_completion_input();
