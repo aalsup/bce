@@ -12,19 +12,7 @@
 void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd);
 void print_recommendations(linked_list_t *recommendation_list);
 
-typedef struct person {
-    int age;
-    char first_name[20];
-    char last_name[20];
-} person;
-
-typedef struct animal {
-    char species[10];
-    int height;
-    int weight;
-} animal;
-
-int main(void) {
+int main(int argc, char **argv) {
     int err = 0;    // custom error values
     int rc = 0;     // SQLite return values
     completion_command_t *completion_command = NULL;
