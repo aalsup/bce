@@ -10,6 +10,7 @@ add_executable(bce
         completion_input.h completion_input.c
         error.h
         prune.h prune.c
+        user_ops.h user_ops.c
         uuid4.h uuid4.c)
 
 add_subdirectory(test)
