@@ -9,10 +9,72 @@
 #include "error.h"
 #include "prune.h"
 
+typedef enum operation {
+    OP_NONE,
+    OP_EXPORT,
+    OP_IMPORT
+} operation;
+
+static const char* EXPORT_ARG_NAME = "--export";
+static const char* IMPORT_ARG_NAME = "--import";
+static const char* FILE_ARG_NAME = "--file";
+
+int process_completion();
+int process_import(const char *filename);
+int process_export(const char *command_name, const char *filename);
 void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd);
 void print_recommendations(linked_list_t *recommendation_list);
 
 int main(int argc, char **argv) {
+    if (argc <= 1) {
+        // called from BASH (for completion help)
+        return process_completion();
+    }
+
+    operation op = OP_NONE;
+    char filename[FILENAME_MAX] = "";
+    char command_name[NAME_FIELD_SIZE + 1] = "";
+    for (int i = 1; i < argc; i++) {
+        if (strncmp(EXPORT_ARG_NAME, argv[i], strlen(EXPORT_ARG_NAME)) == 0) {
+            op = OP_EXPORT;
+            // next parameter should be the command name
+            if ((i+1) < argc) {
+                strncpy(command_name, argv[++i], NAME_FIELD_SIZE);
+            }
+        } else if (strncmp(IMPORT_ARG_NAME, argv[i], strlen(IMPORT_ARG_NAME)) == 0) {
+            op = OP_IMPORT;
+        } else if (strncmp(FILE_ARG_NAME, argv[i], strlen(FILE_ARG_NAME)) == 0) {
+            // next parameter should be the filename
+            if ((i+1) < argc) {
+                strncpy(filename, argv[++i], FILENAME_MAX);
+            }
+        }
+    }
+
+    switch (op) {
+        case OP_EXPORT:
+            return process_export(command_name, filename);
+            break;
+        case OP_IMPORT:
+            return process_import(filename);
+            break;
+        default:
+            fprintf(stderr, "No valid operation provided");
+            return 1;
+    }
+}
+
+int process_import(const char *filename) {
+    printf("process_import() called: filename=%s\n", filename);
+    return 0;
+}
+
+int process_export(const char *command_name, const char *filename) {
+    printf("process_export() called: command_name=%s, filename=%s\n", command_name, filename);
+    return 0;
+}
+
+int process_completion() {
     int err = 0;    // custom error values
     int rc = 0;     // SQLite return values
     completion_command_t *completion_command = NULL;
