@@ -6,6 +6,12 @@
 #include <string.h>
 #include <sqlite3.h>
 
+static const char* COMPLETION_COMMAND_NAMES_SQL =
+        " SELECT c.name "
+        " FROM command c "
+        " WHERE c.parent_cmd IS NULL "
+        " ORDER BY c.name ";
+
 static const char* COMPLETION_COMMAND_READ_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
         " FROM command c "
@@ -17,6 +23,10 @@ static const char* COMPLETION_COMMAND_WRITE_SQL =
         " (uuid, name, parent_cmd) "
         " VALUES "
         " (?1, ?2, ?3) ";
+
+static const char* COMPLETION_COMMAND_DELETE_SQL =
+        " DELETE FROM command "
+        " WHERE name = ?1 ";
 
 static const char* COMPLETION_COMMAND_ALIAS_READ_SQL =
         " SELECT a.uuid, a.cmd_uuid, a.name "
@@ -119,7 +129,29 @@ void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, c
     }
 }
 
-int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* command_name) {
+int get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
+    if (!conn || !cmd_names) {
+        return 1;   // TODO: fix this
+    }
+
+    sqlite3_stmt *stmt;
+    // try to find the command by name
+    int rc = sqlite3_prepare(conn, COMPLETION_COMMAND_NAMES_SQL, -1, &stmt, NULL);
+    if (rc == SQLITE_OK) {
+        int step = sqlite3_step(stmt);
+        while (step == SQLITE_ROW) {
+            char *cmd_name = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
+            strncat(cmd_name, (const char *) sqlite3_column_text(stmt, 0), NAME_FIELD_SIZE);
+            ll_append_item(cmd_names, cmd_name);
+            step = sqlite3_step(stmt);
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    return rc;
+}
+
+int get_db_command(struct sqlite3 *conn, completion_command_t *cmd, const char* command_name) {
     memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
     memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
     memset(cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
@@ -445,7 +477,7 @@ void free_completion_command_opt(completion_command_opt_t **ppopt) {
     *ppopt = NULL;
 }
 
-int write_db_command(completion_command_t *cmd, struct sqlite3 *conn) {
+int write_db_command(struct sqlite3 *conn, completion_command_t *cmd) {
     if (!cmd) {
         return 1;   // TODO: fix this
     }
@@ -476,7 +508,7 @@ int write_db_command(completion_command_t *cmd, struct sqlite3 *conn) {
         while (node) {
             completion_command_alias_t *alias = (completion_command_alias_t *)node->data;
             if (alias) {
-                rc = write_db_command_alias(alias, conn);
+                rc = write_db_command_alias(conn, alias);
                 if (rc != SQLITE_OK) {
                     goto done;
                 }
@@ -491,7 +523,7 @@ int write_db_command(completion_command_t *cmd, struct sqlite3 *conn) {
         while (node) {
             completion_command_t *subcmd = (completion_command_t *)node->data;
             if (subcmd) {
-                rc = write_db_command(subcmd, conn);
+                rc = write_db_command(conn, subcmd);
                 if (rc != SQLITE_OK) {
                     goto done;
                 }
@@ -523,7 +555,7 @@ int write_db_command(completion_command_t *cmd, struct sqlite3 *conn) {
     return rc;
 }
 
-int write_db_command_alias(completion_command_alias_t *alias, struct sqlite3 *conn) {
+int write_db_command_alias(struct sqlite3 *conn, completion_command_alias_t *alias) {
     if (!alias) {
         return 1;
     }
@@ -636,6 +668,33 @@ int write_db_command_opt(struct sqlite3 *conn, completion_command_opt_t *opt) {
     }
 
     done:
+    sqlite3_finalize(stmt);
+    if (rc == SQLITE_DONE) {
+        rc = SQLITE_OK;
+    }
+    return rc;
+}
+
+int delete_db_command(struct sqlite3 *conn, const char *command_name) {
+    if (!conn || !command_name) {
+        return 1;   // TODO: fix this
+    }
+
+    sqlite3_stmt *stmt;
+    int rc;
+
+    // delete the command (CASCADE should happen for all FKs)
+    rc = sqlite3_prepare(conn, COMPLETION_COMMAND_DELETE_SQL, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        goto done;
+    }
+    sqlite3_bind_text(stmt, 1, command_name, -1, NULL);
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+        goto done;
+    }
+
+done:
     sqlite3_finalize(stmt);
     if (rc == SQLITE_DONE) {
         rc = SQLITE_OK;

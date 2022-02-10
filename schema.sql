@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS command (
     uuid TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     parent_cmd TEXT,
-    FOREIGN KEY(parent_cmd) REFERENCES command(uuid)
+    FOREIGN KEY(parent_cmd) REFERENCES command(uuid) ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX command_name_idx
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS command_alias (
     uuid TEXT PRIMARY KEY,
     cmd_uuid TEXT NOT NULL,
     name TEXT NOT NULL,
-    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid)
+    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid) ON DELETE CASCADE
 );
 
 CREATE INDEX command_alias_name_idx
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS command_arg (
     description TEXT NOT NULL,
     long_name TEXT,
     short_name TEXT,
-    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid),
+    FOREIGN KEY(cmd_uuid) REFERENCES command(uuid) ON DELETE CASCADE,
     -- ensure either long_name or short_name has data
     CHECK ( (long_name IS NOT NULL) OR (short_name IS NOT NULL) )
 );
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS command_opt (
     uuid TEXT PRIMARY KEY,
     cmd_arg_uuid TEXT NOT NULL,
     name TEXT NOT NULL,
-    FOREIGN KEY(cmd_arg_uuid) REFERENCES command_arg(uuid)
+    FOREIGN KEY(cmd_arg_uuid) REFERENCES command_arg(uuid) ON DELETE CASCADE
 );
 
 CREATE INDEX command_opt_cmd_arg_idx

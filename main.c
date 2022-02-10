@@ -93,7 +93,7 @@ int process_completion(void) {
     }
     // search for the command directly (load all descendents)
     completion_command = create_completion_command();
-    rc = get_db_command(completion_command, conn, command_name);
+    rc = get_db_command(conn, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
         goto done;

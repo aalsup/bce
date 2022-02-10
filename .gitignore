@@ -1,5 +1,6 @@
 .idea/
 cmake-build-debug/**
 test/*.db
+xyz.db
 **/*.db-shm
 **/*.db-wal

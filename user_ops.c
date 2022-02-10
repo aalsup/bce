@@ -82,19 +82,86 @@ void show_usage(void) {
 }
 
 int process_import(const char *filename) {
-    printf("process_import() called: filename=%s\n", filename);
-    return 0;
+    int rc = SQLITE_OK;
+    int err = 0;
+
+    // open the source database
+    sqlite3 *src_db = open_and_prepare_db(filename, &rc);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
+        err = ERR_OPEN_DATABASE;
+        goto done;
+    }
+
+    // open dest database
+    sqlite3 *dest_db = open_and_prepare_db("completion.db", &rc);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
+        err = ERR_OPEN_DATABASE;
+        goto done;
+    }
+
+    // get a list of the top-level commands in source database
+    linked_list_t *cmd_names = ll_create(NULL);
+    rc = get_db_command_names(src_db, cmd_names);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to query commands. error: %d, database: %s\n", rc, filename);
+        err = ERR_SQLITE_ERROR;
+        goto done;
+    }
+
+    // iterate over the commands
+    linked_list_node_t *node = cmd_names->head;
+    while (node) {
+        char *cmd_name = (char *)node->data;
+        completion_command_t *cmd = create_completion_command();
+
+        // read cmd from src database
+        rc = get_db_command(src_db, cmd, cmd_name);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Unable to query command: %s. error: %d\n", cmd_name, rc);
+            err = ERR_SQLITE_ERROR;
+            goto done;
+        }
+
+        // delete cmd (recurse) from dest database
+        rc = delete_db_command(dest_db, cmd_name);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Unable to delete the command before importing. command %s, error: %d\n", cmd_name, rc);
+            err = ERR_SQLITE_ERROR;
+            goto done;
+        }
+
+        // write cmd to dest database
+        rc = write_db_command(dest_db, cmd);
+        if (rc != SQLITE_OK) {
+            err = ERR_SQLITE_ERROR;
+            goto done;
+        }
+
+        node = node->next;
+    }
+
+    // commit transaction
+    rc = sqlite3_exec(dest_db, "COMMIT;", NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to commit transaction, error: %d, database: %s\n", rc, "completion.db");
+        err = ERR_SQLITE_ERROR;
+        goto done;
+    }
+
+done:
+    return err;
 }
 
 int process_export(const char *command_name, const char *filename) {
-    printf("process_export() called: command_name=%s, filename=%s\n", command_name, filename);
     int rc = SQLITE_OK;
     int err = 0;
 
     // open the source database
     sqlite3 *src_db = open_and_prepare_db("completion.db", &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
         err = ERR_OPEN_DATABASE;
         goto done;
     }
@@ -109,13 +176,13 @@ int process_export(const char *command_name, const char *filename) {
     }
 
     completion_command_t *completion_command = create_completion_command();
-    rc = get_db_command(completion_command, src_db, command_name);
+    rc = get_db_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
         goto done;
     }
 
-    rc = write_db_command(completion_command, dest_db);
+    rc = write_db_command(dest_db, completion_command);
     if (rc != SQLITE_OK) {
         err = ERR_SQLITE_ERROR;
         goto done;
@@ -130,6 +197,9 @@ int process_export(const char *command_name, const char *filename) {
     }
 
 done:
+    if (err) {
+        fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
+    }
     sqlite3_close(src_db);
     sqlite3_close(dest_db);
     return err;

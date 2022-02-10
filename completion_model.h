@@ -45,7 +45,8 @@ typedef struct completion_command_opt_t {
     char name[NAME_FIELD_SIZE + 1];
 } completion_command_opt_t;
 
-int get_db_command(completion_command_t *cmd, struct sqlite3 *conn, const char* command_name);
+int get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names);
+int get_db_command(struct sqlite3 *conn, completion_command_t *cmd, const char* command_name);
 int get_db_command_aliases(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_sub_commands(struct sqlite3 *conn, completion_command_t *parent_cmd);
 int get_db_command_args(struct sqlite3 *conn, completion_command_t *parent_cmd);
@@ -59,9 +60,10 @@ void free_completion_command_alias(completion_command_alias_t **ppalias);
 void free_completion_command_arg(completion_command_arg_t **pparg);
 void free_completion_command_opt(completion_command_opt_t **ppopt);
 void print_command_tree(struct sqlite3 *conn, const completion_command_t *cmd, int level);
-int write_db_command(completion_command_t *completion_command, struct sqlite3 *conn);
-int write_db_command_alias(completion_command_alias_t *alias, struct sqlite3 *conn);
+int write_db_command(struct sqlite3 *conn, completion_command_t *completion_command);
+int write_db_command_alias(struct sqlite3 *conn, completion_command_alias_t *alias);
 int write_db_command_arg(struct sqlite3 *conn, completion_command_arg_t *arg);
 int write_db_command_opt(struct sqlite3 *conn, completion_command_opt_t *opt);
+int delete_db_command(struct sqlite3 *conn, const char *command_name);
 
 #endif // COMPLETION_MODEL_H
