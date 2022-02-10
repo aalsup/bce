@@ -12,7 +12,7 @@ static const char* CREATE_COMPLETION_COMMAND_SQL =
         " CREATE TABLE IF NOT EXISTS command ( "
         "    uuid TEXT PRIMARY KEY, "
         "    name TEXT NOT NULL, "
-        "    parent_cmd TEXT "
+        "    parent_cmd TEXT, "
         "    FOREIGN KEY(parent_cmd) REFERENCES command(uuid) ON DELETE CASCADE "
         " ); "
         " \n "

@@ -45,6 +45,8 @@ typedef struct completion_command_opt_t {
     char name[NAME_FIELD_SIZE + 1];
 } completion_command_opt_t;
 
+int prepare_statement_cache(struct sqlite3 *conn);
+int free_statement_cache(struct sqlite3 *conn);
 int get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names);
 int get_db_command(struct sqlite3 *conn, completion_command_t *cmd, const char* command_name);
 int get_db_command_aliases(struct sqlite3 *conn, completion_command_t *parent_cmd);

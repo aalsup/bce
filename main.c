@@ -91,6 +91,14 @@ int process_completion(void) {
         fprintf(stderr, "begin transaction returned %d\n", rc);
         goto done;
     }
+
+    // load the statement cache (prevent re-parsing statements)
+    rc = prepare_statement_cache(conn);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to load statement cache. err=%d\n", rc);
+        goto done;
+    }
+
     // search for the command directly (load all descendents)
     completion_command = create_completion_command();
     rc = get_db_command(conn, completion_command, command_name);
@@ -98,6 +106,7 @@ int process_completion(void) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
         goto done;
     }
+
     rc = sqlite3_exec(conn, "COMMIT;", NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "commit transaction returned %d\n", rc);
@@ -121,8 +130,9 @@ int process_completion(void) {
     print_recommendations(recommendation_list);
     ll_destroy(&recommendation_list);
 
-    done:
+done:
     free_completion_command(&completion_command);
+    rc = free_statement_cache(conn);
     sqlite3_close(conn);
 
     return err;
