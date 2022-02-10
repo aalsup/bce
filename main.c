@@ -25,7 +25,6 @@ int main(int argc, char **argv) {
 int process_completion(void) {
     int err = 0;    // custom error values
     int rc = 0;     // SQLite return values
-    completion_command_t *completion_command = NULL;
     char command_name[MAX_LINE_SIZE + 1];
     char current_word[MAX_LINE_SIZE + 1];
     char previous_word[MAX_LINE_SIZE + 1];
@@ -100,7 +99,7 @@ int process_completion(void) {
     }
 
     // search for the command directly (load all descendents)
-    completion_command = create_completion_command();
+    completion_command_t *completion_command = create_completion_command();
     rc = get_db_command(conn, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
