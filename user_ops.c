@@ -139,6 +139,9 @@ int process_import(const char *filename) {
             goto done;
         }
 
+        // cleanup
+        free_completion_command(&cmd);
+
         node = node->next;
     }
 
@@ -151,6 +154,8 @@ int process_import(const char *filename) {
     }
 
 done:
+    sqlite3_close(src_db);
+    sqlite3_close(dest_db);
     return err;
 }
 
