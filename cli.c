@@ -205,6 +205,9 @@ done:
     if (err) {
         fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
     }
+    if (completion_command) {
+        free_completion_command(&completion_command);
+    }
     sqlite3_close(src_db);
     sqlite3_close(dest_db);
     return err;
