@@ -4,7 +4,7 @@ extern "C" {
 #include <stdio.h>
 #include <sqlite3.h>
 #include "../dbutil.h"
-#include "../completion_model.h"
+#include "../data_model.h"
 };
 
 TEST_CASE("create schema") {

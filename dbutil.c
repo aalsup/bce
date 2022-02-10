@@ -84,7 +84,7 @@ sqlite3* open_database(const char *filename, int *result) {
         return NULL;
     }
 
-    rc = sqlite3_exec(conn, "PRAGMA journal_mode = 'WAL'", 0, 0, &err_msg);
+    rc = sqlite3_exec(conn, "PRAGMA journal_mode = WAL", 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         sqlite3_close(conn);
 

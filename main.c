@@ -3,11 +3,11 @@
 #include <sqlite3.h>
 #include "linked_list.h"
 #include "dbutil.h"
-#include "completion_model.h"
-#include "completion_input.h"
+#include "data_model.h"
+#include "input.h"
 #include "error.h"
 #include "prune.h"
-#include "user_ops.h"
+#include "cli.h"
 
 int process_completion(void);
 void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd);

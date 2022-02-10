@@ -5,12 +5,12 @@ set(CMAKE_C_STANDARD 99)
 add_executable(bce
         main.c
         dbutil.h dbutil.c
-        completion_model.h completion_model.c
+        data_model.h data_model.c
         linked_list.h linked_list.c
-        completion_input.h completion_input.c
+        input.h input.c
         error.h
         prune.h prune.c
-        user_ops.h user_ops.c
+        cli.h cli.c
         uuid4.h uuid4.c)
 
 add_subdirectory(test)

@@ -2,7 +2,7 @@
 #include <string.h>
 
 extern "C" {
-#include "../completion_input.h"
+#include "../input.h"
 #include "../error.h"
 };
 

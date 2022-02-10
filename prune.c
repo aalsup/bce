@@ -1,6 +1,6 @@
 #include "prune.h"
-#include "completion_model.h"
-#include "completion_input.h"
+#include "data_model.h"
+#include "input.h"
 #include "linked_list.h"
 
 void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list);

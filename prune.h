@@ -2,7 +2,7 @@
 #define PRUNE_H
 
 #include "linked_list.h"
-#include "completion_model.h"
+#include "data_model.h"
 
 void prune_command(completion_command_t* cmd);
 

@@ -1,14 +1,14 @@
-#include "user_ops.h"
+#include "cli.h"
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
 #include "error.h"
 #include "dbutil.h"
-#include "completion_model.h"
+#include "data_model.h"
 
 static const int CMD_NAME_SIZE = 50;
 
-sqlite3* open_and_prepare_db(const char *filename, int *rc);
+sqlite3* open_db_with_xa(const char *filename, int *rc);
 
 int parse_args(int argc, char **argv) {
     if (argc <= 1) {
@@ -86,7 +86,7 @@ int process_import(const char *filename) {
     int err = 0;
 
     // open the source database
-    sqlite3 *src_db = open_and_prepare_db(filename, &rc);
+    sqlite3 *src_db = open_db_with_xa(filename, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
         err = ERR_OPEN_DATABASE;
@@ -94,7 +94,7 @@ int process_import(const char *filename) {
     }
 
     // open dest database
-    sqlite3 *dest_db = open_and_prepare_db("completion.db", &rc);
+    sqlite3 *dest_db = open_db_with_xa("completion.db", &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
         err = ERR_OPEN_DATABASE;
@@ -164,7 +164,7 @@ int process_export(const char *command_name, const char *filename) {
     int err = 0;
 
     // open the source database
-    sqlite3 *src_db = open_and_prepare_db("completion.db", &rc);
+    sqlite3 *src_db = open_db_with_xa("completion.db", &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
         err = ERR_OPEN_DATABASE;
@@ -173,7 +173,7 @@ int process_export(const char *command_name, const char *filename) {
 
     // open the destination database
     remove(filename);
-    sqlite3 *dest_db = open_and_prepare_db(filename, &rc);
+    sqlite3 *dest_db = open_db_with_xa(filename, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
         err = ERR_OPEN_DATABASE;
@@ -210,7 +210,7 @@ done:
     return err;
 }
 
-sqlite3* open_and_prepare_db(const char *filename, int *rc) {
+sqlite3* open_db_with_xa(const char *filename, int *rc) {
     // open the completion database
     sqlite3 *conn = open_database(filename, rc);
     if (*rc != SQLITE_OK) {
