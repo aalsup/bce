@@ -62,7 +62,7 @@ int parse_args(int argc, char **argv) {
             break;
         case OP_NONE:
             fprintf(stderr, "Invalid arguments\n");
-            result = ERR_INVALID_ARGUMENT;
+            result = ERR_INVALID_CLI_ARGUMENT;
         default: // OP_NONE or OP_HELP
             show_usage();
     }
