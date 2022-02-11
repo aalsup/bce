@@ -15,10 +15,14 @@ int process_export_sqlite(const char *command_name, const char *filename);
 int process_import_json(const char *filename);
 int process_export_json(const char *command_name, const char *filename);
 sqlite3* open_db_with_xa(const char *filename, int *rc);
-bce_command_t *bce_command_from_json(const char *parrent_cmd_uuid, struct json_object *j_command);
+bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, struct json_object *j_command);
 bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, struct json_object *j_alias);
 bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, struct json_object *j_arg);
 bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, struct json_object *j_opt);
+json_object *bce_command_to_json(bce_command_t *cmd);
+json_object *bce_command_alias_to_json(bce_command_alias_t *alias);
+json_object *bce_command_arg_to_json(bce_command_arg_t *arg);
+json_object *bce_command_opt_to_json(bce_command_opt_t *opt);
 
 int process_cli(int argc, char **argv) {
     if (argc <= 1) {
@@ -281,21 +285,8 @@ int process_import_json(const char *json_filename) {
         goto done;
     }
 
-    // open the file, get its size, and read the data
-    char *raw_buffer = NULL;
-    {
-        FILE *fp = fopen(json_filename, "r");
-        fseek(fp, 0L, SEEK_END);
-        long file_size = ftell(fp);
-        rewind(fp);
-        raw_buffer = (char *) calloc(file_size + 1, sizeof(char));
-        fread(raw_buffer, file_size, 1, fp);
-        fclose(fp);
-    }
-
     // parse the json
-    struct json_object *parsed_json = json_tokener_parse(raw_buffer);
-    free(raw_buffer);
+    struct json_object *parsed_json = json_object_from_file(json_filename);
     struct json_object *j_command = json_object_object_get(parsed_json, "command");
     bce_command_t *command = bce_command_from_json(NULL, j_command);
 
@@ -333,6 +324,47 @@ int process_import_json(const char *json_filename) {
 done:
     sqlite3_close(dest_db);
     return 0;
+}
+
+int process_export_json(const char *command_name, const char *filename) {
+    int rc = SQLITE_OK;
+    int err = 0;
+
+    // open the source database
+    sqlite3 *src_db = open_db_with_xa("completion.db", &rc);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
+        err = ERR_OPEN_DATABASE;
+        goto done;
+    }
+
+    // load the command hierarchy
+    prepare_statement_cache(src_db);
+    bce_command_t *completion_command = create_bce_command();
+    rc = get_db_command(src_db, completion_command, command_name);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "get_db_command() returned %d\n", rc);
+        goto done;
+    }
+    free_statement_cache(src_db);
+
+    // convert model object to json
+    json_object *j_command = json_object_new_object();
+    json_object *j_command_body = bce_command_to_json(completion_command);
+    json_object_object_add(j_command, "command", j_command_body);
+    int json_flags = JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_NOSLASHESCAPE;
+    json_object_to_file_ext(filename, j_command, json_flags);
+    json_object_put(j_command);
+
+    done:
+    if (err) {
+        fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
+    }
+    if (completion_command) {
+        free_bce_command(&completion_command);
+    }
+    sqlite3_close(src_db);
+    return err;
 }
 
 /*
@@ -515,8 +547,102 @@ bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, struct json_o
     return bce_opt;
 }
 
-int process_export_json(const char *command_name, const char *filename) {
-    return 0;
+json_object *bce_command_to_json(bce_command_t *cmd) {
+    if (!cmd) {
+        return NULL;
+    }
+
+    // create command attributes
+    struct json_object *j_command = json_object_new_object();
+    json_object_object_add(j_command, "uuid", json_object_new_string(cmd->uuid));
+    json_object_object_add(j_command, "name", json_object_new_string(cmd->name));
+    // don't encode parent_cmd (json is already hierarchical)
+
+    // array of aliases
+    struct json_object *j_aliases = json_object_new_array();
+    if (cmd->aliases) {
+        linked_list_node_t *alias_node = cmd->aliases->head;
+        while (alias_node) {
+            bce_command_alias_t *alias = (bce_command_alias_t *) alias_node->data;
+            if (alias) {
+                json_object *j_alias = bce_command_alias_to_json(alias);
+                json_object_array_add(j_aliases, j_alias);
+            }
+            alias_node = alias_node->next;
+        }
+    }
+    json_object_object_add(j_command, "aliases", j_aliases);
+
+    // array of args
+    struct json_object *j_args = json_object_new_array();
+    if (cmd->args) {
+        linked_list_node_t *arg_node = cmd->args->head;
+        while (arg_node) {
+            bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
+            if (arg) {
+                json_object *j_arg = bce_command_arg_to_json(arg);
+                json_object_array_add(j_args, j_arg);
+            }
+            arg_node = arg_node->next;
+        }
+    }
+    json_object_object_add(j_command, "args", j_args);
+
+    // array of sub-commands (recurse)
+    struct json_object *j_subs = json_object_new_array();
+    if (cmd->sub_commands) {
+        linked_list_node_t *sub_node = cmd->sub_commands->head;
+        while (sub_node) {
+            bce_command_t *sub_cmd = (bce_command_t *) sub_node->data;
+            if (sub_cmd) {
+                json_object *j_sub = bce_command_to_json(sub_cmd);
+                json_object_array_add(j_subs, j_sub);
+            }
+            sub_node = sub_node->next;
+        }
+    }
+    json_object_object_add(j_command, "sub_commands", j_subs);
+
+    return j_command;
+}
+
+json_object *bce_command_alias_to_json(bce_command_alias_t *alias) {
+    struct json_object *j_alias = json_object_new_object();
+    json_object_object_add(j_alias, "uuid", json_object_new_string(alias->uuid));
+    json_object_object_add(j_alias, "name", json_object_new_string(alias->name));
+    return j_alias;
+}
+
+json_object *bce_command_arg_to_json(bce_command_arg_t *arg) {
+    struct json_object *j_arg = json_object_new_object();
+    json_object_object_add(j_arg, "uuid", json_object_new_string(arg->uuid));
+    json_object_object_add(j_arg, "arg_type", json_object_new_string(arg->arg_type));
+    json_object_object_add(j_arg, "description", json_object_new_string(arg->description));
+    json_object_object_add(j_arg, "long_name", json_object_new_string(arg->long_name));
+    json_object_object_add(j_arg, "short_name", json_object_new_string(arg->short_name));
+    struct json_object *j_opts = json_object_new_array();
+    if (arg->opts) {
+        linked_list_node_t *opt_node = arg->opts->head;
+        while (opt_node) {
+            bce_command_opt_t *opt = (bce_command_opt_t *)opt_node->data;
+            if (opt) {
+                // convert the option to json
+                json_object *j_opt = bce_command_opt_to_json(opt);
+                // append to the json array
+                json_object_array_add(j_opts, j_opt);
+            }
+            opt_node = opt_node->next;
+        }
+    }
+    json_object_object_add(j_arg, "opts", j_opts);
+    return j_arg;
+}
+
+json_object *bce_command_opt_to_json(bce_command_opt_t *opt) {
+    struct json_object *j_opt = json_object_new_object();
+    json_object_object_add(j_opt, "uuid", json_object_new_string(opt->uuid));
+    json_object_object_add(j_opt, "name", json_object_new_string(opt->name));
+    return j_opt;
 }
 
 sqlite3* open_db_with_xa(const char *filename, int *rc) {
