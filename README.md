@@ -96,15 +96,19 @@ command
       ├── options
 ```
 
-### Future capabilities
-
-#### Import/Export configurations
+### Import/Export configurations
 
 ```
-$ bce --export kubectl --format=sqlite --file=kubectl.db
-$ bce --export kubectl --format=json --file=kubectl.json
+$ bce --export kubectl --file=kubectl.db
+$ bce --import --file=kubectl.db 
+```
 
-$ bce --import --format=sqlite --file=kubectl.db 
+### Future capabilities
+
+#### Import/Export JSON
+
+```
+$ bce --export kubectl --format=json --file=kubectl.json
 $ bce --import --format=json --file=kubectl.json
 ```
 
