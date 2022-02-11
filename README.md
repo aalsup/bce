@@ -103,6 +103,47 @@ $ bce --export kubectl --file=kubectl.db
 $ bce --import --file=kubectl.db 
 ```
 
+### JSON format
+
+```json
+{
+  "command": {
+    "uuid": "str",
+    "name": "str",
+    "aliases": [
+      {
+        "uuid": "str",
+        "name": "str"
+      }
+    ],
+    "args": [
+      {
+        "uuid": "str",
+        "arg_type": "NONE|OPTION|FILE|TEXT",
+        "description": "str",
+        "long_name": "str",
+        "short_name": "str",
+        "opts": [
+          {
+            "uuid": "str",
+            "name": "str"
+          }
+        ]
+      }
+    ],
+    "sub_commands": [
+      {
+        "uuid": "str",
+        "name": "str",
+        "aliases": [],
+        "sub_commands": [],
+        "args": []
+      }
+    ]
+  }
+}
+```
+
 ### Future capabilities
 
 1. **Import/Export JSON**
