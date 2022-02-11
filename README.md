@@ -52,12 +52,14 @@ The project requires the following for linking:
 
 - sqlite
 - catch2
+- json-c
 
 On MacOS, you should be able to satisfy these dependencies using `brew`.
 
 ```bash
 $ brew install sqlite
 $ brew install catch2
+$ brew install json-c
 ```
 
 ## Build/Run configuration

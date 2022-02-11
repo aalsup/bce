@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
         return process_completion();
     }
 
-    return parse_args(argc, argv);
+    return process_cli(argc, argv);
 }
 
 int process_completion(void) {

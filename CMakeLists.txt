@@ -21,5 +21,13 @@ include_directories(/usr/local/include)
 include_directories(/usr/include)
 
 link_directories(/usr/lib)
-target_link_libraries(bce sqlite3)
+
+# Specifying '/usr/local/lib' strangely doesn't work on MacOS. Use 'find_library' instead.
+# see: https://stackoverflow.com/questions/52679871/cannot-find-library-under-usr-local-lib
+# link_directories(/usr/local/lib)
+# find_library(JSONC libjson-c.dylib)
+
+find_package(json-c CONFIG)
+
+target_link_libraries(bce PRIVATE sqlite3 json-c::json-c)
 

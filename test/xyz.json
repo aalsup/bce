@@ -1,0 +1,38 @@
+{
+  "command": {
+    "name": "xyz",
+    "aliases": [
+      {
+        "name": "xyz1"
+      },
+      {
+        "name": "xyz2"
+      }
+    ],
+    "args": [
+      {
+        "arg_type": "TEXT",
+        "description": "verbose output",
+        "long_name": "--verbose",
+        "short_name": "-v"
+      },
+      {
+        "arg_type": "OPTION",
+        "description": "output format",
+        "long_name": "--format",
+        "short_name": "-o",
+        "opts": [
+          {
+            "name": "JSON"
+          },
+          {
+            "name": "XML"
+          },
+          {
+            "name": "TEXT"
+          }
+        ]
+      }
+    ]
+  }
+}
