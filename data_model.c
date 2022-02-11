@@ -78,23 +78,25 @@ static sqlite3_stmt *completion_command_opt_read_stmt;
 
 int prepare_statement_cache(struct sqlite3 *conn) {
     int rc;
-    rc = sqlite3_prepare(conn, COMPLETION_COMMAND_READ_SQL, -1, &completion_command_read_stmt, NULL);
+    int prep_flags = SQLITE_PREPARE_PERSISTENT;
+
+    rc = sqlite3_prepare_v3(conn, COMPLETION_COMMAND_READ_SQL, -1, prep_flags, &completion_command_read_stmt, NULL);
     if (rc != SQLITE_OK) {
         goto done;
     }
-    rc = sqlite3_prepare(conn, COMPLETION_COMMAND_ALIAS_READ_SQL, -1, &completion_command_alias_read_stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMPLETION_COMMAND_ALIAS_READ_SQL, -1, prep_flags, &completion_command_alias_read_stmt, NULL);
     if (rc != SQLITE_OK) {
         goto done;
     }
-    rc = sqlite3_prepare(conn, COMPLETION_SUB_COMMAND_READ_SQL, -1, &completion_sub_command_read_stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMPLETION_SUB_COMMAND_READ_SQL, -1, prep_flags, &completion_sub_command_read_stmt, NULL);
     if (rc != SQLITE_OK) {
         goto done;
     }
-    rc = sqlite3_prepare(conn, COMPLETION_COMMAND_ARG_READ_SQL, -1, &completion_command_arg_read_stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMPLETION_COMMAND_ARG_READ_SQL, -1, prep_flags, &completion_command_arg_read_stmt, NULL);
     if (rc != SQLITE_OK) {
         goto done;
     }
-    rc = sqlite3_prepare(conn, COMPLETION_COMMAND_OPT_READ_SQL, -1, &completion_command_opt_read_stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMPLETION_COMMAND_OPT_READ_SQL, -1, prep_flags, &completion_command_opt_read_stmt, NULL);
     if (rc != SQLITE_OK) {
         goto done;
     }
