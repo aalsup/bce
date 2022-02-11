@@ -78,7 +78,7 @@ static sqlite3_stmt *completion_command_opt_read_stmt;
 
 int prepare_statement_cache(struct sqlite3 *conn) {
     int rc;
-    int prep_flags = SQLITE_PREPARE_PERSISTENT;
+    unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
 
     rc = sqlite3_prepare_v3(conn, COMPLETION_COMMAND_READ_SQL, -1, prep_flags, &completion_command_read_stmt, NULL);
     if (rc != SQLITE_OK) {
