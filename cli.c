@@ -114,7 +114,7 @@ int process_import(const char *filename) {
     linked_list_node_t *node = cmd_names->head;
     while (node) {
         char *cmd_name = (char *)node->data;
-        completion_command_t *cmd = create_completion_command();
+        bce_command_t *cmd = create_bce_command();
 
         // read cmd from src database
         rc = get_db_command(src_db, cmd, cmd_name);
@@ -140,7 +140,7 @@ int process_import(const char *filename) {
         }
 
         // cleanup
-        free_completion_command(&cmd);
+        free_bce_command(&cmd);
 
         node = node->next;
     }
@@ -180,7 +180,7 @@ int process_export(const char *command_name, const char *filename) {
         goto done;
     }
 
-    completion_command_t *completion_command = create_completion_command();
+    bce_command_t *completion_command = create_bce_command();
     rc = get_db_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
@@ -206,7 +206,7 @@ done:
         fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
     }
     if (completion_command) {
-        free_completion_command(&completion_command);
+        free_bce_command(&completion_command);
     }
     sqlite3_close(src_db);
     sqlite3_close(dest_db);

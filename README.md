@@ -1,4 +1,4 @@
-# Bash-Completion-Extension
+# BCE: Bash-Completion-Extension
 
 ## BASH completion
 
@@ -32,10 +32,10 @@ other than shipping around executable scripts (which is risky).
 
 A program that will provide completion assistance for any other program.
 A SQLite database contains all the data necessary to provide a consistent,
-portable dataset to provide auto-completion.
+portable dataset to provide auto-completion help for command-line applications.
 
 The program will provide a way to easily import/export configurations, so
-that users can share completion content.
+that users can easily share completion content.
 
 ## Project internals
 
@@ -55,9 +55,9 @@ The project requires the following for linking:
 
 On MacOS, you should be able to satisfy these dependencies using `brew`.
 
-```
-brew install sqlite
-brew install catch2
+```bash
+$ brew install sqlite
+$ brew install catch2
 ```
 
 ## Build/Run configuration
@@ -98,21 +98,32 @@ command
 
 ### Import/Export configurations
 
-```
+```bash
 $ bce --export kubectl --file=kubectl.db
 $ bce --import --file=kubectl.db 
 ```
 
 ### Future capabilities
 
-#### Import/Export JSON
+1. **Import/Export JSON**
 
-```
+```bash
 $ bce --export kubectl --format=json --file=kubectl.json
 $ bce --import --format=json --file=kubectl.json
 ```
 
-#### Multiple completion databases
+2. **Improve the order of recommendations**
+
+The cursor position could be used to determine which cmd/arg/opt is most
+likely what the user is looking for help with.
+
+3. **Provide a mechanism to easily create new completion data**
+
+Currently, there is no easy way to populate the database for a
+new command. Need to consider some approaches for creating new records
+for commands, sub-commands, arguments, and options.
+
+4. **Multiple completion databases**
 
 Currently, the application utilizes a single SQLite database. This is probably fine, but it does require import/export
 logic in order to load new completion information. Alternatively, we could use discrete SQLite database files for each

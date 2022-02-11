@@ -3,14 +3,14 @@
 #include "input.h"
 #include "linked_list.h"
 
-void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list);
-void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list);
+void prune_sub_commands(bce_command_t* cmd, const linked_list_t *word_list);
+void prune_arguments(bce_command_t* cmd, const linked_list_t *word_list);
 
 /*
  * Find the sub-commands and arguments related to the given command.
  * Prune the results based on the current command_line
  */
-void prune_command(completion_command_t* cmd) {
+void prune_command(bce_command_t* cmd) {
     // build a list of words from the command line
     linked_list_t *word_list = ll_string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
 
@@ -24,7 +24,7 @@ void prune_command(completion_command_t* cmd) {
 /*
  * Iterate over the sub-commands and prune any sibling sub-commands.
  */
-void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_list) {
+void prune_sub_commands(bce_command_t* cmd, const linked_list_t *word_list) {
     if (!cmd || !cmd->sub_commands) {
         return;
     }
@@ -33,7 +33,7 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
     linked_list_t *sub_cmds = cmd->sub_commands;
     linked_list_node_t *check_node = sub_cmds->head;
     while (check_node) {
-        completion_command_t *sub_cmd = (completion_command_t *)check_node->data;
+        bce_command_t *sub_cmd = (bce_command_t *)check_node->data;
         // check if cmd_name is in word_list
         sub_cmd->is_present_on_cmdline = ll_is_string_in_list(word_list, sub_cmd->name);
         if (!sub_cmd->is_present_on_cmdline) {
@@ -61,7 +61,7 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
     // recurse over the remaining sub-cmds
     linked_list_node_t *sub_node = sub_cmds->head;
     while (sub_node) {
-        completion_command_t *sub_cmd = (completion_command_t *)sub_node->data;
+        bce_command_t *sub_cmd = (bce_command_t *)sub_node->data;
         prune_arguments(sub_cmd, word_list);
         prune_sub_commands(sub_cmd, word_list);
         sub_node = sub_node->next;
@@ -70,7 +70,7 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
     sub_node = sub_cmds->head;
     while (sub_node) {
         bool node_deleted = false;
-        completion_command_t *sub_cmd = (completion_command_t *)sub_node->data;
+        bce_command_t *sub_cmd = (bce_command_t *)sub_node->data;
         // if a sub-command is present and has no children, it has been used and should be pruned
         if ((sub_cmd->is_present_on_cmdline)
             && (sub_cmd->sub_commands) && (sub_cmd->sub_commands->size == 0)
@@ -91,7 +91,7 @@ void prune_sub_commands(completion_command_t* cmd, const linked_list_t *word_lis
  * Find the arguments related to the current command.
  * Remove any arguments (without options) that have already been used.
  */
-void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) {
+void prune_arguments(bce_command_t* cmd, const linked_list_t *word_list) {
     if (!cmd) {
         return;
     }
@@ -101,7 +101,7 @@ void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
         linked_list_node_t *arg_node = args->head;
         while (arg_node) {
             bool arg_removed = false;
-            completion_command_arg_t *arg = (completion_command_arg_t *)arg_node->data;
+            bce_command_arg_t *arg = (bce_command_arg_t *)arg_node->data;
             // check if arg_name is in word_list
             if (ll_is_string_in_list(word_list, arg->short_name) || ll_is_string_in_list(word_list, arg->long_name)) {
                 arg->is_present_on_cmdline = true;
@@ -117,7 +117,7 @@ void prune_arguments(completion_command_t* cmd, const linked_list_t *word_list) 
                         linked_list_node_t *opt_node = opts->head;
                         while (opt_node) {
                             should_remove_arg = false;
-                            completion_command_opt_t *opt = (completion_command_opt_t *) opt_node->data;
+                            bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
                             if (ll_is_string_in_list(word_list, opt->name)) {
                                 should_remove_arg = true;
                                 break;

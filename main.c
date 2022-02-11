@@ -10,7 +10,7 @@
 #include "cli.h"
 
 int process_completion(void);
-void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd);
+void collect_recommendations(linked_list_t *recommendation_list, bce_command_t *cmd);
 void print_recommendations(linked_list_t *recommendation_list);
 
 int main(int argc, char **argv) {
@@ -99,7 +99,7 @@ int process_completion(void) {
     }
 
     // search for the command directly (load all descendents)
-    completion_command_t *completion_command = create_completion_command();
+    bce_command_t *completion_command = create_bce_command();
     rc = get_db_command(conn, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
@@ -130,7 +130,7 @@ int process_completion(void) {
     ll_destroy(&recommendation_list);
 
 done:
-    free_completion_command(&completion_command);
+    free_bce_command(&completion_command);
     rc = free_statement_cache(conn);
     sqlite3_close(conn);
 
@@ -139,7 +139,7 @@ done:
 
 // TODO: prioritize recommendations, bubble up most relevant to earlier in the list.
 // For example: `kubectl get pods <tab>` should show args/opts for `pods`, then `get`, and finally `kubectl`
-void collect_recommendations(linked_list_t *recommendation_list, completion_command_t *cmd) {
+void collect_recommendations(linked_list_t *recommendation_list, bce_command_t *cmd) {
     if (!cmd) {
         return;
     }
@@ -148,7 +148,7 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
     if (cmd->sub_commands) {
         linked_list_node_t *sub_cmd_node = cmd->sub_commands->head;
         while (sub_cmd_node) {
-            completion_command_t *sub_cmd = (completion_command_t *) sub_cmd_node->data;
+            bce_command_t *sub_cmd = (bce_command_t *) sub_cmd_node->data;
             if (sub_cmd && !sub_cmd->is_present_on_cmdline) {
                 char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
                 strncat(data, sub_cmd->name, NAME_FIELD_SIZE);
@@ -183,7 +183,7 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
     if (cmd->args) {
         linked_list_node_t *arg_node = cmd->args->head;
         while (arg_node) {
-            completion_command_arg_t *arg = (completion_command_arg_t *) arg_node->data;
+            bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
             if (arg) {
                 if (!arg->is_present_on_cmdline) {
                     char *arg_str = calloc(MAX_LINE_SIZE, sizeof(char));
@@ -203,7 +203,7 @@ void collect_recommendations(linked_list_t *recommendation_list, completion_comm
                     if (arg->opts) {
                         linked_list_node_t *opt_node = arg->opts->head;
                         while (opt_node) {
-                            completion_command_opt_t *opt = (completion_command_opt_t *) opt_node->data;
+                            bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
                             if (opt) {
                                 char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
                                 strncat(data, opt->name, NAME_FIELD_SIZE);
