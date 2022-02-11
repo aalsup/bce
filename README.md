@@ -101,8 +101,13 @@ command
 ### Import/Export configurations
 
 ```bash
-$ bce --export kubectl --file=kubectl.db
-$ bce --import --file=kubectl.db 
+# SQLite import/export
+$ bce --export kubectl --format=sqlite --file=kubectl.db
+$ bce --import --format=sqlite --file=kubectl.db
+
+# JSON import/export
+$ bce --export kubectl --format=json --file=kubectl.json
+$ bce --import --format=json --file=kubectl.json
 ```
 
 ### JSON format
@@ -148,30 +153,29 @@ $ bce --import --file=kubectl.db
 
 ### Future capabilities
 
-1. **Import/Export JSON**
-
-```bash
-$ bce --export kubectl --format=json --file=kubectl.json
-$ bce --import --format=json --file=kubectl.json
-```
-
-2. **Improve the order of recommendations**
+1. **Improve the order of recommendations**
 
 The cursor position could be used to determine which cmd/arg/opt is most
 likely what the user is looking for help with.
 
-3. **Provide a mechanism to easily create new completion data**
+2. **Provide a mechanism to easily create new completion data**
 
 Currently, there is no easy way to populate the database for a
 new command. Need to consider some approaches for creating new records
 for commands, sub-commands, arguments, and options.
 
-4. **Use extended SQLite error codes**
+3. **Use extended SQLite error codes**
 
 Currently, SQLite simply returns `SQLITE_ERROR` if anything goes wrong
 during a SQL operation. This could result from bad SQL, but could also
 result from a constraint violation. SQLite supports extended error numbers,
 which should be used to provide better messages and error handling.
+
+4. **Statically link libraries**
+
+It would be ideal to statically link the libraries, so that users don't have
+to manage extra dependencies. It'll make the executable larger, but its worth
+looking into.
 
 5. **Multiple completion databases**
 
