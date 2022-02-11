@@ -6,17 +6,44 @@
 #include <string.h>
 #include <sqlite3.h>
 
-static const char* COMPLETION_COMMAND_NAMES_SQL =
-        " SELECT c.name "
-        " FROM command c "
-        " WHERE c.parent_cmd IS NULL "
-        " ORDER BY c.name ";
-
+// SQL statements used for BASH completion
 static const char* COMPLETION_COMMAND_READ_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
         " FROM command c "
         " JOIN command_alias a ON a.cmd_uuid = c.uuid "
         " WHERE c.name = ?1 OR a.name = ?2 ";
+
+static const char* COMPLETION_COMMAND_ALIAS_READ_SQL =
+        " SELECT a.uuid, a.cmd_uuid, a.name "
+        " FROM command_alias a "
+        " WHERE a.cmd_uuid = ?1 ";
+
+static const char* COMPLETION_SUB_COMMAND_READ_SQL =
+        " SELECT c.uuid, c.name, c.parent_cmd "
+        " FROM command c "
+        " WHERE c.parent_cmd = ?1 "
+        " ORDER BY c.name ";
+
+static const char* COMPLETION_COMMAND_ARG_READ_SQL =
+        " SELECT ca.uuid, ca.cmd_uuid, ca.arg_type, ca.description, ca.long_name, ca.short_name "
+        " FROM command_arg ca "
+        " JOIN command c ON c.uuid = ca.cmd_uuid "
+        " WHERE c.uuid = ?1 "
+        " ORDER BY ca.long_name, ca.short_name ";
+
+static const char* COMPLETION_COMMAND_OPT_READ_SQL =
+        " SELECT co.uuid, co.cmd_arg_uuid, co.name "
+        " FROM command_opt co "
+        " JOIN command_arg ca ON ca.uuid = co.cmd_arg_uuid "
+        " WHERE ca.uuid = ?1 "
+        " ORDER BY co.name ";
+
+// SQL statements used for IMPORT/EXPORT
+static const char* COMPLETION_COMMAND_NAMES_SQL =
+        " SELECT c.name "
+        " FROM command c "
+        " WHERE c.parent_cmd IS NULL "
+        " ORDER BY c.name ";
 
 static const char* COMPLETION_COMMAND_WRITE_SQL =
         " INSERT INTO command "
@@ -24,31 +51,11 @@ static const char* COMPLETION_COMMAND_WRITE_SQL =
         " VALUES "
         " (?1, ?2, ?3) ";
 
-static const char* COMPLETION_COMMAND_DELETE_SQL =
-        " DELETE FROM command "
-        " WHERE name = ?1 ";
-
-static const char* COMPLETION_COMMAND_ALIAS_READ_SQL =
-        " SELECT a.uuid, a.cmd_uuid, a.name "
-        " FROM command_alias a "
-        " WHERE a.cmd_uuid = ?1 ";
-
 static const char* COMPLETION_COMMAND_ALIAS_WRITE_SQL =
         " INSERT INTO command_alias "
         " (uuid, cmd_uuid, name) "
         " VALUES "
         " (?1, ?2, ?3) ";
-
-static const char* COMPLETION_SUB_COMMAND_READ_SQL =
-        " SELECT c.uuid, c.name, c.parent_cmd "
-        " FROM command c "
-        " WHERE c.parent_cmd = ?1 ";
-
-static const char* COMPLETION_COMMAND_ARG_READ_SQL =
-        " SELECT ca.uuid, ca.cmd_uuid, ca.arg_type, ca.description, ca.long_name, ca.short_name "
-        " FROM command_arg ca "
-        " JOIN command c ON c.uuid = ca.cmd_uuid "
-        " WHERE c.uuid = ?1 ";
 
 static const char* COMPLETION_COMMAND_ARG_WRITE_SQL =
         " INSERT INTO command_arg "
@@ -56,18 +63,17 @@ static const char* COMPLETION_COMMAND_ARG_WRITE_SQL =
         " VALUES "
         " (?1, ?2, ?3, ?4, ?5, ?6) ";
 
-static const char* COMPLETION_COMMAND_OPT_READ_SQL =
-        " SELECT co.uuid, co.cmd_arg_uuid, co.name "
-        " FROM command_opt co "
-        " JOIN command_arg ca ON ca.uuid = co.cmd_arg_uuid "
-        " WHERE ca.uuid = ?1 "
-        " ORDER BY ca.long_name ";
-
 static const char* COMPLETION_COMMAND_OPT_WRITE_SQL =
         " INSERT INTO command_opt "
         " (uuid, cmd_arg_uuid, name) "
         " VALUES "
         " (?1, ?2, ?3) ";
+
+// DB schema should perform cascade deletes
+static const char* COMPLETION_COMMAND_DELETE_SQL =
+        " DELETE FROM command c "
+        " WHERE c.name = ?1 "
+        " AND c.parent_cmd IS NULL ";
 
 // cache statements that are used multiple times (prevent extra parse SQL operations)
 static sqlite3_stmt *completion_command_read_stmt;
@@ -101,7 +107,7 @@ int prepare_statement_cache(struct sqlite3 *conn) {
         goto done;
     }
 
-done:
+    done:
     return rc;
 }
 
