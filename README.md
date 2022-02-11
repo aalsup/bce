@@ -110,24 +110,24 @@ $ bce --import --file=kubectl.db
 ```json
 {
   "command": {
-    "uuid": "str",
+    "uuid": "str <optional>",
     "name": "str",
     "aliases": [
       {
-        "uuid": "str",
+        "uuid": "str <optional>",
         "name": "str"
       }
     ],
     "args": [
       {
-        "uuid": "str",
+        "uuid": "str <optional>",
         "arg_type": "NONE|OPTION|FILE|TEXT",
         "description": "str",
         "long_name": "str",
         "short_name": "str",
         "opts": [
           {
-            "uuid": "str",
+            "uuid": "str <optional>",
             "name": "str"
           }
         ]
@@ -135,7 +135,7 @@ $ bce --import --file=kubectl.db
     ],
     "sub_commands": [
       {
-        "uuid": "str",
+        "uuid": "str <optional>",
         "name": "str",
         "aliases": [],
         "sub_commands": [],
@@ -166,7 +166,14 @@ Currently, there is no easy way to populate the database for a
 new command. Need to consider some approaches for creating new records
 for commands, sub-commands, arguments, and options.
 
-4. **Multiple completion databases**
+4. **Use extended SQLite error codes**
+
+Currently, SQLite simply returns `SQLITE_ERROR` if anything goes wrong
+during a SQL operation. This could result from bad SQL, but could also
+result from a constraint violation. SQLite supports extended error numbers,
+which should be used to provide better messages and error handling.
+
+5. **Multiple completion databases**
 
 Currently, the application utilizes a single SQLite database. This is probably fine, but it does require import/export
 logic in order to load new completion information. Alternatively, we could use discrete SQLite database files for each
