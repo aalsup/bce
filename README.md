@@ -67,6 +67,11 @@ $ brew install json-c
 The project should build and run as-is. However, without passing in
 the expected environment variables, nothing interesting will be displayed.
 
+Currently, the `json-c` library is statically linked within the application, so 
+users won't need to install `json-c`. On the other hand, `sqlite3` is almost
+universally available as a dynlib, so it is dynamically linked at runtime. This
+can be overridden by running `cmake -DSQLITE_STATIC=ON ...`.
+
 #### Example run configuration
 
 ```
@@ -171,13 +176,7 @@ during a SQL operation. This could result from bad SQL, but could also
 result from a constraint violation. SQLite supports extended error numbers,
 which should be used to provide better messages and error handling.
 
-4. **Statically link libraries**
-
-It would be ideal to statically link the libraries, so that users don't have
-to manage extra dependencies. It'll make the executable larger, but its worth
-looking into.
-
-5. **Multiple completion databases**
+4. **Multiple completion databases**
 
 Currently, the application utilizes a single SQLite database. This is probably fine, but it does require import/export
 logic in order to load new completion information. Alternatively, we could use discrete SQLite database files for each

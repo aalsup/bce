@@ -1,0 +1,114 @@
+{
+  "command": {
+    "uuid": "00000000-0000-0000-0000-000000000001",
+    "name": "kubectl",
+    "aliases": [
+      {
+        "uuid": "00000000-0000-0000-0003-000000000000",
+        "name": "bbb"
+      }
+    ],
+    "args": [
+      {
+        "uuid": "00000000-0000-0000-1111-000000000004",
+        "arg_type": "NONE",
+        "description": "Use all namespaces",
+        "long_name": "--all-namespaces",
+        "short_name": "-A",
+        "opts": [
+        ]
+      },
+      {
+        "uuid": "00000000-0000-0000-1111-000000000002",
+        "arg_type": "FILE",
+        "description": "read/write data using the provided file",
+        "long_name": "--file",
+        "short_name": "-f",
+        "opts": [
+        ]
+      },
+      {
+        "uuid": "00000000-0000-0000-1111-000000000003",
+        "arg_type": "TEXT",
+        "description": "Use the specified namespace",
+        "long_name": "--namespace",
+        "short_name": "-n",
+        "opts": [
+        ]
+      }
+    ],
+    "sub_commands": [
+      {
+        "uuid": "00000000-0000-0000-0000-000000000002",
+        "name": "get",
+        "aliases": [
+        ],
+        "args": [
+          {
+            "uuid": "00000000-0000-0000-1111-000000000005",
+            "arg_type": "TEXT",
+            "description": "Build a kustomization target from a directory or URL",
+            "long_name": "--kustomize",
+            "short_name": "-k",
+            "opts": [
+            ]
+          },
+          {
+            "uuid": "00000000-0000-0000-1111-000000000006",
+            "arg_type": "TEXT",
+            "description": "comma separated list of labels to be presented as columns",
+            "long_name": "--label-columns",
+            "short_name": "-L",
+            "opts": [
+            ]
+          },
+          {
+            "uuid": "00000000-0000-0000-1111-000000000001",
+            "arg_type": "OPTION",
+            "description": "Output format",
+            "long_name": "--output",
+            "short_name": "-o",
+            "opts": [
+              {
+                "uuid": "00000000-0000-0000-2222-000000000001",
+                "name": "json"
+              },
+              {
+                "uuid": "00000000-0000-0000-2222-000000000004",
+                "name": "name"
+              },
+              {
+                "uuid": "00000000-0000-0000-2222-000000000002",
+                "name": "wide"
+              },
+              {
+                "uuid": "00000000-0000-0000-2222-000000000003",
+                "name": "yaml"
+              }
+            ]
+          }
+        ],
+        "sub_commands": [
+          {
+            "uuid": "00000000-0000-0000-0000-000000000003",
+            "name": "pods",
+            "aliases": [
+              {
+                "uuid": "00000000-0000-0000-0003-000000000002",
+                "name": "po"
+              },
+              {
+                "uuid": "00000000-0000-0000-0003-000000000001",
+                "name": "pod"
+              }
+            ],
+            "args": [
+            ],
+            "sub_commands": [
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

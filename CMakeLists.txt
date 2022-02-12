@@ -16,18 +16,31 @@ add_executable(bce
 add_subdirectory(test)
 
 option(DEBUG "Output additional debug information" OFF)
+option(SQLITE_STATIC "Link SQLite statically" OFF)
 
 include_directories(/usr/local/include)
 include_directories(/usr/include)
-
-link_directories(/usr/lib)
 
 # Specifying '/usr/local/lib' strangely doesn't work on MacOS. Use 'find_library' instead.
 # see: https://stackoverflow.com/questions/52679871/cannot-find-library-under-usr-local-lib
 # link_directories(/usr/local/lib)
 # find_library(JSONC libjson-c.dylib)
+link_directories(/usr/lib)
 
+# bundle json-c library within the application
 find_package(json-c CONFIG)
+add_library(json-c STATIC IMPORTED)
+set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/local/lib/libjson-c.a)
 
-target_link_libraries(bce PRIVATE sqlite3 json-c::json-c)
+if (SQLITE_STATIC)
+    # bundle sqlite3 library within the application
+    link_directories(/usr/local/Cellar/sqlite/3.37.2/lib)
+    find_package(sqlite3 CONFIG)
+    add_library(sqlite3 STATIC IMPORTED)
+    set_target_properties(sqlite3 PROPERTIES IMPORTED_LOCATION /usr/local/Cellar/sqlite/3.37.2/lib/libsqlite3.a)
+else ()
+    # allow sqlite3 to be dynamically linked at runtime
+endif (SQLITE_STATIC)
+
+target_link_libraries(bce PRIVATE sqlite3 json-c)
 
