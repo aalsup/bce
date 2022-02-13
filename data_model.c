@@ -206,7 +206,7 @@ int get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
     // try to find the command by name
     sqlite3_stmt *stmt;
     // try to find the command by name
-    int rc = sqlite3_prepare(conn, COMMAND_NAMES_SQL, -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v3(conn, COMMAND_NAMES_SQL, -1, 0, &stmt, NULL);
     if (rc == SQLITE_OK) {
         int step = sqlite3_step(bce_command_read_stmt);
         while (step == SQLITE_ROW) {
@@ -546,14 +546,14 @@ void free_bce_command_opt(bce_command_opt_t **ppopt) {
 
 int write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
     if (!cmd) {
-        return 1;   // TODO: fix this
+        return ERR_MISSING_DATA;
     }
 
     sqlite3_stmt *stmt;
     int rc;
 
     // insert the command
-    rc = sqlite3_prepare(conn, COMMAND_WRITE_SQL, -1, &stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMMAND_WRITE_SQL, -1, 0, &stmt, NULL);
     if (rc != SQLITE_OK) {
         goto done;
     }
@@ -631,7 +631,7 @@ int write_db_command_alias(struct sqlite3 *conn, bce_command_alias_t *alias) {
     int rc;
 
     // insert the alias
-    rc = sqlite3_prepare(conn, COMMAND_ALIAS_WRITE_SQL, -1, &stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMMAND_ALIAS_WRITE_SQL, -1, 0, &stmt, NULL);
     // uuid, cmd_uuid, arg_type, description, long_name, short_name
     if (rc != SQLITE_OK) {
         goto done;
@@ -661,7 +661,7 @@ int write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg) {
     int rc;
 
     // insert the arg
-    rc = sqlite3_prepare(conn, COMMAND_ARG_WRITE_SQL, -1, &stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMMAND_ARG_WRITE_SQL, -1, 0, &stmt, NULL);
     // uuid, cmd_uuid, arg_type, description, long_name, short_name
     if (rc != SQLITE_OK) {
         goto done;
@@ -721,7 +721,7 @@ int write_db_command_opt(struct sqlite3 *conn, bce_command_opt_t *opt) {
     int rc;
 
     // insert the opt
-    rc = sqlite3_prepare(conn, COMMAND_OPT_WRITE_SQL, -1, &stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMMAND_OPT_WRITE_SQL, -1, 0, &stmt, NULL);
     // uuid, cmd_arg_uuid, name
     if (rc != SQLITE_OK) {
         goto done;
@@ -751,7 +751,7 @@ int delete_db_command(struct sqlite3 *conn, const char *command_name) {
     int rc;
 
     // delete the command (CASCADE should happen for all FKs)
-    rc = sqlite3_prepare(conn, COMMAND_DELETE_SQL, -1, &stmt, NULL);
+    rc = sqlite3_prepare_v3(conn, COMMAND_DELETE_SQL, -1, 0, &stmt, NULL);
     if (rc != SQLITE_OK) {
         goto done;
     }

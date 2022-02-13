@@ -108,7 +108,7 @@ int get_schema_version(struct sqlite3 *conn) {
     int version = 0;
     sqlite3_stmt *stmt;
     // try to find the command by name
-    int rc = sqlite3_prepare(conn, SCHEMA_VERSION_SQL, -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v3(conn, SCHEMA_VERSION_SQL, -1, 0, &stmt, NULL);
     if (rc == SQLITE_OK) {
         int step = sqlite3_step(stmt);
         if (step == SQLITE_ROW) {
