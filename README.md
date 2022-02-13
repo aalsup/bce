@@ -185,3 +185,8 @@ clean way to import/export configurations, since each command is self-contained 
 would present a challenge for aliases. How would the application know which DB to open if the command-line contains 
 an alias (rather than the actual command name).
 
+5. **Check user's history for recommendations**
+
+For options (child of argument), it would be helpful to look back through BASH history
+to check if a particular value was mostly recently used.
+
