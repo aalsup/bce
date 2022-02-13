@@ -163,18 +163,18 @@ $ bce --import --format=json --file=kubectl.json
 The cursor position could be used to determine which cmd/arg/opt is most
 likely what the user is looking for help with.
 
-2. **Provide a mechanism to easily create new completion data**
+2. **More consistent response/error function results**
+
+BCE is scattered with different error-code expectations everywhere.
+In some cases, functions return `SQLITE_xyz` error codes. In other
+cases `ERR_xyz` codes defined in `error.h`. Additionally, the use of
+error-codes is inconsistent.
+
+3. **Provide a mechanism to easily create new completion data**
 
 Currently, there is no easy way to populate the database for a
 new command. Need to consider some approaches for creating new records
 for commands, sub-commands, arguments, and options.
-
-3. **Use extended SQLite error codes**
-
-Currently, SQLite simply returns `SQLITE_ERROR` if anything goes wrong
-during a SQL operation. This could result from bad SQL, but could also
-result from a constraint violation. SQLite supports extended error numbers,
-which should be used to provide better messages and error handling.
 
 4. **Multiple completion databases**
 
