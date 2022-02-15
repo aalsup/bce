@@ -17,7 +17,7 @@ void prune_command(bce_command_t* cmd) {
     prune_arguments(cmd, word_list);
     prune_sub_commands(cmd, word_list);
 
-    ll_destroy(&word_list);
+    word_list = ll_destroy(word_list);
     return;
 }
 

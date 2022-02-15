@@ -49,7 +49,7 @@ bool get_current_word(char* dest, size_t bufsize) {
             result = true;
         }
     }
-    ll_destroy(&list);
+    list = ll_destroy(list);
     return result;
 }
 
@@ -67,7 +67,7 @@ bool get_previous_word(char* dest, size_t bufsize) {
             result = true;
         }
     }
-    ll_destroy(&list);
+    list = ll_destroy(list);
     return result;
 }
 

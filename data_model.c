@@ -353,7 +353,7 @@ int get_db_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
     }
 
     // ensure cmd->args is fresh
-    ll_destroy(&parent_cmd->args);
+    parent_cmd->args = ll_destroy(parent_cmd->args);
     ll_free_node_func free_arg = (ll_free_node_func) &free_bce_command_arg;
     parent_cmd->args = ll_create(free_arg);
 
@@ -402,7 +402,7 @@ int get_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg) {
     }
 
     // ensure arg->opts is fresh
-    ll_destroy(&parent_arg->opts);
+    parent_arg->opts = ll_destroy(parent_arg->opts);
     ll_free_node_func free_opt = (ll_free_node_func) &free_bce_command_opt;
     parent_arg->opts = ll_create(free_opt);
 
@@ -483,65 +483,49 @@ bce_command_opt_t* create_bce_command_opt(void) {
     return opt;
 }
 
-void free_bce_command(bce_command_t **ppcmd) {
-    if (!ppcmd) {
-        return;
-    }
-    bce_command_t *cmd = *ppcmd;
+bce_command_t* free_bce_command(bce_command_t *cmd) {
     if (!cmd) {
-        return;
+        return NULL;
     }
 
     // free dynamic internals
-    ll_destroy(&cmd->aliases);
-    ll_destroy(&cmd->sub_commands);
-    ll_destroy(&cmd->args);
+    cmd->aliases = ll_destroy(cmd->aliases);
+    cmd->sub_commands = ll_destroy(cmd->sub_commands);
+    cmd->args = ll_destroy(cmd->args);
 
     free(cmd);
-    *ppcmd = NULL;
+    return NULL;
 }
 
-void free_bce_command_alias(bce_command_alias_t **ppalias) {
-    if (!ppalias) {
-        return;
-    }
-    bce_command_alias_t *alias = *ppalias;
+bce_command_alias_t* free_bce_command_alias(bce_command_alias_t *alias) {
     if (!alias) {
-        return;
+        return NULL;
     }
 
     free(alias);
-    *ppalias = NULL;
+    return NULL;
 }
 
-void free_bce_command_arg(bce_command_arg_t **pparg) {
-    if (!pparg) {
-        return;
-    }
-    bce_command_arg_t *arg = *pparg;
+bce_command_arg_t* free_bce_command_arg(bce_command_arg_t *arg) {
     if (!arg) {
-        return;
+        return NULL;
     }
 
-    ll_destroy(&arg->opts);
+    arg->opts = ll_destroy(arg->opts);
 
     free(arg);
-    *pparg = NULL;
+    return NULL;
 }
 
-void free_bce_command_opt(bce_command_opt_t **ppopt) {
-    if (!ppopt) {
-        return;
-    }
-    bce_command_opt_t *opt = *ppopt;
+bce_command_opt_t* free_bce_command_opt(bce_command_opt_t *opt) {
     if (!opt) {
-        return;
+        return NULL;
     }
 
     // no internal data to free here
 
     free(opt);
-    *ppopt = NULL;
+    return NULL;
 }
 
 int write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {

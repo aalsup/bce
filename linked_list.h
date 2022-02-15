@@ -5,7 +5,7 @@
 #define LINKED_LIST_H
 
 // function signature to free node data; otherwise free() is used by `ll_destroy()` and `ll_remove_item()`
-typedef void (*ll_free_node_func)(void *);
+typedef void* (*ll_free_node_func)(void *);
 
 typedef struct linked_list_node_t {
     int id;
@@ -20,7 +20,7 @@ typedef struct linked_list_t {
 } linked_list_t;
 
 linked_list_t* ll_create(ll_free_node_func free_func);
-void ll_destroy(linked_list_t **list);
+linked_list_t* ll_destroy(linked_list_t *list);
 bool ll_append_item(linked_list_t *list, const void *data);
 bool ll_remove_item(linked_list_t *list, linked_list_node_t *node);
 void* ll_get_nth_item(const linked_list_t* list, size_t elem);

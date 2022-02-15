@@ -127,10 +127,10 @@ int process_completion(void) {
     linked_list_t *recommendation_list = ll_create(NULL);
     collect_recommendations(recommendation_list, completion_command);
     print_recommendations(recommendation_list);
-    ll_destroy(&recommendation_list);
+    recommendation_list = ll_destroy(recommendation_list);
 
 done:
-    free_bce_command(&completion_command);
+    completion_command = free_bce_command(completion_command);
     rc = free_statement_cache(conn);
     sqlite3_close(conn);
 

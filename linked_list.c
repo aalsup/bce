@@ -9,7 +9,7 @@ static unsigned long node_id_seq = 1;
  * Allocates dynamic memory for the struct. Caller should use `ll_destroy()` when done.
  * If `free_node_func` is not NULL, this function will be called to free items from the list.
  */
-linked_list_t* ll_create(void (*free_func)(void *)) {
+linked_list_t* ll_create(void * (*free_func)(void *)) {
     linked_list_t* list = malloc(sizeof(linked_list_t));
     if (list) {
         list->size = 0;
@@ -24,20 +24,16 @@ linked_list_t* ll_create(void (*free_func)(void *)) {
  * free_node_func is a function pointer to perform any custom logic to free each node's data.
  * If free_node_func is NULL, the nodes' data will be reclaimed using `free(node->data)`.
  */
-void ll_destroy(linked_list_t **pplist) {
-    if (!pplist) {
-        return;
-    }
-    linked_list_t *list = *pplist;
+linked_list_t* ll_destroy(linked_list_t *list) {
     if (!list) {
-        return;
+        return NULL;
     }
 
     linked_list_node_t* node = list->head;
     while (node) {
         // free tbe node's data
         if (list->free_node_func) {
-            list->free_node_func(&node->data);
+            node->data = list->free_node_func(node->data);
         } else {
             free(node->data);
         }
@@ -52,7 +48,7 @@ void ll_destroy(linked_list_t **pplist) {
     list->head = NULL;
     list->size = 0;
     free(list);
-    *pplist = NULL;
+    return NULL;
 }
 
 /*
@@ -176,7 +172,7 @@ bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
         if (node->id == node_to_remove->id) {
             // free the node's data
             if (list->free_node_func) {
-                list->free_node_func(&node->data);
+                list->free_node_func(node->data);
             } else {
                 free(node->data);
             }

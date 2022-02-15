@@ -205,7 +205,7 @@ static int process_import_sqlite(const char *filename) {
         }
 
         // cleanup
-        free_bce_command(&cmd);
+        cmd = free_bce_command(cmd);
 
         node = node->next;
     }
@@ -272,7 +272,7 @@ done:
         fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
     }
     if (completion_command) {
-        free_bce_command(&completion_command);
+        completion_command = free_bce_command(completion_command);
     }
     sqlite3_close(src_db);
     sqlite3_close(dest_db);
@@ -364,7 +364,7 @@ static int process_export_json(const char *command_name, const char *filename) {
         fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
     }
     if (completion_command) {
-        free_bce_command(&completion_command);
+        completion_command = free_bce_command(completion_command);
     }
     sqlite3_close(src_db);
     return err;
