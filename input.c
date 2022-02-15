@@ -12,6 +12,7 @@ int load_completion_input(void) {
     if (!str_cursor_pos || strlen(str_cursor_pos) == 0) {
         return(ERR_MISSING_ENV_COMP_POINT);
     }
+    completion_input.line[0] = '\0';
     strncat(completion_input.line, line, MAX_LINE_SIZE);
     completion_input.cursor_pos = (int) strtol(str_cursor_pos, (char **)NULL, 10);
     if ((completion_input.cursor_pos == 0) && (errno != 0)) {

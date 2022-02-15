@@ -50,7 +50,7 @@ int process_cli(int argc, char **argv) {
             op = OP_EXPORT;
             // next parameter should be the command name
             if ((i+1) < argc) {
-                strncpy(command_name, argv[++i], CMD_NAME_SIZE);
+                strncat(command_name, argv[++i], CMD_NAME_SIZE);
             } else {
                 op = OP_NONE;
                 break;
@@ -68,7 +68,7 @@ int process_cli(int argc, char **argv) {
         {
             // next parameter should be the filename
             if ((i+1) < argc) {
-                strncpy(filename, argv[++i], FILENAME_MAX);
+                strncat(filename, argv[++i], FILENAME_MAX);
             } else {
                 op = OP_NONE;
                 break;
@@ -384,20 +384,20 @@ static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, struct 
     json_object *j_obj = NULL;
 
     if (parent_cmd_uuid) {
-        strncpy(bce_command->parent_cmd_uuid, parent_cmd_uuid, UUID_FIELD_SIZE);
+        strncat(bce_command->parent_cmd_uuid, parent_cmd_uuid, UUID_FIELD_SIZE);
     }
 
     j_obj = json_object_object_get(j_command, "uuid");
     if (j_obj) {
         const char *uuid = json_object_get_string(j_obj);
-        strncpy(bce_command->uuid, uuid, UUID_FIELD_SIZE);
+        strncat(bce_command->uuid, uuid, UUID_FIELD_SIZE);
     } else {
         uuid4_generate(bce_command->uuid);
     }
     j_obj = json_object_object_get(j_command, "name");
     if (j_obj) {
         const char *name = json_object_get_string(j_obj);
-        strncpy(bce_command->name, name, NAME_FIELD_SIZE);
+        strncat(bce_command->name, name, NAME_FIELD_SIZE);
     }
     j_obj = json_object_object_get(j_command, "aliases");
     if (j_obj) {
@@ -446,19 +446,19 @@ static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, st
     bce_command_alias_t *bce_alias = create_bce_command_alias();
     json_object *j_obj = NULL;
 
-    strncpy(bce_alias->cmd_uuid, cmd_uuid, UUID_FIELD_SIZE);
+    strncat(bce_alias->cmd_uuid, cmd_uuid, UUID_FIELD_SIZE);
 
     j_obj = json_object_object_get(j_alias, "uuid");
     if (j_obj) {
         const char *uuid = json_object_get_string(j_obj);
-        strncpy(bce_alias->uuid, uuid, UUID_FIELD_SIZE);
+        strncat(bce_alias->uuid, uuid, UUID_FIELD_SIZE);
     } else {
         uuid4_generate(bce_alias->uuid);
     }
     j_obj = json_object_object_get(j_alias, "name");
     if (j_obj) {
         const char *name = json_object_get_string(j_obj);
-        strncpy(bce_alias->name, name, NAME_FIELD_SIZE);
+        strncat(bce_alias->name, name, NAME_FIELD_SIZE);
     }
 
     return bce_alias;
@@ -478,34 +478,34 @@ static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, struct
     bce_command_arg_t *bce_arg = create_bce_command_arg();
     json_object *j_obj = NULL;
 
-    strncpy(bce_arg->cmd_uuid, cmd_uuid, UUID_FIELD_SIZE);
+    strncat(bce_arg->cmd_uuid, cmd_uuid, UUID_FIELD_SIZE);
 
     j_obj = json_object_object_get(j_arg, "uuid");
     if (j_obj) {
         const char *uuid = json_object_get_string(j_obj);
-        strncpy(bce_arg->uuid, uuid, UUID_FIELD_SIZE);
+        strncat(bce_arg->uuid, uuid, UUID_FIELD_SIZE);
     } else {
         uuid4_generate(bce_arg->uuid);
     }
     j_obj = json_object_object_get(j_arg, "arg_type");
     if (j_obj) {
         const char *arg_type = json_object_get_string(j_obj);
-        strncpy(bce_arg->arg_type, arg_type, CMD_TYPE_FIELD_SIZE);
+        strncat(bce_arg->arg_type, arg_type, CMD_TYPE_FIELD_SIZE);
     }
     j_obj = json_object_object_get(j_arg, "description");
     if (j_obj) {
         const char *description = json_object_get_string(j_obj);
-        strncpy(bce_arg->description, description, DESCRIPTION_FIELD_SIZE);
+        strncat(bce_arg->description, description, DESCRIPTION_FIELD_SIZE);
     }
     j_obj = json_object_object_get(j_arg, "long_name");
     if (j_obj) {
         const char *long_name = json_object_get_string(j_obj);
-        strncpy(bce_arg->long_name, long_name, NAME_FIELD_SIZE);
+        strncat(bce_arg->long_name, long_name, NAME_FIELD_SIZE);
     }
     j_obj = json_object_object_get(j_arg, "short_name");
     if (j_obj) {
         const char *short_name = json_object_get_string(j_obj);
-        strncpy(bce_arg->short_name, short_name, SHORTNAME_FIELD_SIZE);
+        strncat(bce_arg->short_name, short_name, SHORTNAME_FIELD_SIZE);
     }
 
     j_obj = json_object_object_get(j_arg, "opts");
@@ -536,17 +536,17 @@ static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, struct
     j_obj = json_object_object_get(j_opt, "uuid");
     if (j_obj) {
         const char *uuid = json_object_get_string(j_obj);
-        strncpy(bce_opt->uuid, uuid, UUID_FIELD_SIZE);
+        strncat(bce_opt->uuid, uuid, UUID_FIELD_SIZE);
     } else {
         uuid4_generate(bce_opt->uuid);
     }
     j_obj = json_object_object_get(j_opt, "name");
     if (j_obj) {
         const char *name = json_object_get_string(j_obj);
-        strncpy(bce_opt->name, name, NAME_FIELD_SIZE);
+        strncat(bce_opt->name, name, NAME_FIELD_SIZE);
     }
 
-    strncpy(bce_opt->cmd_arg_uuid, arg_uuid, UUID_FIELD_SIZE);
+    strncat(bce_opt->cmd_arg_uuid, arg_uuid, UUID_FIELD_SIZE);
     return bce_opt;
 }
 
