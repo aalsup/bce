@@ -189,6 +189,9 @@ bool exec_sql_script(struct sqlite3 *conn, const char *filename) {
         if (rc != SQLITE_OK) {
             result = false;
         }
+    } else {
+        fprintf(stderr, "Error reading file: %s\n", filename);
+        result = false;
     }
     free((void *) *sql_data);
     free((void *) sql_data);
