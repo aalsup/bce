@@ -194,6 +194,9 @@ static int process_import_sqlite(const char *filename) {
             goto done;
         }
 
+        // vacuum the database (reclaim space)
+        rc = sqlite3_exec(dest_db, "VACUUM", NULL, NULL, NULL);
+
         // write cmd to dest database
         rc = write_db_command(dest_db, cmd);
         if (rc != SQLITE_OK) {
