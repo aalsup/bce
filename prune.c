@@ -3,8 +3,8 @@
 #include "input.h"
 #include "linked_list.h"
 
-void prune_sub_commands(bce_command_t* cmd, const linked_list_t *word_list);
-void prune_arguments(bce_command_t* cmd, const linked_list_t *word_list);
+static void prune_sub_commands(bce_command_t* cmd, const linked_list_t *word_list);
+static void prune_arguments(bce_command_t* cmd, const linked_list_t *word_list);
 
 /*
  * Find the sub-commands and arguments related to the given command.
@@ -24,7 +24,7 @@ void prune_command(bce_command_t* cmd) {
 /*
  * Iterate over the sub-commands and prune any sibling sub-commands.
  */
-void prune_sub_commands(bce_command_t* cmd, const linked_list_t *word_list) {
+static void prune_sub_commands(bce_command_t* cmd, const linked_list_t *word_list) {
     if (!cmd || !cmd->sub_commands) {
         return;
     }
@@ -91,7 +91,7 @@ void prune_sub_commands(bce_command_t* cmd, const linked_list_t *word_list) {
  * Find the arguments related to the current command.
  * Remove any arguments (without options) that have already been used.
  */
-void prune_arguments(bce_command_t* cmd, const linked_list_t *word_list) {
+static void prune_arguments(bce_command_t* cmd, const linked_list_t *word_list) {
     if (!cmd) {
         return;
     }

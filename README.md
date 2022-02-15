@@ -48,7 +48,7 @@ The build system is CMake (3.21+).
 
 ## Project dependencies
 
-The project requires the following for linking:
+The project has the following build dependencies:
 
 - sqlite
 - catch2
@@ -190,3 +190,7 @@ an alias (rather than the actual command name).
 For options (child of argument), it would be helpful to look back through BASH history
 to check if a particular value was mostly recently used.
 
+6. **Improve Cmake config**
+
+The cmake configuration has been cobbled together. It _works_; however, there are modern cmake features that aren't
+being used. For example, `target_link_libraries` are supposedly superior to the older `link_libraries`.
