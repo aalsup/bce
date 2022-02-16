@@ -9,7 +9,6 @@ char* get_bce_error_msg(bce_error_t err) {
         case ERR_NONE:
             break;
         case ERR_SQLITE_ERROR:
-            msg = "SQLite runtime error";
             break;
         case ERR_MISSING_ENV_COMP_LINE:
             break;
