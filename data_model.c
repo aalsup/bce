@@ -82,7 +82,7 @@ static sqlite3_stmt *bce_sub_command_read_stmt;
 static sqlite3_stmt *bce_command_arg_read_stmt;
 static sqlite3_stmt *bce_command_opt_read_stmt;
 
-int prepare_statement_cache(struct sqlite3 *conn) {
+bce_error_t prepare_statement_cache(struct sqlite3 *conn) {
     int rc;
     unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
 
@@ -107,11 +107,15 @@ int prepare_statement_cache(struct sqlite3 *conn) {
         goto done;
     }
 
-    done:
-    return rc;
+done:
+    if (rc == SQLITE_OK) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
+    }
 }
 
-int free_statement_cache(struct sqlite3 *conn) {
+bce_error_t free_statement_cache(struct sqlite3 *conn) {
     int rc;
 
     if (bce_command_read_stmt) {
@@ -135,7 +139,11 @@ int free_statement_cache(struct sqlite3 *conn) {
         bce_command_opt_read_stmt = NULL;
     }
 
-    return rc;
+    if (rc == SQLITE_OK) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
+    }
 }
 
 void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, const int level) {
@@ -198,9 +206,12 @@ void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, const in
     }
 }
 
-int get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
-    if (!conn || !cmd_names) {
-        return 1;   // TODO: fix this
+bce_error_t get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
+    if (!conn) {
+        return ERR_NO_DATABASE_CONNECTION;
+    }
+    if (!cmd_names) {
+        return ERR_INVALID_CMD_NAME;
     }
 
     // try to find the command by name
@@ -217,10 +228,14 @@ int get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
         }
     }
 
-    return rc;
+    if (rc == SQLITE_OK) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
+    }
 }
 
-int get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char* command_name) {
+bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char* command_name) {
     int rc;
 
     memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -274,7 +289,11 @@ int get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char* command
     }
 
 done:
-    return rc;
+    if (rc == SQLITE_OK) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
+    }
 }
 
 int get_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
@@ -301,7 +320,7 @@ int get_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     return rc;
 }
 
-int get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd) {
+bce_error_t get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     // pull statement from cache
     sqlite3_stmt *stmt = bce_sub_command_read_stmt;
     int rc = sqlite3_reset(stmt);
@@ -344,7 +363,11 @@ int get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     }
 
     done:
-    return rc;
+    if (rc == SQLITE_OK) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
+    }
 }
 
 int get_db_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
@@ -528,9 +551,9 @@ bce_command_opt_t* free_bce_command_opt(bce_command_opt_t *opt) {
     return NULL;
 }
 
-int write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
+bce_error_t write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
     if (!cmd) {
-        return ERR_MISSING_DATA;
+        return ERR_INVALID_CMD;
     }
 
     sqlite3_stmt *stmt;
@@ -600,15 +623,16 @@ int write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
 
     done:
     sqlite3_finalize(stmt);
-    if (rc == SQLITE_DONE) {
-        rc = SQLITE_OK;
+    if ((rc == SQLITE_DONE) || (rc == SQLITE_OK)) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
     }
-    return rc;
 }
 
-int write_db_command_alias(struct sqlite3 *conn, bce_command_alias_t *alias) {
+bce_error_t write_db_command_alias(struct sqlite3 *conn, bce_command_alias_t *alias) {
     if (!alias) {
-        return 1;
+        return ERR_INVALID_ALIAS;
     }
 
     sqlite3_stmt *stmt;
@@ -630,15 +654,16 @@ int write_db_command_alias(struct sqlite3 *conn, bce_command_alias_t *alias) {
 
     done:
     sqlite3_finalize(stmt);
-    if (rc == SQLITE_DONE) {
-        rc = SQLITE_OK;
+    if ((rc == SQLITE_DONE) || (rc == SQLITE_OK)) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
     }
-    return rc;
 }
 
-int write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg) {
+bce_error_t write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg) {
     if (!arg) {
-        return 1;   // TODO: fix this
+        return ERR_INVALID_ARG;
     }
 
     sqlite3_stmt *stmt;
@@ -690,15 +715,16 @@ int write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg) {
 
     done:
     sqlite3_finalize(stmt);
-    if (rc == SQLITE_DONE) {
-        rc = SQLITE_OK;
+    if ((rc == SQLITE_DONE) || (rc = SQLITE_OK)) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
     }
-    return rc;
 }
 
-int write_db_command_opt(struct sqlite3 *conn, bce_command_opt_t *opt) {
+bce_error_t write_db_command_opt(struct sqlite3 *conn, bce_command_opt_t *opt) {
     if (!opt) {
-        return 1;   // TODO: fix this
+        return ERR_INVALID_OPT;
     }
 
     sqlite3_stmt *stmt;
@@ -720,15 +746,16 @@ int write_db_command_opt(struct sqlite3 *conn, bce_command_opt_t *opt) {
 
     done:
     sqlite3_finalize(stmt);
-    if (rc == SQLITE_DONE) {
-        rc = SQLITE_OK;
+    if ((rc == SQLITE_DONE) || (rc = SQLITE_OK)) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
     }
-    return rc;
 }
 
-int delete_db_command(struct sqlite3 *conn, const char *command_name) {
+bce_error_t delete_db_command(struct sqlite3 *conn, const char *command_name) {
     if (!conn || !command_name) {
-        return 1;   // TODO: fix this
+        return ERR_NO_DATABASE_CONNECTION;
     }
 
     sqlite3_stmt *stmt;
@@ -747,8 +774,9 @@ int delete_db_command(struct sqlite3 *conn, const char *command_name) {
 
 done:
     sqlite3_finalize(stmt);
-    if (rc == SQLITE_DONE) {
-        rc = SQLITE_OK;
+    if ((rc == SQLITE_DONE) || (rc = SQLITE_OK)) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
     }
-    return rc;
 }

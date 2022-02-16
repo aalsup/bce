@@ -660,7 +660,7 @@ static sqlite3* open_db_with_xa(const char *filename, int *rc) {
     int schema_version = get_schema_version(conn);
     if (schema_version == 0) {
         // create the schema
-        if (!create_schema(conn, rc)) {
+        if (!create_schema(conn)) {
             fprintf(stderr, "Unable to create database schema. database: %s\n", filename);
             return NULL;
         }

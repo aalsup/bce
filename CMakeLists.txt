@@ -8,7 +8,7 @@ add_executable(bce
         data_model.h data_model.c
         linked_list.h linked_list.c
         input.h input.c
-        error.h
+        error.h error.c
         prune.h prune.c
         cli.h cli.c
         uuid4.h uuid4.c)

@@ -2,15 +2,16 @@
 #include "data_model.h"
 #include <string.h>
 #include <errno.h>
+#include "error.h"
 
-int load_completion_input(void) {
+bce_error_t load_completion_input(void) {
     const char* line = getenv(BASH_LINE_VAR);
     if (!line || strlen(line) == 0) {
-        return(ERR_MISSING_ENV_COMP_LINE);
+        return ERR_MISSING_ENV_COMP_LINE;
     }
     const char* str_cursor_pos = getenv(BASH_CURSOR_VAR);
     if (!str_cursor_pos || strlen(str_cursor_pos) == 0) {
-        return(ERR_MISSING_ENV_COMP_POINT);
+        return ERR_MISSING_ENV_COMP_POINT;
     }
     completion_input.line[0] = '\0';
     strncat(completion_input.line, line, MAX_LINE_SIZE);
@@ -18,7 +19,7 @@ int load_completion_input(void) {
     if ((completion_input.cursor_pos == 0) && (errno != 0)) {
         return ERR_INVALID_ENV_COMP_POINT;
     }
-    return 0;
+    return ERR_NONE;
 }
 
 bool get_command_from_input(char* dest, size_t bufsize) {

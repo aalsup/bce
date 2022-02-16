@@ -9,7 +9,7 @@
 #include "prune.h"
 #include "cli.h"
 
-int process_completion(void);
+bce_error_t process_completion(void);
 void collect_recommendations(linked_list_t *recommendation_list, bce_command_t *cmd);
 void print_recommendations(linked_list_t *recommendation_list);
 
@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
     return process_cli(argc, argv);
 }
 
-int process_completion(void) {
-    int err = 0;    // custom error values
+bce_error_t process_completion(void) {
+    bce_error_t err = ERR_NONE;    // custom error values
     int rc = 0;     // SQLite return values
     char command_name[MAX_LINE_SIZE + 1];
     char current_word[MAX_LINE_SIZE + 1];
@@ -43,21 +43,21 @@ int process_completion(void) {
     int schema_version = get_schema_version(conn);
     if (schema_version == 0) {
         // create the schema
-        if (!create_schema(conn, &rc)) {
+        err = create_schema(conn);
+        if (err != ERR_NONE) {
             fprintf(stderr, "Unable to create database schema\n");
-            err = ERR_DATABASE_SCHEMA;
             goto done;
         }
         schema_version = get_schema_version(conn);
     }
     if (schema_version != SCHEMA_VERSION) {
         fprintf(stderr, "Schema version %d does not match expected version %d\n", schema_version, SCHEMA_VERSION);
-        err = ERR_DATABASE_SCHEMA;
+        err = ERR_DATABASE_SCHEMA_VERSION_MISMATCH;
         goto done;
     }
 
     err = load_completion_input();
-    if (err) {
+    if (err != ERR_NONE) {
         switch (err) {
             case ERR_MISSING_ENV_COMP_LINE:
                 fprintf(stderr, "No %s env var\n", BASH_LINE_VAR);
@@ -72,6 +72,7 @@ int process_completion(void) {
     // load the data provided by environment
     if (!get_command_from_input(command_name, MAX_LINE_SIZE)) {
         fprintf(stderr, "Unable to determine command\n");
+        err = ERR_INVALID_CMD_NAME;
         goto done;
     }
     get_current_word(current_word, MAX_LINE_SIZE);
@@ -88,6 +89,7 @@ int process_completion(void) {
     rc = sqlite3_exec(conn, "BEGIN TRANSACTION;", NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "begin transaction returned %d\n", rc);
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -95,6 +97,7 @@ int process_completion(void) {
     rc = prepare_statement_cache(conn);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to load statement cache. err=%d\n", rc);
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -103,12 +106,14 @@ int process_completion(void) {
     rc = get_db_command(conn, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
     rc = sqlite3_exec(conn, "COMMIT;", NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "commit transaction returned %d\n", rc);
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 

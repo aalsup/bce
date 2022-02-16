@@ -119,42 +119,35 @@ int get_schema_version(struct sqlite3 *conn) {
     return version;
 }
 
-bool create_schema(struct sqlite3 *conn, int *result) {
-    char *err_msg = 0;
+bce_error_t create_schema(struct sqlite3 *conn) {
     int rc;
 
-    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_SQL, 0, 0, &err_msg);
+    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_SQL, 0, 0, NULL);
     if (rc != SQLITE_OK) {
-        *result = ERR_DATABASE_CREATE_TABLE;
-        return false;
+        return ERR_DATABASE_CREATE_TABLE;
     }
 
-    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_ALIAS_SQL, 0, 0, &err_msg);
+    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_ALIAS_SQL, 0, 0, NULL);
     if (rc != SQLITE_OK) {
-        *result = ERR_DATABASE_CREATE_TABLE;
-        return false;
+        return ERR_DATABASE_CREATE_TABLE;
     }
 
-    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_ARG_SQL, 0, 0, &err_msg);
+    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_ARG_SQL, 0, 0, NULL);
     if (rc != SQLITE_OK) {
-        *result = ERR_DATABASE_CREATE_TABLE;
-        return false;
+        return ERR_DATABASE_CREATE_TABLE;
     }
 
-    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_OPT_SQL, 0, 0, &err_msg);
+    rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_OPT_SQL, 0, 0, NULL);
     if (rc != SQLITE_OK) {
-        *result = ERR_DATABASE_CREATE_TABLE;
-        return false;
+        return ERR_DATABASE_CREATE_TABLE;
     }
 
-    rc = sqlite3_exec(conn, "PRAGMA user_version = 1;", 0, 0, &err_msg);
+    rc = sqlite3_exec(conn, "PRAGMA user_version = 1;", 0, 0, NULL);
     if (rc != SQLITE_OK) {
-        *result = ERR_DATABASE_PRAGMA;
-        return false;
+        return ERR_DATABASE_PRAGMA;
     }
 
-    *result = SQLITE_OK;
-    return true;
+    return ERR_NONE;
 }
 
 bool read_file_into_buffer(const char *filename, char **ppbuffer) {
@@ -178,20 +171,19 @@ bool read_file_into_buffer(const char *filename, char **ppbuffer) {
     return false;
 }
 
-bool exec_sql_script(struct sqlite3 *conn, const char *filename) {
-    int result = true;
+bce_error_t exec_sql_script(struct sqlite3 *conn, const char *filename) {
+    bce_error_t result = ERR_NONE;
     char **sql_data = (char **)malloc(sizeof(char));
     if (read_file_into_buffer(filename, sql_data)) {
-        char *err_msg = 0;
         int rc;
 
-        rc = sqlite3_exec(conn, *sql_data, 0, 0, &err_msg);
+        rc = sqlite3_exec(conn, *sql_data, 0, 0, NULL);
         if (rc != SQLITE_OK) {
-            result = false;
+            result = ERR_SQLITE_ERROR;
         }
     } else {
         fprintf(stderr, "Error reading file: %s\n", filename);
-        result = false;
+        result = ERR_READ_FILE;
     }
     free((void *) *sql_data);
     free((void *) sql_data);
