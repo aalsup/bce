@@ -7,12 +7,14 @@
 #include "dbutil.h"
 #include "data_model.h"
 #include "uuid4.h"
+#include "download.h"
 
-static const int CMD_NAME_SIZE = 50;
+static const size_t CMD_NAME_SIZE = 50;
+static const size_t URL_SIZE = 1024;
 
 static int process_import_sqlite(const char *filename);
 static int process_export_sqlite(const char *command_name, const char *filename);
-static int process_import_json(const char *filename);
+static int process_import_json(const char *filename, const char *url);
 static int process_export_json(const char *command_name, const char *filename);
 static sqlite3* open_db_with_xa(const char *filename, int *rc);
 static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, struct json_object *j_command);
@@ -32,8 +34,9 @@ int process_cli(int argc, char **argv) {
 
     // collect the command-line arguments
     operation_t op = OP_NONE;
-    char filename[FILENAME_MAX] = "";
+    char filename[FILENAME_MAX + 1] = "";
     char command_name[CMD_NAME_SIZE + 1] = "";
+    char url[URL_SIZE + 1] = "";
     format_t format = FORMAT_SQLITE;
     for (int i = 1; i < argc; i++) {
         // help
@@ -94,14 +97,31 @@ int process_cli(int argc, char **argv) {
                 break;
             }
         }
+        // url
+        else if ((strncmp(URL_ARG_LONGNAME, argv[i], strlen(URL_ARG_LONGNAME)) == 0)
+                 || (strncmp(URL_ARG_SHORTNAME, argv[i], strlen(URL_ARG_SHORTNAME)) == 0))
+        {
+            // next parameter should be the URL
+            if ((i+1) < argc) {
+                strncat(url, argv[++i], URL_SIZE);
+            } else {
+                op = OP_NONE;
+                break;
+            }
+        }
     }
 
     // check values
-    if (strlen(filename) == 0) {
-        op = OP_NONE;
-    }
-    if ((op == OP_EXPORT) && (strlen(command_name) == 0)) {
-        op = OP_NONE;
+    if (op == OP_EXPORT) {
+        if (strlen(filename) == 0) {
+            op = OP_NONE;
+        } else if (strlen(command_name) == 0) {
+            op = OP_NONE;
+        }
+    } else if (op == OP_IMPORT) {
+        if ((strlen(filename) == 0) && (strlen(url) == 0)) {
+            op = OP_NONE;
+        }
     }
 
     // determine what operation to perform
@@ -116,7 +136,7 @@ int process_cli(int argc, char **argv) {
             break;
         case OP_IMPORT:
             if (format == FORMAT_JSON) {
-                result = process_import_json(filename);
+                result = process_import_json(filename, url);
             } else {
                 result = process_import_sqlite(filename);
             }
@@ -279,13 +299,22 @@ done:
     return err;
 }
 
-static int process_import_json(const char *json_filename) {
+static int process_import_json(const char *json_filename, const char *url) {
     int err = 0;
     int rc = SQLITE_OK;
     const char *db_filename = "completion.db";
     if (uuid4_init() != UUID4_ESUCCESS) {
         fprintf(stderr, "UUID init failure\n");
         goto done;
+    }
+
+    // do we need to download the file
+    if ((strlen(url) > 0) && (strlen(json_filename) == 0)) {
+        bool result = download_file(url, json_filename);
+        if (!result) {
+            fprintf(stderr, "Unable to download file: %s\n", url);
+            goto done;
+        }
     }
 
     // parse the json
@@ -326,7 +355,7 @@ static int process_import_json(const char *json_filename) {
 
 done:
     sqlite3_close(dest_db);
-    return 0;
+    return err;
 }
 
 static int process_export_json(const char *command_name, const char *filename) {

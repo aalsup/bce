@@ -8,6 +8,7 @@ add_executable(bce
         data_model.h data_model.c
         linked_list.h linked_list.c
         input.h input.c
+        download.h download.c
         error.h error.c
         prune.h prune.c
         cli.h cli.c
@@ -45,5 +46,5 @@ else ()
     # allow sqlite3 to be dynamically linked at runtime
 endif (SQLITE_STATIC)
 
-target_link_libraries(bce PRIVATE sqlite3 json-c)
+target_link_libraries(bce PRIVATE sqlite3 json-c curl)
 

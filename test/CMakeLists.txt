@@ -13,9 +13,11 @@ add_executable(
         linked_list_tests.cpp
         completion_input_tests.cpp
         completion_model_tests.cpp
+        download_tests.cpp
         ../linked_list.c ../linked_list.h
         ../dbutil.c ../dbutil.h
         ../input.c ../input.h
+        ../download.c ../download.h
         ../data_model.c ../data_model.h
         ../error.h
         ../prune.c ../prune.h
@@ -28,5 +30,5 @@ include_directories(/usr/include)
 
 link_directories(/usr/lib)
 
-target_link_libraries(tests sqlite3)
+target_link_libraries(tests sqlite3 curl)
 

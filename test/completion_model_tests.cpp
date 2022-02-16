@@ -5,11 +5,12 @@ extern "C" {
 #include <sqlite3.h>
 #include "../dbutil.h"
 #include "../data_model.h"
+#include "../error.h"
 };
 
 TEST_CASE("create schema") {
     int rc;
-    int err = 0;    // custom error values
+    bce_error_t err = ERR_NONE;
     const char *database_file = "test/test1.db";
 
     // ensure database file does not exist
@@ -18,11 +19,11 @@ TEST_CASE("create schema") {
     sqlite3 *conn = open_database(database_file, &rc);
     CHECK(rc == SQLITE_OK);
 
-    bool schema_exists = ensure_schema(conn);
-    CHECK(schema_exists == false);
+    int schema_version = get_schema_version(conn);
+    CHECK(schema_version == 0);
 
-    bool schema_created = create_schema(conn, &rc);
-    CHECK(schema_created == true);
+    err = create_schema(conn);
+    CHECK(err == ERR_NONE);
 
     remove(database_file);
 }
@@ -37,7 +38,7 @@ TEST_CASE("load data") {
     sqlite3 *conn = open_database(database_file, &rc);
     CHECK(rc == SQLITE_OK);
     if (conn != NULL) {
-        bool result = exec_sql_script(conn, "test/kubectl_data.sql");
-        CHECK(result == true);
+        bce_error_t result = exec_sql_script(conn, "test/kubectl_data.sql");
+        CHECK(result == ERR_NONE);
     }
 }
