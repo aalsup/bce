@@ -80,6 +80,18 @@ bool ll_append_item(linked_list_t* list, const void* data) {
 }
 
 /*
+ * Add the item to the end of the list, if it isn't already present.
+ */
+bool ll_append_item_unique(linked_list_t *list, const char *data) {
+    if (list) {
+        if (!ll_is_string_in_list(list, data)) {
+            return ll_append_item(list, data);
+        }
+    }
+    return false;
+}
+
+/*
  * Retrieves a particular data item from the list.
  */
 void* ll_get_nth_item(const linked_list_t* list, size_t elem) {
