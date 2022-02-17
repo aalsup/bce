@@ -155,11 +155,13 @@ void show_usage(void) {
     printf("usage:\n");
     printf("  bce --export <command> --format <sqlite|json> --file <filename>\n");
     printf("  bce --import --format <sqlite|json> --file <filename>\n");
+    printf("  bce --import --format json --url <url-of-json-file>\n");
     printf("\narguments:\n");
     printf("  %s (%s) : export command data to file\n", EXPORT_ARG_LONGNAME, EXPORT_ARG_SHORTNAME);
     printf("  %s (%s) : import command data from file\n", IMPORT_ARG_LONGNAME, IMPORT_ARG_SHORTNAME);
     printf("  %s (%s) : format to read/write data [sqlite|json] (default=sqlite)\n", FORMAT_ARG_LONGNAME, FORMAT_ARG_SHORTNAME);
     printf("  %s (%s) : filename to import/export\n", FILE_ARG_LONGNAME, FILE_ARG_SHORTNAME);
+    printf("  %s (%s) : url of json file to import\n", URL_ARG_LONGNAME, URL_ARG_SHORTNAME);
     printf("\n");
 }
 

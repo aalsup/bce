@@ -30,5 +30,5 @@ include_directories(/usr/include)
 
 link_directories(/usr/lib)
 
-target_link_libraries(tests sqlite3 curl)
+target_link_libraries(tests PRIVATE SQLite3 curl)
 
