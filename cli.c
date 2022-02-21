@@ -36,7 +36,7 @@ int process_cli(int argc, char **argv) {
     operation_t op = OP_NONE;
     char filename[FILENAME_MAX + 1];
     char command_name[CMD_NAME_SIZE + 1];
-    char url[URL_SIZE + 1] = "";
+    char url[URL_SIZE + 1];
     format_t format = FORMAT_SQLITE;
     for (int i = 1; i < argc; i++) {
         // help

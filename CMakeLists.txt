@@ -41,6 +41,12 @@ endmacro()
 target_include_directories(bce PRIVATE /usr/local/include)
 target_include_directories(bce PRIVATE /usr/include)
 
+if (${MACOSX})
+    target_link_directories(bce PRIVATE /usr/local/lib)
+else ()
+    target_link_directories(bce PRIVATE /usr/lib640)
+endif (${MACOSX})
+
 # Specifying '/usr/local/lib' strangely doesn't work on MacOS. Use 'find_library' instead.
 # see: https://stackoverflow.com/questions/52679871/cannot-find-library-under-usr-local-lib
 

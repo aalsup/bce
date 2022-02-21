@@ -67,7 +67,7 @@ $ brew install json-c
 ```bash
 $ sudo dnf install -y sqlite-devel
 $ sudo dnf install -y json-c-devel
-$ 
+$ sudo dnf install -y libcurl-devel
 ```
 
 ## Build/Run configuration
