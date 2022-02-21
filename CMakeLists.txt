@@ -31,23 +31,16 @@ endmacro()
 
 target_include_directories(bce PRIVATE /usr/local/include)
 target_include_directories(bce PRIVATE /usr/include)
-#include_directories(/usr/local/include)
-#include_directories(/usr/include)
 
 # Specifying '/usr/local/lib' strangely doesn't work on MacOS. Use 'find_library' instead.
 # see: https://stackoverflow.com/questions/52679871/cannot-find-library-under-usr-local-lib
-# link_directories(/usr/local/lib)
-# find_library(JSONC libjson-c.dylib)
-#target_link_directories(bce PRIVATE /usr/lib)
-#link_directories(/usr/lib)
 
 # static link json-c library within the application
-link_directories(bce PRIVATE /usr/local/Cellar/json-c/${JSON-C_VERSION}/lib)
 find_package(json-c REQUIRED CONFIG)
 add_library(json-c STATIC IMPORTED)
 set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/local/Cellar/json-c/${JSON-C_VERSION}/lib/libjson-c.a)
 
-# print_all_variables()
+print_all_variables()
 
 target_link_libraries(bce PRIVATE sqlite3 json-c curl)
 
