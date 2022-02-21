@@ -26,6 +26,8 @@ static const char* FORMAT_ARG_LONGNAME = "--format";
 static const char* FORMAT_ARG_SHORTNAME = "-o";
 static const char* FILE_ARG_LONGNAME = "--file";
 static const char* FILE_ARG_SHORTNAME = "-f";
+static const char* URL_ARG_LONGNAME = "--url";
+static const char* URL_ARG_SHORTNAME = "-u";
 
 void show_usage(void);
 int process_cli(int argc, char **argv);

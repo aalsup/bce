@@ -115,12 +115,13 @@ command
 
 ```bash
 # SQLite import/export
-$ bce --export kubectl --format=sqlite --file=kubectl.db
-$ bce --import --format=sqlite --file=kubectl.db
+$ bce --export kubectl --format sqlite --file kubectl.db
+$ bce --import --format sqlite --file kubectl.db
 
 # JSON import/export
-$ bce --export kubectl --format=json --file=kubectl.json
-$ bce --import --format=json --file=kubectl.json
+$ bce --export kubectl --format json --file kubectl.json
+$ bce --import --format json --file kubectl.json
+$ bce --import --format json --url "https://example.com/my-command.json"
 ```
 
 ### JSON format
