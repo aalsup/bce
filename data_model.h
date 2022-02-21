@@ -6,11 +6,11 @@
 #ifndef DATA_MODEL_H
 #define DATA_MODEL_H
 
-static const int UUID_FIELD_SIZE = 36;
-static const int NAME_FIELD_SIZE = 50;
-static const int SHORTNAME_FIELD_SIZE = 5;
-static const int CMD_TYPE_FIELD_SIZE = 20;
-static const int DESCRIPTION_FIELD_SIZE = 200;
+#define UUID_FIELD_SIZE        36
+#define NAME_FIELD_SIZE        50
+#define SHORTNAME_FIELD_SIZE   5
+#define CMD_TYPE_FIELD_SIZE    20
+#define DESCRIPTION_FIELD_SIZE 200
 
 typedef struct bce_command_t {
     char uuid[UUID_FIELD_SIZE + 1];

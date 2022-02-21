@@ -54,12 +54,20 @@ The project has the following build dependencies:
 - catch2
 - json-c
 
-On MacOS, you should be able to satisfy these dependencies using `brew`.
+### MacOS
 
 ```bash
 $ brew install sqlite
 $ brew install catch2
 $ brew install json-c
+```
+
+### Fedora Linux
+
+```bash
+$ sudo dnf install -y sqlite-devel
+$ sudo dnf install -y json-c-devel
+$ 
 ```
 
 ## Build/Run configuration

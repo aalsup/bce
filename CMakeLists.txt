@@ -15,6 +15,12 @@ add_executable(bce
 
 add_subdirectory(test)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(MACOSX TRUE)
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(LINUX TRUE)
+endif()
+
 option(DEBUG "Output additional debug information" OFF)
 option(SQLITE_STATIC "Link SQLite statically" OFF)
 
@@ -33,7 +39,11 @@ target_link_directories(bce PRIVATE /usr/lib)
 # bundle json-c library within the application
 find_package(json-c CONFIG)
 add_library(json-c STATIC IMPORTED)
-set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/local/lib/libjson-c.a)
+if (${MACOSX})
+    set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/local/lib/libjson-c.a)
+else ()
+    set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/lib64/libjson-c.so)
+endif (${MACOSX})
 
 if (SQLITE_STATIC)
     # bundle sqlite3 library within the application

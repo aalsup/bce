@@ -32,8 +32,8 @@ int process_cli(int argc, char **argv) {
 
     // collect the command-line arguments
     operation_t op = OP_NONE;
-    char filename[FILENAME_MAX] = "";
-    char command_name[CMD_NAME_SIZE + 1] = "";
+    char filename[FILENAME_MAX];
+    char command_name[CMD_NAME_SIZE + 1];
     format_t format = FORMAT_SQLITE;
     for (int i = 1; i < argc; i++) {
         // help
