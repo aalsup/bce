@@ -42,6 +42,7 @@ add_library(json-c STATIC IMPORTED)
 if (${MACOSX})
     set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/local/lib/libjson-c.a)
 else ()
+    # TODO: figure out why json-c is not being statically linked
     set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/lib64/libjson-c.so)
 endif (${MACOSX})
 
