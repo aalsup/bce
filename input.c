@@ -4,28 +4,34 @@
 #include <errno.h>
 #include "error.h"
 
-bce_error_t load_completion_input(void) {
+ completion_input_t* load_completion_input(bce_error_t *err) {
     const char* line = getenv(BASH_LINE_VAR);
     if (!line || strlen(line) == 0) {
-        return ERR_MISSING_ENV_COMP_LINE;
+        *err = ERR_MISSING_ENV_COMP_LINE;
+        return NULL;
     }
     const char* str_cursor_pos = getenv(BASH_CURSOR_VAR);
     if (!str_cursor_pos || strlen(str_cursor_pos) == 0) {
-        return ERR_MISSING_ENV_COMP_POINT;
+        *err = ERR_MISSING_ENV_COMP_POINT;
+        return NULL;
     }
-    completion_input.line[0] = '\0';
-    strncat(completion_input.line, line, MAX_LINE_SIZE);
-    completion_input.cursor_pos = (int) strtol(str_cursor_pos, (char **)NULL, 10);
-    if ((completion_input.cursor_pos == 0) && (errno != 0)) {
-        return ERR_INVALID_ENV_COMP_POINT;
+    completion_input_t *input = (completion_input_t *) malloc(sizeof(completion_input_t));
+    input->line[0] = '\0';
+    strncat(input->line, line, MAX_LINE_SIZE);
+    input->cursor_pos = (int) strtol(str_cursor_pos, (char **)NULL, 10);
+    if ((input->cursor_pos == 0) && (errno != 0)) {
+        free(input);
+        *err = ERR_INVALID_ENV_COMP_POINT;
+        return NULL;
     }
-    return ERR_NONE;
+    *err = ERR_NONE;
+    return input;
 }
 
-bool get_command_from_input(char* dest, size_t bufsize) {
+bool get_command_from_input(completion_input_t *input, char* dest, size_t bufsize) {
     bool result = false;
     memset(dest, 0, bufsize);
-    linked_list_t *list = bash_input_to_list(completion_input.line, MAX_LINE_SIZE);
+    linked_list_t *list = bash_input_to_list(input->line, MAX_LINE_SIZE);
     if (list) {
         if (list->head) {
             char *data = (char *)list->head->data;
@@ -36,12 +42,12 @@ bool get_command_from_input(char* dest, size_t bufsize) {
     return result;
 }
 
-bool get_current_word(char* dest, size_t bufsize) {
+bool get_current_word(completion_input_t *input, char* dest, size_t bufsize) {
     memset(dest, 0, bufsize);
     bool result = false;
 
     // build a list of words, up to the current cursor position
-    linked_list_t *list = bash_input_to_list(completion_input.line, completion_input.cursor_pos);
+    linked_list_t *list = bash_input_to_list(input->line, input->cursor_pos);
     if (list) {
         if (list->size > 0) {
             size_t elem = list->size - 1;
@@ -54,12 +60,12 @@ bool get_current_word(char* dest, size_t bufsize) {
     return result;
 }
 
-bool get_previous_word(char* dest, size_t bufsize) {
+bool get_previous_word(completion_input_t *input, char* dest, size_t bufsize) {
     memset(dest, 0, bufsize);
     bool result = false;
 
     // build a list of words, up to the current cursor position
-    linked_list_t *list = bash_input_to_list(completion_input.line, completion_input.cursor_pos);
+    linked_list_t *list = bash_input_to_list(input->line, input->cursor_pos);
     if (list) {
         if (list->size > 1) {
             size_t elem = list->size - 2;

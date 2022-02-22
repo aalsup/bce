@@ -56,7 +56,7 @@ bce_error_t process_completion(void) {
         goto done;
     }
 
-    err = load_completion_input();
+    completion_input_t *input = load_completion_input(&err);
     if (err != ERR_NONE) {
         switch (err) {
             case ERR_MISSING_ENV_COMP_LINE:
@@ -70,13 +70,13 @@ bce_error_t process_completion(void) {
     }
 
     // load the data provided by environment
-    if (!get_command_from_input(command_name, MAX_LINE_SIZE)) {
+    if (!get_command_from_input(input, command_name, MAX_LINE_SIZE)) {
         fprintf(stderr, "Unable to determine command\n");
         err = ERR_INVALID_CMD_NAME;
         goto done;
     }
-    get_current_word(current_word, MAX_LINE_SIZE);
-    get_previous_word(previous_word, MAX_LINE_SIZE);
+    get_current_word(input, current_word, MAX_LINE_SIZE);
+    get_previous_word(input, previous_word, MAX_LINE_SIZE);
 
 #ifdef DEBUG
     printf("input: %s\n", completion_input.line);
@@ -122,7 +122,7 @@ bce_error_t process_completion(void) {
     print_command_tree(conn, completion_command, 0);
 #endif
 
-    prune_command(completion_command);
+    prune_command(completion_command, input);
 
 #ifdef DEBUG
     printf("\nCommand Tree (Pruned)\n");

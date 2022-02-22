@@ -10,9 +10,9 @@ static void prune_arguments(bce_command_t* cmd, const linked_list_t *word_list);
  * Find the sub-commands and arguments related to the given command.
  * Prune the results based on the current command_line
  */
-void prune_command(bce_command_t* cmd) {
+void prune_command(bce_command_t* cmd, completion_input_t *input) {
     // build a list of words from the command line
-    linked_list_t *word_list = ll_string_to_list(completion_input.line, " ", MAX_LINE_SIZE);
+    linked_list_t *word_list = ll_string_to_list(input->line, " ", MAX_LINE_SIZE);
 
     prune_arguments(cmd, word_list);
     prune_sub_commands(cmd, word_list);

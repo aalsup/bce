@@ -14,20 +14,26 @@ void setup_env(const char *comp_line, const char *comp_point) {
 TEST_CASE("completion_input missing ENV vars") {
     SECTION("missing COMP_LINE") {
         setup_env("", "0");
-        int retval = load_completion_input();
-        CHECK(retval == ERR_MISSING_ENV_COMP_LINE);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_MISSING_ENV_COMP_LINE);
+        free(input);
     }
 
     SECTION("missing COMP_POINT") {
         setup_env("xyz", "");
-        int retval = load_completion_input();
-        CHECK(retval == ERR_MISSING_ENV_COMP_POINT);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_MISSING_ENV_COMP_POINT);
+        free(input);
     }
 
     SECTION("bad COMP_POINT") {
         setup_env("xyz", "abc");
-        int retval = load_completion_input();
-        CHECK(retval != 0);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err != ERR_NONE);
+        free(input);
     }
 }
 
@@ -37,16 +43,24 @@ TEST_CASE("completion_input") {
     setup_env(line, cursor);
 
     SECTION("load completion_input") {
-        int retval = load_completion_input();
-        CHECK(retval == 0);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_NONE);
+        free(input);
     }
 
     SECTION("line value") {
-        CHECK(strlen(completion_input.line) == strlen(line));
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(strlen(input->line) == strlen(line));
+        free(input);
     }
 
     SECTION("cursor value") {
-        CHECK(completion_input.cursor_pos == strtol(cursor, (char **)NULL, 10));
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(input->cursor_pos == strtol(cursor, (char **)NULL, 10));
+        free(input);
     }
 }
 
@@ -54,13 +68,15 @@ TEST_CASE("get_command_from_input") {
     const size_t BUF_SIZE = 1024;
     const char *line = "kubectl get pods -o wide";
     setenv(BASH_LINE_VAR, line, 1);
-    int retval = load_completion_input();
-    CHECK(retval == 0);
+    bce_error_t err;
+    completion_input_t *input = load_completion_input(&err);
+    CHECK(err == ERR_NONE);
 
     char cmd[BUF_SIZE];
-    bool result = get_command_from_input(cmd, BUF_SIZE);
+    bool result = get_command_from_input(input, cmd, BUF_SIZE);
     CHECK(result == true);
     CHECK(strncmp("kubectl", cmd, BUF_SIZE) == 0);
+    free(input);
 }
 
 TEST_CASE("current_word") {
@@ -71,68 +87,83 @@ TEST_CASE("current_word") {
     SECTION("cursor at 1st word") {
         const char *cursor = "7";
         setup_env(line, cursor);
-        int retval = load_completion_input();
-        CHECK(retval == 0);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_NONE);
 
         char word[BUF_SIZE];
-        CHECK(get_current_word(word, BUF_SIZE) == true);
+        CHECK(get_current_word(input, word, BUF_SIZE) == true);
         CHECK(strncmp("kubectl", word, BUF_SIZE) == 0);
 
-        CHECK(get_previous_word(word, BUF_SIZE) == false);
+        CHECK(get_previous_word(input, word, BUF_SIZE) == false);
         CHECK(strlen(word) == 0);
+
+        free(input);
     }
 
     SECTION("cursor after 1st word") {
         const char *cursor = "8";
         setup_env(line, cursor);
-        int retval = load_completion_input();
-        CHECK(retval == 0);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_NONE);
 
         char word[BUF_SIZE];
-        CHECK(get_current_word(word, BUF_SIZE) == true);
+        CHECK(get_current_word(input, word, BUF_SIZE) == true);
         CHECK(strncmp("kubectl", word, BUF_SIZE) == 0);
 
-        CHECK(get_previous_word(word, BUF_SIZE) == false);
+        CHECK(get_previous_word(input, word, BUF_SIZE) == false);
         CHECK(strlen(word) == 0);
+
+        free(input);
     }
 
     SECTION("cursor at 2nd word") {
         const char *cursor = "11";
         setup_env(line, cursor);
-        int retval = load_completion_input();
-        CHECK(retval == 0);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_NONE);
 
         char word[BUF_SIZE];
-        CHECK(get_current_word(word, BUF_SIZE) == true);
+        CHECK(get_current_word(input, word, BUF_SIZE) == true);
         CHECK(strncmp("get", word, BUF_SIZE) == 0);
 
-        CHECK(get_previous_word(word, BUF_SIZE) == true);
+        CHECK(get_previous_word(input, word, BUF_SIZE) == true);
         CHECK(strncmp("kubectl", word, BUF_SIZE) == 0);
+
+        free(input);
     }
 
     SECTION("cursor after 2nd word") {
         const char *cursor = "12";
         setup_env(line, cursor);
-        int retval = load_completion_input();
-        CHECK(retval == 0);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_NONE);
 
         char word[BUF_SIZE];
-        CHECK(get_current_word(word, BUF_SIZE) == true);
+        CHECK(get_current_word(input, word, BUF_SIZE) == true);
         CHECK(strncmp("get", word, BUF_SIZE) == 0);
 
-        CHECK(get_previous_word(word, BUF_SIZE) == true);
+        CHECK(get_previous_word(input, word, BUF_SIZE) == true);
         CHECK(strncmp("kubectl", word, BUF_SIZE) == 0);
+
+        free(input);
     }
 
     SECTION("cursor at middle of 1st word") {
         const char *cursor = "3";
         setup_env(line, cursor);
-        int retval = load_completion_input();
-        CHECK(retval == 0);
+        bce_error_t err;
+        completion_input_t *input = load_completion_input(&err);
+        CHECK(err == ERR_NONE);
 
         char word[BUF_SIZE];
-        CHECK(get_current_word(word, BUF_SIZE) == true);
+        CHECK(get_current_word(input, word, BUF_SIZE) == true);
         CHECK(strncmp("kub", word, BUF_SIZE) == 0);
+
+        free(input);
     }
 
 }
