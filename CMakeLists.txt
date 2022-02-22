@@ -28,15 +28,7 @@ endif()
 
 option(DEBUG "Output additional debug information" OFF)
 option(SQLITE_STATIC "Link SQLite statically" OFF)
-
-macro(print_all_variables)
-    message(STATUS "print_all_variables------------------------------------------{")
-    get_cmake_property(_variableNames VARIABLES)
-    foreach (_variableName ${_variableNames})
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
-    message(STATUS "print_all_variables------------------------------------------}")
-endmacro()
+option(CURL_STATIC "Link cURL statically" OFF)
 
 target_include_directories(bce PRIVATE /usr/local/include)
 target_include_directories(bce PRIVATE /usr/include)
@@ -50,17 +42,39 @@ endif (${MACOSX})
 # Specifying '/usr/local/lib' strangely doesn't work on MacOS. Use 'find_library' instead.
 # see: https://stackoverflow.com/questions/52679871/cannot-find-library-under-usr-local-lib
 
-# static link json-c library within the application
+# JSON-C: static link
 find_package(json-c REQUIRED CONFIG)
 add_library(json-c STATIC IMPORTED)
 if (${MACOSX})
     set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/local/lib/libjson-c.a)
 else ()
-    # TODO: figure out why json-c is not being statically linked
+    # TODO: figure out why json-c is not being statically linked.
+    # https://stackoverflow.com/questions/50783730/adding-curl-as-static-library-to-a-c-cmake-project
     set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/lib64/libjson-c.so)
 endif (${MACOSX})
+target_link_libraries(bce PRIVATE json-c)
+
+# CURL: dynamic vs static link
+if (${CURL_STATIC})
+    find_package(CURL REQUIRED)
+    target_include_directories(bce PRIVATE ${CURL_INCLUDE_DIR})
+    target_link_libraries(bce PRIVATE ${CURL_LIBRARIES})
+else ()
+    target_link_libraries(bce PRIVATE curl)
+endif ()
+
+# SQLite: dynamic link
+target_link_libraries(bce PRIVATE sqlite3)
+
+macro(print_all_variables)
+    message(STATUS "print_all_variables------------------------------------------{")
+    get_cmake_property(_variableNames VARIABLES)
+    foreach (_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+    message(STATUS "print_all_variables------------------------------------------}")
+endmacro()
 
 print_all_variables()
 
-target_link_libraries(bce PRIVATE sqlite3 json-c curl)
 
