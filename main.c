@@ -135,6 +135,7 @@ bce_error_t process_completion(void) {
     recommendation_list = ll_destroy(recommendation_list);
 
 done:
+    free(input);
     completion_command = free_bce_command(completion_command);
     rc = free_statement_cache(conn);
     sqlite3_close(conn);
