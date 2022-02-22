@@ -10,7 +10,9 @@
 #include "cli.h"
 
 bce_error_t process_completion(void);
+
 void collect_recommendations(linked_list_t *recommendation_list, bce_command_t *cmd);
+
 void print_recommendations(linked_list_t *recommendation_list);
 
 int main(int argc, char **argv) {
@@ -134,7 +136,7 @@ bce_error_t process_completion(void) {
     print_recommendations(recommendation_list);
     recommendation_list = ll_destroy(recommendation_list);
 
-done:
+    done:
     input = free_completion_input(input);
     completion_command = free_bce_command(completion_command);
     rc = free_statement_cache(conn);
@@ -230,9 +232,9 @@ void print_recommendations(linked_list_t *recommendation_list) {
         return;
     }
 
-    linked_list_node_t* node = recommendation_list->head;
+    linked_list_node_t *node = recommendation_list->head;
     while (node) {
-        printf("%s\n", (char *)node->data);
+        printf("%s\n", (char *) node->data);
         node = node->next;
     }
 }

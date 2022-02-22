@@ -4,13 +4,13 @@
 #include <errno.h>
 #include "error.h"
 
- completion_input_t* create_completion_input(bce_error_t *err) {
-    const char* line = getenv(BASH_LINE_VAR);
+completion_input_t *create_completion_input(bce_error_t *err) {
+    const char *line = getenv(BASH_LINE_VAR);
     if (!line || strlen(line) == 0) {
         *err = ERR_MISSING_ENV_COMP_LINE;
         return NULL;
     }
-    const char* str_cursor_pos = getenv(BASH_CURSOR_VAR);
+    const char *str_cursor_pos = getenv(BASH_CURSOR_VAR);
     if (!str_cursor_pos || strlen(str_cursor_pos) == 0) {
         *err = ERR_MISSING_ENV_COMP_POINT;
         return NULL;
@@ -18,7 +18,7 @@
     completion_input_t *input = (completion_input_t *) malloc(sizeof(completion_input_t));
     input->line[0] = '\0';
     strncat(input->line, line, MAX_LINE_SIZE);
-    input->cursor_pos = (int) strtol(str_cursor_pos, (char **)NULL, 10);
+    input->cursor_pos = (int) strtol(str_cursor_pos, (char **) NULL, 10);
     if ((input->cursor_pos == 0) && (errno != 0)) {
         free(input);
         *err = ERR_INVALID_ENV_COMP_POINT;
@@ -28,18 +28,18 @@
     return input;
 }
 
-completion_input_t* free_completion_input(completion_input_t *input) {
+completion_input_t *free_completion_input(completion_input_t *input) {
     free(input);
     return NULL;
 }
 
-bool get_command_from_input(completion_input_t *input, char* dest, size_t bufsize) {
+bool get_command_from_input(completion_input_t *input, char *dest, size_t bufsize) {
     bool result = false;
     memset(dest, 0, bufsize);
     linked_list_t *list = bash_input_to_list(input->line, MAX_LINE_SIZE);
     if (list) {
         if (list->head) {
-            char *data = (char *)list->head->data;
+            char *data = (char *) list->head->data;
             strncat(dest, data, bufsize);
             result = true;
         }
@@ -47,7 +47,7 @@ bool get_command_from_input(completion_input_t *input, char* dest, size_t bufsiz
     return result;
 }
 
-bool get_current_word(completion_input_t *input, char* dest, size_t bufsize) {
+bool get_current_word(completion_input_t *input, char *dest, size_t bufsize) {
     memset(dest, 0, bufsize);
     bool result = false;
 
@@ -65,7 +65,7 @@ bool get_current_word(completion_input_t *input, char* dest, size_t bufsize) {
     return result;
 }
 
-bool get_previous_word(completion_input_t *input, char* dest, size_t bufsize) {
+bool get_previous_word(completion_input_t *input, char *dest, size_t bufsize) {
     memset(dest, 0, bufsize);
     bool result = false;
 
@@ -96,7 +96,7 @@ bool get_previous_word(completion_input_t *input, char* dest, size_t bufsize) {
  *
  * TODO: How to handle nested, escaped quotes?
  */
-linked_list_t* bash_input_to_list(const char *str, const size_t max_len) {
+linked_list_t *bash_input_to_list(const char *str, const size_t max_len) {
     // POSIX whitespace characters and equals
     char delim[] = " \t\r\n\v\f=";
 

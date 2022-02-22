@@ -13,17 +13,29 @@ static const size_t CMD_NAME_SIZE = 50;
 static const size_t URL_SIZE = 1024;
 
 static int process_import_sqlite(const char *filename);
+
 static int process_export_sqlite(const char *command_name, const char *filename);
+
 static int process_import_json(const char *filename, const char *url);
+
 static int process_export_json(const char *command_name, const char *filename);
-static sqlite3* open_db_with_xa(const char *filename, int *rc);
+
+static sqlite3 *open_db_with_xa(const char *filename, int *rc);
+
 static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, struct json_object *j_command);
+
 static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, struct json_object *j_alias);
+
 static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, struct json_object *j_arg);
+
 static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, struct json_object *j_opt);
+
 static json_object *bce_command_to_json(bce_command_t *cmd);
+
 static json_object *bce_command_alias_to_json(bce_command_alias_t *alias);
+
 static json_object *bce_command_arg_to_json(bce_command_arg_t *arg);
+
 static json_object *bce_command_opt_to_json(bce_command_opt_t *opt);
 
 int process_cli(int argc, char **argv) {
@@ -41,18 +53,16 @@ int process_cli(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         // help
         if ((strncmp(HELP_ARG_LONGNAME, argv[i], strlen(HELP_ARG_LONGNAME)) == 0)
-           || (strncmp(HELP_ARG_SHORTNAME, argv[i], strlen(HELP_ARG_SHORTNAME)) == 0))
-        {
+            || (strncmp(HELP_ARG_SHORTNAME, argv[i], strlen(HELP_ARG_SHORTNAME)) == 0)) {
             op = OP_HELP;
             break;
         }
         // export
         else if ((strncmp(EXPORT_ARG_LONGNAME, argv[i], strlen(EXPORT_ARG_LONGNAME)) == 0)
-                || (strncmp(EXPORT_ARG_SHORTNAME, argv[i], strlen(EXPORT_ARG_SHORTNAME)) == 0))
-        {
+                 || (strncmp(EXPORT_ARG_SHORTNAME, argv[i], strlen(EXPORT_ARG_SHORTNAME)) == 0)) {
             op = OP_EXPORT;
             // next parameter should be the command name
-            if ((i+1) < argc) {
+            if ((i + 1) < argc) {
                 strncat(command_name, argv[++i], CMD_NAME_SIZE);
             } else {
                 op = OP_NONE;
@@ -61,16 +71,14 @@ int process_cli(int argc, char **argv) {
         }
         // import
         else if ((strncmp(IMPORT_ARG_LONGNAME, argv[i], strlen(IMPORT_ARG_LONGNAME)) == 0)
-                || (strncmp(IMPORT_ARG_SHORTNAME, argv[i], strlen(IMPORT_ARG_SHORTNAME)) == 0))
-        {
+                 || (strncmp(IMPORT_ARG_SHORTNAME, argv[i], strlen(IMPORT_ARG_SHORTNAME)) == 0)) {
             op = OP_IMPORT;
         }
         // filename
         else if ((strncmp(FILE_ARG_LONGNAME, argv[i], strlen(FILE_ARG_LONGNAME)) == 0)
-                || (strncmp(FILE_ARG_SHORTNAME, argv[i], strlen(FILE_ARG_SHORTNAME)) == 0))
-        {
+                 || (strncmp(FILE_ARG_SHORTNAME, argv[i], strlen(FILE_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the filename
-            if ((i+1) < argc) {
+            if ((i + 1) < argc) {
                 strncat(filename, argv[++i], FILENAME_MAX);
             } else {
                 op = OP_NONE;
@@ -79,10 +87,9 @@ int process_cli(int argc, char **argv) {
         }
         // format
         else if ((strncmp(FORMAT_ARG_LONGNAME, argv[i], strlen(FORMAT_ARG_LONGNAME)) == 0)
-                || (strncmp(FORMAT_ARG_SHORTNAME, argv[i], strlen(FORMAT_ARG_SHORTNAME)) == 0))
-        {
+                 || (strncmp(FORMAT_ARG_SHORTNAME, argv[i], strlen(FORMAT_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the format
-            if ((i+1) < argc) {
+            if ((i + 1) < argc) {
                 i++;
                 if (strncmp("json", argv[i], CMD_NAME_SIZE) == 0) {
                     format = FORMAT_JSON;
@@ -99,10 +106,9 @@ int process_cli(int argc, char **argv) {
         }
         // url
         else if ((strncmp(URL_ARG_LONGNAME, argv[i], strlen(URL_ARG_LONGNAME)) == 0)
-                 || (strncmp(URL_ARG_SHORTNAME, argv[i], strlen(URL_ARG_SHORTNAME)) == 0))
-        {
+                 || (strncmp(URL_ARG_SHORTNAME, argv[i], strlen(URL_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the URL
-            if ((i+1) < argc) {
+            if ((i + 1) < argc) {
                 strncat(url, argv[++i], URL_SIZE);
             } else {
                 op = OP_NONE;
@@ -157,11 +163,16 @@ void show_usage(void) {
     printf("  bce --import --format <sqlite|json> --file <filename>\n");
     printf("  bce --import --format json --url <url-of-json-file>\n");
     printf("\narguments:\n");
-    printf("  %s (%s) : export command data to file\n", EXPORT_ARG_LONGNAME, EXPORT_ARG_SHORTNAME);
-    printf("  %s (%s) : import command data from file\n", IMPORT_ARG_LONGNAME, IMPORT_ARG_SHORTNAME);
-    printf("  %s (%s) : format to read/write data [sqlite|json] (default=sqlite)\n", FORMAT_ARG_LONGNAME, FORMAT_ARG_SHORTNAME);
-    printf("  %s (%s) : filename to import/export\n", FILE_ARG_LONGNAME, FILE_ARG_SHORTNAME);
-    printf("  %s (%s) : url of json file to import\n", URL_ARG_LONGNAME, URL_ARG_SHORTNAME);
+    printf("  %s (%s) : export command data to file\n",
+           EXPORT_ARG_LONGNAME, EXPORT_ARG_SHORTNAME);
+    printf("  %s (%s) : import command data from file\n",
+           IMPORT_ARG_LONGNAME, IMPORT_ARG_SHORTNAME);
+    printf("  %s (%s) : format to read/write data [sqlite|json] (default=sqlite)\n",
+           FORMAT_ARG_LONGNAME, FORMAT_ARG_SHORTNAME);
+    printf("  %s (%s) : filename to import/export\n",
+           FILE_ARG_LONGNAME, FILE_ARG_SHORTNAME);
+    printf("  %s (%s) : url of json file to import\n",
+           URL_ARG_LONGNAME, URL_ARG_SHORTNAME);
     printf("\n");
 }
 
@@ -197,7 +208,7 @@ static int process_import_sqlite(const char *filename) {
     // iterate over the commands
     linked_list_node_t *node = cmd_names->head;
     while (node) {
-        char *cmd_name = (char *)node->data;
+        char *cmd_name = (char *) node->data;
         bce_command_t *cmd = create_bce_command();
 
         // read cmd from src database
@@ -240,7 +251,7 @@ static int process_import_sqlite(const char *filename) {
         goto done;
     }
 
-done:
+    done:
     sqlite3_close(src_db);
     sqlite3_close(dest_db);
     return err;
@@ -289,7 +300,7 @@ static int process_export_sqlite(const char *command_name, const char *filename)
         goto done;
     }
 
-done:
+    done:
     if (err) {
         fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
     }
@@ -355,7 +366,7 @@ static int process_import_json(const char *json_filename, const char *url) {
         goto done;
     }
 
-done:
+    done:
     sqlite3_close(dest_db);
     return err;
 }
@@ -658,7 +669,7 @@ static json_object *bce_command_arg_to_json(bce_command_arg_t *arg) {
     if (arg->opts) {
         linked_list_node_t *opt_node = arg->opts->head;
         while (opt_node) {
-            bce_command_opt_t *opt = (bce_command_opt_t *)opt_node->data;
+            bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
             if (opt) {
                 // convert the option to json
                 json_object *j_opt = bce_command_opt_to_json(opt);
@@ -679,7 +690,7 @@ static json_object *bce_command_opt_to_json(bce_command_opt_t *opt) {
     return j_opt;
 }
 
-static sqlite3* open_db_with_xa(const char *filename, int *rc) {
+static sqlite3 *open_db_with_xa(const char *filename, int *rc) {
     // open the completion database
     sqlite3 *conn = open_database(filename, rc);
     if (*rc != SQLITE_OK) {
@@ -698,7 +709,8 @@ static sqlite3* open_db_with_xa(const char *filename, int *rc) {
         schema_version = get_schema_version(conn);
     }
     if (schema_version != SCHEMA_VERSION) {
-        fprintf(stderr, "Schema version mismatch. database: %s, expected: %d, found: %d\n", filename, SCHEMA_VERSION, schema_version);
+        fprintf(stderr, "Schema version mismatch. database: %s, expected: %d, found: %d\n", filename, SCHEMA_VERSION,
+                schema_version);
         return NULL;
     }
 

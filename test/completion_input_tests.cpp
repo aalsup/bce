@@ -59,7 +59,7 @@ TEST_CASE("completion_input") {
     SECTION("cursor value") {
         bce_error_t err;
         completion_input_t *input = create_completion_input(&err);
-        CHECK(input->cursor_pos == strtol(cursor, (char **)NULL, 10));
+        CHECK(input->cursor_pos == strtol(cursor, (char **) NULL, 10));
         free_completion_input(input);
     }
 }

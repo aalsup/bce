@@ -21,6 +21,6 @@ typedef enum {
     ERR_SQLITE_ERROR = -105,
 } bce_error_t;
 
-char* get_bce_error_msg(bce_error_t err);
+char *get_bce_error_msg(bce_error_t err);
 
 #endif // AUTO_COMPLETE_ERROR_H

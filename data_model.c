@@ -7,31 +7,31 @@
 #include <sqlite3.h>
 
 // SQL statements used for BASH completion
-static const char* COMMAND_READ_SQL =
+static const char *COMMAND_READ_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
         " FROM command c "
         " JOIN command_alias a ON a.cmd_uuid = c.uuid "
         " WHERE c.name = ?1 OR a.name = ?2 ";
 
-static const char* COMMAND_ALIAS_READ_SQL =
+static const char *COMMAND_ALIAS_READ_SQL =
         " SELECT a.uuid, a.cmd_uuid, a.name "
         " FROM command_alias a "
         " WHERE a.cmd_uuid = ?1 ";
 
-static const char* SUB_COMMAND_READ_SQL =
+static const char *SUB_COMMAND_READ_SQL =
         " SELECT c.uuid, c.name, c.parent_cmd "
         " FROM command c "
         " WHERE c.parent_cmd = ?1 "
         " ORDER BY c.name ";
 
-static const char* COMMAND_ARG_READ_SQL =
+static const char *COMMAND_ARG_READ_SQL =
         " SELECT ca.uuid, ca.cmd_uuid, ca.arg_type, ca.description, ca.long_name, ca.short_name "
         " FROM command_arg ca "
         " JOIN command c ON c.uuid = ca.cmd_uuid "
         " WHERE c.uuid = ?1 "
         " ORDER BY ca.long_name, ca.short_name ";
 
-static const char* COMMAND_OPT_READ_SQL =
+static const char *COMMAND_OPT_READ_SQL =
         " SELECT co.uuid, co.cmd_arg_uuid, co.name "
         " FROM command_opt co "
         " JOIN command_arg ca ON ca.uuid = co.cmd_arg_uuid "
@@ -39,38 +39,38 @@ static const char* COMMAND_OPT_READ_SQL =
         " ORDER BY co.name ";
 
 // SQL statements used for IMPORT/EXPORT
-static const char* COMMAND_NAMES_SQL =
+static const char *COMMAND_NAMES_SQL =
         " SELECT c.name "
         " FROM command c "
         " WHERE c.parent_cmd IS NULL "
         " ORDER BY c.name ";
 
-static const char* COMMAND_WRITE_SQL =
+static const char *COMMAND_WRITE_SQL =
         " INSERT INTO command "
         " (uuid, name, parent_cmd) "
         " VALUES "
         " (?1, ?2, ?3) ";
 
-static const char* COMMAND_ALIAS_WRITE_SQL =
+static const char *COMMAND_ALIAS_WRITE_SQL =
         " INSERT INTO command_alias "
         " (uuid, cmd_uuid, name) "
         " VALUES "
         " (?1, ?2, ?3) ";
 
-static const char* COMMAND_ARG_WRITE_SQL =
+static const char *COMMAND_ARG_WRITE_SQL =
         " INSERT INTO command_arg "
         " (uuid, cmd_uuid, arg_type, description, long_name, short_name) "
         " VALUES "
         " (?1, ?2, ?3, ?4, ?5, ?6) ";
 
-static const char* COMMAND_OPT_WRITE_SQL =
+static const char *COMMAND_OPT_WRITE_SQL =
         " INSERT INTO command_opt "
         " (uuid, cmd_arg_uuid, name) "
         " VALUES "
         " (?1, ?2, ?3) ";
 
 // DB schema should perform cascade deletes
-static const char* COMMAND_DELETE_SQL =
+static const char *COMMAND_DELETE_SQL =
         " DELETE FROM command "
         " WHERE name = ?1 "
         " AND parent_cmd IS NULL ";
@@ -107,7 +107,7 @@ bce_error_t prepare_statement_cache(struct sqlite3 *conn) {
         goto done;
     }
 
-done:
+    done:
     if (rc == SQLITE_OK) {
         return ERR_NONE;
     } else {
@@ -160,7 +160,7 @@ void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, const in
         printf("  aliases: ");
         linked_list_node_t *alias_node = cmd->aliases->head;
         while (alias_node != NULL) {
-            bce_command_alias_t *alias = (bce_command_alias_t *)alias_node->data;
+            bce_command_alias_t *alias = (bce_command_alias_t *) alias_node->data;
             printf("%s ", alias->name);
             alias_node = alias_node->next;
         }
@@ -170,7 +170,7 @@ void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, const in
     if (cmd->args) {
         linked_list_node_t *arg_node = cmd->args->head;
         while (arg_node) {
-            bce_command_arg_t *arg = (bce_command_arg_t *)arg_node->data;
+            bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
             if (arg) {
                 for (int i = 0; i < level; i++) {
                     printf("  ");
@@ -181,7 +181,7 @@ void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, const in
                 if (arg->opts) {
                     linked_list_node_t *opt_node = arg->opts->head;
                     while (opt_node) {
-                        bce_command_opt_t *opt = (bce_command_opt_t *)opt_node->data;
+                        bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
                         if (opt) {
                             for (int i = 0; i < level; i++) {
                                 printf("  ");
@@ -235,7 +235,7 @@ bce_error_t get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names)
     }
 }
 
-bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char* command_name) {
+bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name) {
     int rc;
 
     memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -288,7 +288,7 @@ bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char*
         }
     }
 
-done:
+    done:
     if (rc == SQLITE_OK) {
         return ERR_NONE;
     } else {
@@ -307,9 +307,9 @@ int get_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     int step = sqlite3_step(stmt);
     while (step == SQLITE_ROW) {
         bce_command_alias_t *alias = create_bce_command_alias();
-        strncat(alias->uuid, (const char *)sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
-        strncat(alias->cmd_uuid, (const char *)sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
-        strncat(alias->name, (const char *)sqlite3_column_text(stmt, 2), NAME_FIELD_SIZE);
+        strncat(alias->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+        strncat(alias->cmd_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
+        strncat(alias->name, (const char *) sqlite3_column_text(stmt, 2), NAME_FIELD_SIZE);
 
         // add this alias to the parent
         ll_append_item(parent_cmd->aliases, alias);
@@ -330,10 +330,10 @@ bce_error_t get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd)
     while (step == SQLITE_ROW) {
         // create bce_command_t
         bce_command_t *sub_cmd = create_bce_command();
-        strncat(sub_cmd->uuid, (const char *)sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
-        strncat(sub_cmd->name, (const char *)sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
+        strncat(sub_cmd->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
+        strncat(sub_cmd->name, (const char *) sqlite3_column_text(stmt, 1), NAME_FIELD_SIZE);
         if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
-            strncat(sub_cmd->parent_cmd_uuid, (const char *)sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
+            strncat(sub_cmd->parent_cmd_uuid, (const char *) sqlite3_column_text(stmt, 2), UUID_FIELD_SIZE);
         } else {
             memset(sub_cmd->parent_cmd_uuid, 0, UUID_FIELD_SIZE + 1);
         }
@@ -450,7 +450,7 @@ int get_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg) {
     return rc;
 }
 
-bce_command_t* create_bce_command(void) {
+bce_command_t *create_bce_command(void) {
     bce_command_t *cmd = malloc(sizeof(bce_command_t));
     if (cmd) {
         memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -469,7 +469,7 @@ bce_command_t* create_bce_command(void) {
     return cmd;
 }
 
-bce_command_alias_t* create_bce_command_alias(void) {
+bce_command_alias_t *create_bce_command_alias(void) {
     bce_command_alias_t *alias = malloc(sizeof(bce_command_alias_t));
     if (alias) {
         memset(alias->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -479,7 +479,7 @@ bce_command_alias_t* create_bce_command_alias(void) {
     return alias;
 }
 
-bce_command_arg_t* create_bce_command_arg(void) {
+bce_command_arg_t *create_bce_command_arg(void) {
     bce_command_arg_t *arg = malloc(sizeof(bce_command_arg_t));
     if (arg) {
         memset(arg->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -496,7 +496,7 @@ bce_command_arg_t* create_bce_command_arg(void) {
     return arg;
 }
 
-bce_command_opt_t* create_bce_command_opt(void) {
+bce_command_opt_t *create_bce_command_opt(void) {
     bce_command_opt_t *opt = malloc(sizeof(bce_command_opt_t));
     if (opt) {
         memset(opt->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -506,7 +506,7 @@ bce_command_opt_t* create_bce_command_opt(void) {
     return opt;
 }
 
-bce_command_t* free_bce_command(bce_command_t *cmd) {
+bce_command_t *free_bce_command(bce_command_t *cmd) {
     if (!cmd) {
         return NULL;
     }
@@ -520,7 +520,7 @@ bce_command_t* free_bce_command(bce_command_t *cmd) {
     return NULL;
 }
 
-bce_command_alias_t* free_bce_command_alias(bce_command_alias_t *alias) {
+bce_command_alias_t *free_bce_command_alias(bce_command_alias_t *alias) {
     if (!alias) {
         return NULL;
     }
@@ -529,7 +529,7 @@ bce_command_alias_t* free_bce_command_alias(bce_command_alias_t *alias) {
     return NULL;
 }
 
-bce_command_arg_t* free_bce_command_arg(bce_command_arg_t *arg) {
+bce_command_arg_t *free_bce_command_arg(bce_command_arg_t *arg) {
     if (!arg) {
         return NULL;
     }
@@ -540,7 +540,7 @@ bce_command_arg_t* free_bce_command_arg(bce_command_arg_t *arg) {
     return NULL;
 }
 
-bce_command_opt_t* free_bce_command_opt(bce_command_opt_t *opt) {
+bce_command_opt_t *free_bce_command_opt(bce_command_opt_t *opt) {
     if (!opt) {
         return NULL;
     }
@@ -580,7 +580,7 @@ bce_error_t write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
     if (cmd->aliases) {
         linked_list_node_t *node = cmd->aliases->head;
         while (node) {
-            bce_command_alias_t *alias = (bce_command_alias_t *)node->data;
+            bce_command_alias_t *alias = (bce_command_alias_t *) node->data;
             if (alias) {
                 rc = write_db_command_alias(conn, alias);
                 if (rc != SQLITE_OK) {
@@ -595,7 +595,7 @@ bce_error_t write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
     if (cmd->sub_commands) {
         linked_list_node_t *node = cmd->sub_commands->head;
         while (node) {
-            bce_command_t *subcmd = (bce_command_t *)node->data;
+            bce_command_t *subcmd = (bce_command_t *) node->data;
             if (subcmd) {
                 rc = write_db_command(conn, subcmd);
                 if (rc != SQLITE_OK) {
@@ -610,7 +610,7 @@ bce_error_t write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
     if (cmd->args) {
         linked_list_node_t *node = cmd->args->head;
         while (node) {
-            bce_command_arg_t *arg = (bce_command_arg_t *)node->data;
+            bce_command_arg_t *arg = (bce_command_arg_t *) node->data;
             if (arg) {
                 rc = write_db_command_arg(conn, arg);
                 if (rc != SQLITE_OK) {
@@ -702,7 +702,7 @@ bce_error_t write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg) {
     if (arg->opts) {
         linked_list_node_t *node = arg->opts->head;
         while (node) {
-            bce_command_opt_t *opt = (bce_command_opt_t *)node->data;
+            bce_command_opt_t *opt = (bce_command_opt_t *) node->data;
             if (opt) {
                 rc = write_db_command_opt(conn, opt);
                 if (rc != SQLITE_OK) {
@@ -772,7 +772,7 @@ bce_error_t delete_db_command(struct sqlite3 *conn, const char *command_name) {
         goto done;
     }
 
-done:
+    done:
     sqlite3_finalize(stmt);
     if ((rc == SQLITE_DONE) || (rc = SQLITE_OK)) {
         return ERR_NONE;

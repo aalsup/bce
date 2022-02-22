@@ -5,10 +5,10 @@
 #include <sqlite3.h>
 #include "error.h"
 
-static const char* SCHEMA_VERSION_SQL =
+static const char *SCHEMA_VERSION_SQL =
         " PRAGMA user_version ";
 
-static const char* CREATE_COMPLETION_COMMAND_SQL =
+static const char *CREATE_COMPLETION_COMMAND_SQL =
         " CREATE TABLE IF NOT EXISTS command ( "
         "    uuid TEXT PRIMARY KEY, "
         "    name TEXT NOT NULL, "
@@ -22,7 +22,7 @@ static const char* CREATE_COMPLETION_COMMAND_SQL =
         " CREATE INDEX command_parent_idx "
         "    ON command (parent_cmd); ";
 
-static const char* CREATE_COMPLETION_COMMAND_ALIAS_SQL =
+static const char *CREATE_COMPLETION_COMMAND_ALIAS_SQL =
         " CREATE TABLE IF NOT EXISTS command_alias ( "
         "    uuid TEXT PRIMARY KEY, "
         "    cmd_uuid TEXT NOT NULL, "
@@ -39,7 +39,7 @@ static const char* CREATE_COMPLETION_COMMAND_ALIAS_SQL =
         " CREATE UNIQUE INDEX command_alias_cmd_name_idx "
         "    ON command_alias (cmd_uuid, name); ";
 
-static const char* CREATE_COMPLETION_COMMAND_ARG_SQL =
+static const char *CREATE_COMPLETION_COMMAND_ARG_SQL =
         " CREATE TABLE IF NOT EXISTS command_arg ( "
         "    uuid TEXT PRIMARY KEY, "
         "    cmd_uuid TEXT NOT NULL, "
@@ -58,7 +58,7 @@ static const char* CREATE_COMPLETION_COMMAND_ARG_SQL =
         " CREATE UNIQUE INDEX command_arg_longname_idx "
         "    ON command_arg (cmd_uuid, long_name); ";
 
-static const char* CREATE_COMPLETION_COMMAND_OPT_SQL =
+static const char *CREATE_COMPLETION_COMMAND_OPT_SQL =
         " CREATE TABLE IF NOT EXISTS command_opt ( "
         "    uuid TEXT PRIMARY KEY, "
         "    cmd_arg_uuid TEXT NOT NULL, "
@@ -72,7 +72,7 @@ static const char* CREATE_COMPLETION_COMMAND_OPT_SQL =
         " CREATE UNIQUE INDEX command_opt_arg_name_idx "
         "    ON command_opt (cmd_arg_uuid, name); ";
 
-sqlite3* open_database(const char *filename, int *result) {
+sqlite3 *open_database(const char *filename, int *result) {
     char *err_msg = 0;
     sqlite3 *conn;
 
@@ -153,16 +153,16 @@ bce_error_t create_schema(struct sqlite3 *conn) {
 bool read_file_into_buffer(const char *filename, char **ppbuffer) {
     char *buffer = *ppbuffer;
     size_t length;
-    FILE *f = fopen (filename, "rb");
+    FILE *f = fopen(filename, "rb");
     if (f) {
         fseek(f, 0, SEEK_END);
         length = ftell(f);
         fseek(f, 0, SEEK_SET);
-        buffer = (char *)malloc(length);
+        buffer = (char *) malloc(length);
         if (buffer) {
             fread(buffer, 1, length, f);
         }
-        fclose (f);
+        fclose(f);
     }
 
     if (buffer) {
@@ -173,7 +173,7 @@ bool read_file_into_buffer(const char *filename, char **ppbuffer) {
 
 bce_error_t exec_sql_script(struct sqlite3 *conn, const char *filename) {
     bce_error_t result = ERR_NONE;
-    char **sql_data = (char **)malloc(sizeof(char));
+    char **sql_data = (char **) malloc(sizeof(char));
     if (read_file_into_buffer(filename, sql_data)) {
         int rc;
 
