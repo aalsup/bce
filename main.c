@@ -56,7 +56,7 @@ bce_error_t process_completion(void) {
         goto done;
     }
 
-    completion_input_t *input = load_completion_input(&err);
+    completion_input_t *input = create_completion_input(&err);
     if (err != ERR_NONE) {
         switch (err) {
             case ERR_MISSING_ENV_COMP_LINE:
@@ -135,7 +135,7 @@ bce_error_t process_completion(void) {
     recommendation_list = ll_destroy(recommendation_list);
 
 done:
-    free(input);
+    input = free_completion_input(input);
     completion_command = free_bce_command(completion_command);
     rc = free_statement_cache(conn);
     sqlite3_close(conn);

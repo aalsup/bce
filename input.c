@@ -4,7 +4,7 @@
 #include <errno.h>
 #include "error.h"
 
- completion_input_t* load_completion_input(bce_error_t *err) {
+ completion_input_t* create_completion_input(bce_error_t *err) {
     const char* line = getenv(BASH_LINE_VAR);
     if (!line || strlen(line) == 0) {
         *err = ERR_MISSING_ENV_COMP_LINE;
@@ -26,6 +26,11 @@
     }
     *err = ERR_NONE;
     return input;
+}
+
+completion_input_t* free_completion_input(completion_input_t *input) {
+    free(input);
+    return NULL;
 }
 
 bool get_command_from_input(completion_input_t *input, char* dest, size_t bufsize) {

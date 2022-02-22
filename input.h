@@ -18,7 +18,8 @@ typedef struct completion_input_t {
 // global instance for completion_input
 // completion_input_t completion_input;
 
-completion_input_t* load_completion_input(bce_error_t *err);
+completion_input_t* create_completion_input(bce_error_t *err);
+completion_input_t* free_completion_input(completion_input_t *input);
 linked_list_t* bash_input_to_list(const char *str, const size_t max_len);
 bool get_command_from_input(completion_input_t *input, char* dest, size_t bufsize);
 bool get_current_word(completion_input_t *input, char* dest, size_t bufsize);
