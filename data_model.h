@@ -79,15 +79,15 @@ bce_command_arg_t *free_bce_command_arg(bce_command_arg_t *arg);
 
 bce_command_opt_t *free_bce_command_opt(bce_command_opt_t *opt);
 
-void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, int level);
+void print_command_tree(const bce_command_t *cmd, int level);
 
-bce_error_t write_db_command(struct sqlite3 *conn, bce_command_t *completion_command);
+bce_error_t write_db_command(struct sqlite3 *conn, const bce_command_t *completion_command);
 
-bce_error_t write_db_command_alias(struct sqlite3 *conn, bce_command_alias_t *alias);
+bce_error_t write_db_command_alias(struct sqlite3 *conn, const bce_command_alias_t *alias);
 
-bce_error_t write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg);
+bce_error_t write_db_command_arg(struct sqlite3 *conn, const bce_command_arg_t *arg);
 
-bce_error_t write_db_command_opt(struct sqlite3 *conn, bce_command_opt_t *opt);
+bce_error_t write_db_command_opt(struct sqlite3 *conn, const bce_command_opt_t *opt);
 
 bce_error_t delete_db_command(struct sqlite3 *conn, const char *command_name);
 

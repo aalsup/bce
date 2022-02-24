@@ -146,7 +146,7 @@ bce_error_t free_statement_cache(struct sqlite3 *conn) {
     }
 }
 
-void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, const int level) {
+void print_command_tree(const bce_command_t *cmd, const int level) {
     // indent
     for (int i = 0; i < level; i++) {
         printf("  ");
@@ -200,7 +200,7 @@ void print_command_tree(struct sqlite3 *conn, const bce_command_t *cmd, const in
         linked_list_node_t *node = cmd->sub_commands->head;
         while (node) {
             bce_command_t *sub_cmd = (bce_command_t *) node->data;
-            print_command_tree(conn, sub_cmd, level + 1);
+            print_command_tree(sub_cmd, level + 1);
             node = node->next;
         }
     }
@@ -551,7 +551,7 @@ bce_command_opt_t *free_bce_command_opt(bce_command_opt_t *opt) {
     return NULL;
 }
 
-bce_error_t write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
+bce_error_t write_db_command(struct sqlite3 *conn, const bce_command_t *cmd) {
     if (!cmd) {
         return ERR_INVALID_CMD;
     }
@@ -630,7 +630,7 @@ bce_error_t write_db_command(struct sqlite3 *conn, bce_command_t *cmd) {
     }
 }
 
-bce_error_t write_db_command_alias(struct sqlite3 *conn, bce_command_alias_t *alias) {
+bce_error_t write_db_command_alias(struct sqlite3 *conn, const bce_command_alias_t *alias) {
     if (!alias) {
         return ERR_INVALID_ALIAS;
     }
@@ -661,7 +661,7 @@ bce_error_t write_db_command_alias(struct sqlite3 *conn, bce_command_alias_t *al
     }
 }
 
-bce_error_t write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg) {
+bce_error_t write_db_command_arg(struct sqlite3 *conn, const bce_command_arg_t *arg) {
     if (!arg) {
         return ERR_INVALID_ARG;
     }
@@ -722,7 +722,7 @@ bce_error_t write_db_command_arg(struct sqlite3 *conn, bce_command_arg_t *arg) {
     }
 }
 
-bce_error_t write_db_command_opt(struct sqlite3 *conn, bce_command_opt_t *opt) {
+bce_error_t write_db_command_opt(struct sqlite3 *conn, const bce_command_opt_t *opt) {
     if (!opt) {
         return ERR_INVALID_OPT;
     }

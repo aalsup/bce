@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <json-c/json_object.h>
+#include "error.h"
 
 typedef enum operation_t {
     OP_NONE,
@@ -31,6 +32,6 @@ static const char *URL_ARG_SHORTNAME = "-u";
 
 void show_usage(void);
 
-int process_cli(int argc, char **argv);
+bce_error_t process_cli(int argc, const char **argv);
 
 #endif // CLI_H

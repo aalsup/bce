@@ -24,6 +24,6 @@ typedef enum {
     ERR_UUID_ERR = -108,
 } bce_error_t;
 
-char *get_bce_error_msg(bce_error_t err);
+char *get_bce_error_msg(const bce_error_t err);
 
 #endif // AUTO_COMPLETE_ERROR_H

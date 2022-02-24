@@ -173,7 +173,7 @@ bool ll_is_any_in_list(const linked_list_t *search_list, const linked_list_t *st
 /*
  * Removes a particular node from the list.
  */
-bool ll_remove_item(linked_list_t *list, linked_list_node_t *node_to_remove) {
+bool ll_remove_item(linked_list_t *list, const linked_list_node_t *node_to_remove) {
     if (!list || !node_to_remove) {
         return false;
     }

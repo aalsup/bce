@@ -3,7 +3,7 @@
 
 static const size_t MAX_MSG_LEN = 1024;
 
-char *get_bce_error_msg(bce_error_t err) {
+char *get_bce_error_msg(const bce_error_t err) {
     char *msg = calloc(MAX_MSG_LEN + 1, sizeof(char));
     switch (err) {
         case ERR_NONE:

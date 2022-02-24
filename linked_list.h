@@ -27,7 +27,7 @@ bool ll_append_item(linked_list_t *list, const void *data);
 
 bool ll_append_item_unique(linked_list_t *list, const char *data);
 
-bool ll_remove_item(linked_list_t *list, linked_list_node_t *node);
+bool ll_remove_item(linked_list_t *list, const linked_list_node_t *node);
 
 void *ll_get_nth_item(const linked_list_t *list, size_t elem);
 

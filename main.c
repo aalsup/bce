@@ -11,7 +11,7 @@
 
 bce_error_t process_completion(void);
 
-void collect_recommendations(linked_list_t *recommendation_list, bce_command_t *cmd);
+void collect_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd);
 
 void print_recommendations(linked_list_t *recommendation_list);
 
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
         return process_completion();
     }
 
-    return process_cli(argc, argv);
+    return process_cli(argc, (const char **) argv);
 }
 
 bce_error_t process_completion(void) {
@@ -147,7 +147,7 @@ bce_error_t process_completion(void) {
 
 // TODO: prioritize recommendations, bubble up most relevant to earlier in the list.
 // For example: `kubectl get pods <tab>` should show args/opts for `pods`, then `get`, and finally `kubectl`
-void collect_recommendations(linked_list_t *recommendation_list, bce_command_t *cmd) {
+void collect_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd) {
     if (!cmd) {
         return;
     }

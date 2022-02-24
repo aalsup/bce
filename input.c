@@ -33,7 +33,7 @@ completion_input_t *free_completion_input(completion_input_t *input) {
     return NULL;
 }
 
-bool get_command_from_input(completion_input_t *input, char *dest, size_t bufsize) {
+bool get_command_from_input(const completion_input_t *input, char *dest, const size_t bufsize) {
     bool result = false;
     memset(dest, 0, bufsize);
     linked_list_t *list = bash_input_to_list(input->line, MAX_LINE_SIZE);
@@ -47,7 +47,7 @@ bool get_command_from_input(completion_input_t *input, char *dest, size_t bufsiz
     return result;
 }
 
-bool get_current_word(completion_input_t *input, char *dest, size_t bufsize) {
+bool get_current_word(const completion_input_t *input, char *dest, const size_t bufsize) {
     memset(dest, 0, bufsize);
     bool result = false;
 
@@ -65,7 +65,7 @@ bool get_current_word(completion_input_t *input, char *dest, size_t bufsize) {
     return result;
 }
 
-bool get_previous_word(completion_input_t *input, char *dest, size_t bufsize) {
+bool get_previous_word(const completion_input_t *input, char *dest, size_t bufsize) {
     memset(dest, 0, bufsize);
     bool result = false;
 

@@ -24,26 +24,26 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
 
 static sqlite3 *open_db_with_xa(const char *filename, int *rc);
 
-static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, struct json_object *j_command);
+static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, const struct json_object *j_command);
 
-static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, struct json_object *j_alias);
+static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, const struct json_object *j_alias);
 
-static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, struct json_object *j_arg);
+static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, const struct json_object *j_arg);
 
-static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, struct json_object *j_opt);
+static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, const struct json_object *j_opt);
 
-static json_object *bce_command_to_json(bce_command_t *cmd);
+static json_object *bce_command_to_json(const bce_command_t *cmd);
 
-static json_object *bce_command_alias_to_json(bce_command_alias_t *alias);
+static json_object *bce_command_alias_to_json(const bce_command_alias_t *alias);
 
-static json_object *bce_command_arg_to_json(bce_command_arg_t *arg);
+static json_object *bce_command_arg_to_json(const bce_command_arg_t *arg);
 
-static json_object *bce_command_opt_to_json(bce_command_opt_t *opt);
+static json_object *bce_command_opt_to_json(const bce_command_opt_t *opt);
 
-int process_cli(int argc, char **argv) {
+bce_error_t process_cli(const int argc, const char **argv) {
     if (argc <= 1) {
         // called from BASH (for completion help)
-        return 0;
+        return ERR_NONE;
     }
 
     // collect the command-line arguments
@@ -133,35 +133,35 @@ int process_cli(int argc, char **argv) {
     }
 
     // determine what operation to perform
-    int result = 0;
+    bce_error_t err = ERR_NONE;
     switch (op) {
         case OP_EXPORT:
             if (format == FORMAT_JSON) {
-                result = process_export_json(command_name, filename);
+                err = process_export_json(command_name, filename);
             } else {
-                result = process_export_sqlite(command_name, filename);
+                err = process_export_sqlite(command_name, filename);
             }
             break;
         case OP_IMPORT:
             if (format == FORMAT_JSON) {
                 if (strlen(url) > 0) {
                     // import from URL
-                    result = process_import_json_url(url);
+                    err = process_import_json_url(url);
                 } else {
                     // import from local file
-                    result = process_import_json_file(filename);
+                    err = process_import_json_file(filename);
                 }
             } else {
-                result = process_import_sqlite(filename);
+                err = process_import_sqlite(filename);
             }
             break;
         case OP_NONE:
             fprintf(stderr, "Invalid arguments\n");
-            result = ERR_INVALID_CLI_ARGUMENT;
+            err = ERR_INVALID_CLI_ARGUMENT;
         default: // OP_NONE or OP_HELP
             show_usage();
     }
-    return result;
+    return err;
 }
 
 void show_usage(void) {
@@ -448,7 +448,7 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
   "sub_commands": []
 }
  */
-static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, struct json_object *j_command) {
+static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, const struct json_object *j_command) {
     bce_command_t *bce_command = create_bce_command();
     json_object *j_obj = NULL;
 
@@ -511,7 +511,7 @@ static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, struct 
   "name": "str"
 }
  */
-static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, struct json_object *j_alias) {
+static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, const struct json_object *j_alias) {
     bce_command_alias_t *bce_alias = create_bce_command_alias();
     json_object *j_obj = NULL;
 
@@ -543,7 +543,7 @@ static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, st
   "opts": []
 }
  */
-static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, struct json_object *j_arg) {
+static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, const struct json_object *j_arg) {
     bce_command_arg_t *bce_arg = create_bce_command_arg();
     json_object *j_obj = NULL;
 
@@ -598,7 +598,7 @@ static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, struct
   "name": "str"
 }
  */
-static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, struct json_object *j_opt) {
+static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, const struct json_object *j_opt) {
     bce_command_opt_t *bce_opt = create_bce_command_opt();
     json_object *j_obj = NULL;
 
@@ -619,7 +619,7 @@ static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, struct
     return bce_opt;
 }
 
-static json_object *bce_command_to_json(bce_command_t *cmd) {
+static json_object *bce_command_to_json(const bce_command_t *cmd) {
     if (!cmd) {
         return NULL;
     }
@@ -678,14 +678,14 @@ static json_object *bce_command_to_json(bce_command_t *cmd) {
     return j_command;
 }
 
-static json_object *bce_command_alias_to_json(bce_command_alias_t *alias) {
+static json_object *bce_command_alias_to_json(const bce_command_alias_t *alias) {
     struct json_object *j_alias = json_object_new_object();
     json_object_object_add(j_alias, "uuid", json_object_new_string(alias->uuid));
     json_object_object_add(j_alias, "name", json_object_new_string(alias->name));
     return j_alias;
 }
 
-static json_object *bce_command_arg_to_json(bce_command_arg_t *arg) {
+static json_object *bce_command_arg_to_json(const bce_command_arg_t *arg) {
     struct json_object *j_arg = json_object_new_object();
     json_object_object_add(j_arg, "uuid", json_object_new_string(arg->uuid));
     json_object_object_add(j_arg, "arg_type", json_object_new_string(arg->arg_type));
@@ -710,7 +710,7 @@ static json_object *bce_command_arg_to_json(bce_command_arg_t *arg) {
     return j_arg;
 }
 
-static json_object *bce_command_opt_to_json(bce_command_opt_t *opt) {
+static json_object *bce_command_opt_to_json(const bce_command_opt_t *opt) {
     struct json_object *j_opt = json_object_new_object();
     json_object_object_add(j_opt, "uuid", json_object_new_string(opt->uuid));
     json_object_object_add(j_opt, "name", json_object_new_string(opt->name));
