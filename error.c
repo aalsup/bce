@@ -40,6 +40,12 @@ char *get_bce_error_msg(bce_error_t err) {
             break;
         case ERR_DATABASE_CREATE_TABLE:
             break;
+        case ERR_UUID_ERR:
+            break;
+        case ERR_DOWNLOAD_ERR:
+            break;
+        case ERR_INVALID_URL:
+            break;
     }
     return msg;
 }

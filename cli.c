@@ -12,13 +12,15 @@
 static const size_t CMD_NAME_SIZE = 50;
 static const size_t URL_SIZE = 1024;
 
-static int process_import_sqlite(const char *filename);
+static bce_error_t process_import_sqlite(const char *filename);
 
-static int process_export_sqlite(const char *command_name, const char *filename);
+static bce_error_t process_export_sqlite(const char *command_name, const char *filename);
 
-static int process_import_json(const char *filename, const char *url);
+static bce_error_t process_import_json_url(const char *url);
 
-static int process_export_json(const char *command_name, const char *filename);
+static bce_error_t process_import_json_file(const char *json_filename);
+
+static bce_error_t process_export_json(const char *command_name, const char *filename);
 
 static sqlite3 *open_db_with_xa(const char *filename, int *rc);
 
@@ -142,7 +144,13 @@ int process_cli(int argc, char **argv) {
             break;
         case OP_IMPORT:
             if (format == FORMAT_JSON) {
-                result = process_import_json(filename, url);
+                if (strlen(url) > 0) {
+                    // import from URL
+                    result = process_import_json_url(url);
+                } else {
+                    // import from local file
+                    result = process_import_json_file(filename);
+                }
             } else {
                 result = process_import_sqlite(filename);
             }
@@ -176,9 +184,9 @@ void show_usage(void) {
     printf("\n");
 }
 
-static int process_import_sqlite(const char *filename) {
+static bce_error_t process_import_sqlite(const char *filename) {
     int rc = SQLITE_OK;
-    int err = 0;
+    bce_error_t err = 0;
 
     // open the source database
     sqlite3 *src_db = open_db_with_xa(filename, &rc);
@@ -189,9 +197,9 @@ static int process_import_sqlite(const char *filename) {
     }
 
     // open dest database
-    sqlite3 *dest_db = open_db_with_xa("completion.db", &rc);
+    sqlite3 *dest_db = open_db_with_xa(BCE_DB__FILENAME, &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
         err = ERR_OPEN_DATABASE;
         goto done;
     }
@@ -246,7 +254,7 @@ static int process_import_sqlite(const char *filename) {
     // commit transaction
     rc = sqlite3_exec(dest_db, "COMMIT;", NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to commit transaction, error: %d, database: %s\n", rc, "completion.db");
+        fprintf(stderr, "Unable to commit transaction, error: %d, database: %s\n", rc, BCE_DB__FILENAME);
         err = ERR_SQLITE_ERROR;
         goto done;
     }
@@ -259,12 +267,12 @@ static int process_import_sqlite(const char *filename) {
 
 static int process_export_sqlite(const char *command_name, const char *filename) {
     int rc = SQLITE_OK;
-    int err = 0;
+    bce_error_t err = 0;
 
     // open the source database
-    sqlite3 *src_db = open_db_with_xa("completion.db", &rc);
+    sqlite3 *src_db = open_db_with_xa(BCE_DB__FILENAME, &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
         err = ERR_OPEN_DATABASE;
         goto done;
     }
@@ -283,6 +291,7 @@ static int process_export_sqlite(const char *command_name, const char *filename)
     rc = get_db_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -312,22 +321,39 @@ static int process_export_sqlite(const char *command_name, const char *filename)
     return err;
 }
 
-static int process_import_json(const char *json_filename, const char *url) {
-    int err = 0;
-    int rc = SQLITE_OK;
-    const char *db_filename = "completion.db";
-    if (uuid4_init() != UUID4_ESUCCESS) {
-        fprintf(stderr, "UUID init failure\n");
+static bce_error_t process_import_json_url(const char *url) {
+    bce_error_t err = ERR_NONE;
+    char json_filename[L_tmpnam + 1];
+    mkstemp(json_filename);
+
+    // check url
+    if ((url == NULL) || (strlen(url) == 0)) {
+        err = ERR_INVALID_URL;
         goto done;
     }
 
-    // do we need to download the file
-    if ((strlen(url) > 0) && (strlen(json_filename) == 0)) {
-        bool result = download_file(url, json_filename);
-        if (!result) {
-            fprintf(stderr, "Unable to download file: %s\n", url);
-            goto done;
-        }
+    bool result = download_file(url, json_filename);
+    if (!result) {
+        fprintf(stderr, "Unable to download file: %s\n", url);
+        err = ERR_DOWNLOAD_ERR;
+        goto done;
+    }
+
+    err = process_import_json_file(json_filename);
+
+    done:
+    remove(json_filename);
+    return err;
+}
+
+static bce_error_t process_import_json_file(const char *json_filename) {
+    bce_error_t err = ERR_NONE;
+    int rc = SQLITE_OK;
+    const char *db_filename = BCE_DB__FILENAME;
+    if (uuid4_init() != UUID4_ESUCCESS) {
+        fprintf(stderr, "UUID init failure\n");
+        err = ERR_UUID_ERR;
+        goto done;
     }
 
     // parse the json
@@ -371,14 +397,14 @@ static int process_import_json(const char *json_filename, const char *url) {
     return err;
 }
 
-static int process_export_json(const char *command_name, const char *filename) {
+static bce_error_t process_export_json(const char *command_name, const char *filename) {
     int rc = SQLITE_OK;
-    int err = 0;
+    bce_error_t err = ERR_NONE;
 
     // open the source database
-    sqlite3 *src_db = open_db_with_xa("completion.db", &rc);
+    sqlite3 *src_db = open_db_with_xa(BCE_DB__FILENAME, &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, "completion.db");
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
         err = ERR_OPEN_DATABASE;
         goto done;
     }
@@ -389,6 +415,7 @@ static int process_export_json(const char *command_name, const char *filename) {
     rc = get_db_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "get_db_command() returned %d\n", rc);
+        err = ERR_INVALID_CMD;
         goto done;
     }
     free_statement_cache(src_db);

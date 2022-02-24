@@ -19,6 +19,9 @@ typedef enum {
     ERR_DATABASE_PRAGMA = -102,
     ERR_DATABASE_CREATE_TABLE = -104,
     ERR_SQLITE_ERROR = -105,
+    ERR_INVALID_URL = -106,
+    ERR_DOWNLOAD_ERR = -107,
+    ERR_UUID_ERR = -108,
 } bce_error_t;
 
 char *get_bce_error_msg(bce_error_t err);
