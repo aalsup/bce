@@ -30,7 +30,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(LINUX TRUE)
-endif()
+endif ()
 
 target_include_directories(bce PRIVATE /usr/local/include)
 target_include_directories(bce PRIVATE /usr/include)
@@ -39,7 +39,7 @@ if (${MACOSX})
     target_link_directories(bce PRIVATE /usr/local/lib)
 else ()
     target_link_directories(bce PRIVATE /usr/lib640)
-endif (${MACOSX})
+endif ()
 
 # Specifying '/usr/local/lib' strangely doesn't work on MacOS. Use 'find_library' instead.
 # see: https://stackoverflow.com/questions/52679871/cannot-find-library-under-usr-local-lib
@@ -53,7 +53,7 @@ else ()
     # TODO: figure out why json-c is not being statically linked.
     # https://stackoverflow.com/questions/50783730/adding-curl-as-static-library-to-a-c-cmake-project
     set_target_properties(json-c PROPERTIES IMPORTED_LOCATION /usr/lib64/libjson-c.so)
-endif (${MACOSX})
+endif ()
 target_link_libraries(bce PRIVATE json-c)
 
 # CURL: dynamic vs static link
@@ -68,16 +68,15 @@ endif ()
 # SQLite: dynamic link
 target_link_libraries(bce PRIVATE sqlite3)
 
-
 # debug stuff
-macro(print_all_variables)
+macro (print_all_variables)
     message(STATUS "print_all_variables------------------------------------------{")
     get_cmake_property(_variableNames VARIABLES)
     foreach (_variableName ${_variableNames})
         message(STATUS "${_variableName}=${${_variableName}}")
     endforeach()
     message(STATUS "print_all_variables------------------------------------------}")
-endmacro()
+endmacro ()
 
 print_all_variables()
 

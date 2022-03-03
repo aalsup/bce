@@ -9,9 +9,13 @@
 #include "prune.h"
 #include "cli.h"
 
+#define DEBUG
+
 bce_error_t process_completion(void);
 
 void collect_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd);
+
+void prioritize_recommendations(linked_list_t *recommendation_list, const char *current_word, const char *previous_word);
 
 void print_recommendations(linked_list_t *recommendation_list);
 
@@ -81,7 +85,7 @@ bce_error_t process_completion(void) {
     get_previous_word(input, previous_word, MAX_LINE_SIZE);
 
 #ifdef DEBUG
-    printf("input: %s\n", completion_input.line);
+    printf("input: %s\n", input->line);
     printf("command: %s\n", command_name);
     printf("current_word: %s\n", current_word);
     printf("previous_word: %s\n", previous_word);
@@ -121,18 +125,25 @@ bce_error_t process_completion(void) {
 
 #ifdef DEBUG
     printf("\nCommand Tree (Database)\n");
-    print_command_tree(conn, completion_command, 0);
+    print_command_tree(completion_command, 0);
 #endif
 
+    // remove non-relevant command data
     prune_command(completion_command, input);
 
 #ifdef DEBUG
     printf("\nCommand Tree (Pruned)\n");
-    print_command_tree(conn, completion_command, 0);
+    print_command_tree(completion_command, 0);
 #endif
 
+    // build the command recommendations
     linked_list_t *recommendation_list = ll_create(NULL);
     collect_recommendations(recommendation_list, completion_command);
+    prioritize_recommendations(recommendation_list, current_word, previous_word);
+
+#ifdef DEBUG
+    printf("\nRecommendations (Prioritized)\n");
+#endif
     print_recommendations(recommendation_list);
     recommendation_list = ll_destroy(recommendation_list);
 
@@ -145,7 +156,6 @@ bce_error_t process_completion(void) {
     return err;
 }
 
-// TODO: prioritize recommendations, bubble up most relevant to earlier in the list.
 // For example: `kubectl get pods <tab>` should show args/opts for `pods`, then `get`, and finally `kubectl`
 void collect_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd) {
     if (!cmd) {
@@ -225,6 +235,14 @@ void collect_recommendations(linked_list_t *recommendation_list, const bce_comma
             arg_node = arg_node->next;
         }
     }
+}
+
+void prioritize_recommendations(linked_list_t *recommendation_list, const char *current_word, const char *previous_word) {
+    if (!recommendation_list) {
+        return;
+    }
+
+     // TODO: How to do this?
 }
 
 void print_recommendations(linked_list_t *recommendation_list) {
