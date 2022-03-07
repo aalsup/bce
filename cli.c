@@ -65,6 +65,7 @@ bce_error_t process_cli(const int argc, const char **argv) {
             op = OP_EXPORT;
             // next parameter should be the command name
             if ((i + 1) < argc) {
+                command_name[0] = '\0';
                 strncat(command_name, argv[++i], CMD_NAME_SIZE);
             } else {
                 op = OP_NONE;
@@ -81,6 +82,7 @@ bce_error_t process_cli(const int argc, const char **argv) {
                  || (strncmp(FILE_ARG_SHORTNAME, argv[i], strlen(FILE_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the filename
             if ((i + 1) < argc) {
+                filename[0] = '\0';
                 strncat(filename, argv[++i], FILENAME_MAX);
             } else {
                 op = OP_NONE;
@@ -111,6 +113,7 @@ bce_error_t process_cli(const int argc, const char **argv) {
                  || (strncmp(URL_ARG_SHORTNAME, argv[i], strlen(URL_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the URL
             if ((i + 1) < argc) {
+                url[0] = '\0';
                 strncat(url, argv[++i], URL_SIZE);
             } else {
                 op = OP_NONE;

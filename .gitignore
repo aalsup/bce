@@ -4,3 +4,4 @@ test/*.db
 xyz.db
 **/*.db-shm
 **/*.db-wal
+**/*.swp
