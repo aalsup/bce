@@ -1,9 +1,9 @@
 #ifndef BCE_DATA_MODEL_H
 #define BCE_DATA_MODEL_H
 
-#include "linked_list.h"
 #include <stdbool.h>
 #include <sqlite3.h>
+#include "linked_list.h"
 #include "error.h"
 
 #define UUID_FIELD_SIZE        36

@@ -2,7 +2,6 @@
 #define BCE_CLI_H
 
 #include <stdio.h>
-#include <json-c/json_object.h>
 #include "error.h"
 
 typedef enum operation_t {
