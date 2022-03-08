@@ -1,9 +1,9 @@
-#ifndef PRUNE_H
-#define PRUNE_H
+#ifndef BCE_PRUNE_H
+#define BCE_PRUNE_H
 
 #include "input.h"
 #include "data_model.h"
 
 void prune_command(bce_command_t *cmd, const completion_input_t *input);
 
-#endif // PRUNE_H
+#endif // BCE_PRUNE_H

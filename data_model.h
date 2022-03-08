@@ -1,10 +1,10 @@
+#ifndef BCE_DATA_MODEL_H
+#define BCE_DATA_MODEL_H
+
 #include "linked_list.h"
 #include <stdbool.h>
 #include <sqlite3.h>
 #include "error.h"
-
-#ifndef DATA_MODEL_H
-#define DATA_MODEL_H
 
 #define UUID_FIELD_SIZE        36
 #define NAME_FIELD_SIZE        50
@@ -91,4 +91,4 @@ bce_error_t write_db_command_opt(struct sqlite3 *conn, const bce_command_opt_t *
 
 bce_error_t delete_db_command(struct sqlite3 *conn, const char *command_name);
 
-#endif // DATA_MODEL_H
+#endif // BCE_DATA_MODEL_H

@@ -1,5 +1,5 @@
-#ifndef AUTO_COMPLETE_ERROR_H
-#define AUTO_COMPLETE_ERROR_H
+#ifndef BCE_ERROR_H 
+#define BCE_ERROR_H 
 
 typedef enum {
     ERR_NONE = 0,
@@ -26,4 +26,4 @@ typedef enum {
 
 char *get_bce_error_msg(const bce_error_t err);
 
-#endif // AUTO_COMPLETE_ERROR_H
+#endif // BCE_ERROR_H

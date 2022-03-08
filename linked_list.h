@@ -1,8 +1,8 @@
+#ifndef BCE_LINKED_LIST_H
+#define BCE_LINKED_LIST_H
+
 #include <stdlib.h>
 #include <stdbool.h>
-
-#ifndef LINKED_LIST_H
-#define LINKED_LIST_H
 
 // function signature to free node data; otherwise free() is used by `ll_destroy()` and `ll_remove_item()`
 typedef void *(*ll_free_node_func)(void *);
@@ -37,4 +37,4 @@ bool ll_is_string_in_list(const linked_list_t *list, const char *str);
 
 bool ll_is_any_in_list(const linked_list_t *search_list, const linked_list_t *str_list);
 
-#endif // LINKED_LIST_H
+#endif // BCE_LINKED_LIST_H

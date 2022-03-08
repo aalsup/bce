@@ -1,5 +1,5 @@
-#ifndef DBUTIL_H
-#define DBUTIL_H
+#ifndef BCE_DBUTIL_H
+#define BCE_DBUTIL_H
 
 #include <sqlite3.h>
 #include <stdbool.h>
@@ -17,4 +17,4 @@ bool read_file_into_buffer(const char *filename, char **ppbuffer);
 
 bce_error_t exec_sql_script(struct sqlite3 *conn, const char *filename);
 
-#endif // DBUTIL_H
+#endif // BCE_DBUTIL_H

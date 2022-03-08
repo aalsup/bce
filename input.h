@@ -1,10 +1,10 @@
+#ifndef BCE_INPUT_H
+#define BCE_INPUT_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include "linked_list.h"
 #include "error.h"
-
-#ifndef COMPLETION_INPUT_H
-#define COMPLETION_INPUT_H
 
 #define MAX_LINE_SIZE  2048
 static const char *BASH_LINE_VAR = "COMP_LINE";
@@ -27,4 +27,4 @@ bool get_current_word(const completion_input_t *input, char *dest, size_t bufsiz
 
 bool get_previous_word(const completion_input_t *input, char *dest, size_t bufsize);
 
-#endif // COMPLETION_INPUT_H
+#endif // BCE_INPUT_H

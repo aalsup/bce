@@ -1,5 +1,5 @@
-#ifndef CLI_H
-#define CLI_H
+#ifndef BCE_CLI_H
+#define BCE_CLI_H
 
 #include <stdio.h>
 #include <json-c/json_object.h>
@@ -34,4 +34,4 @@ void show_usage(void);
 
 bce_error_t process_cli(int argc, const char **argv);
 
-#endif // CLI_H
+#endif // BCE_CLI_H
