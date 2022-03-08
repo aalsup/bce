@@ -51,17 +51,17 @@ bce_error_t prepare_statement_cache(struct sqlite3 *conn);
 
 bce_error_t free_statement_cache(struct sqlite3 *conn);
 
-bce_error_t get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names);
+bce_error_t load_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names);
 
-bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name);
+bce_error_t load_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name);
 
-bce_error_t get_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd);
+bce_error_t load_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd);
 
-int get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd);
+bce_error_t load_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd);
 
-int get_db_command_args(struct sqlite3 *conn, bce_command_t *parent_cmd);
+bce_error_t load_db_command_args(struct sqlite3 *conn, bce_command_t *parent_cmd);
 
-int get_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg);
+bce_error_t load_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg);
 
 bce_command_t *create_bce_command(void);
 

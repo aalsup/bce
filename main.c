@@ -17,7 +17,7 @@ void collect_recommendations(linked_list_t *recommendation_list, const bce_comma
 
 void prioritize_recommendations(linked_list_t *recommendation_list, const char *current_word, const char *previous_word);
 
-void print_recommendations(linked_list_t *recommendation_list);
+void print_recommendations(const linked_list_t *recommendation_list);
 
 int main(int argc, char **argv) {
     if (argc <= 1) {
@@ -109,9 +109,9 @@ bce_error_t process_completion(void) {
 
     // search for the command directly (load all descendents)
     bce_command_t *completion_command = create_bce_command();
-    rc = get_db_command(conn, completion_command, command_name);
+    rc = load_db_command(conn, completion_command, command_name);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "get_db_command() returned %d\n", rc);
+        fprintf(stderr, "load_db_command() returned %d\n", rc);
         err = ERR_SQLITE_ERROR;
         goto done;
     }
@@ -245,7 +245,7 @@ void prioritize_recommendations(linked_list_t *recommendation_list, const char *
      // TODO: How to do this?
 }
 
-void print_recommendations(linked_list_t *recommendation_list) {
+void print_recommendations(const linked_list_t *recommendation_list) {
     if (!recommendation_list) {
         return;
     }

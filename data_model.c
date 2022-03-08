@@ -206,7 +206,7 @@ void print_command_tree(const bce_command_t *cmd, const int level) {
     }
 }
 
-bce_error_t get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
+bce_error_t load_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
     if (!conn) {
         return ERR_NO_DATABASE_CONNECTION;
     }
@@ -235,7 +235,7 @@ bce_error_t get_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names)
     }
 }
 
-bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name) {
+bce_error_t load_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name) {
     int rc;
 
     memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
@@ -270,19 +270,19 @@ bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char 
         cmd->args = ll_create(free_arg);
 
         // populate child aliases
-        rc = get_db_command_aliases(conn, cmd);
+        rc = load_db_command_aliases(conn, cmd);
         if (rc != SQLITE_OK) {
             goto done;
         }
 
         // populate child args
-        rc = get_db_command_args(conn, cmd);
+        rc = load_db_command_args(conn, cmd);
         if (rc != SQLITE_OK) {
             goto done;
         }
 
         // populate child sub-cmds
-        rc = get_db_sub_commands(conn, cmd);
+        rc = load_db_sub_commands(conn, cmd);
         if (rc != SQLITE_OK) {
             goto done;
         }
@@ -296,7 +296,7 @@ bce_error_t get_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char 
     }
 }
 
-int get_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
+int load_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     int rc;
 
     // pull statement from cache
@@ -320,7 +320,7 @@ int get_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     return rc;
 }
 
-bce_error_t get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd) {
+bce_error_t load_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     // pull statement from cache
     sqlite3_stmt *stmt = bce_sub_command_read_stmt;
     int rc = sqlite3_reset(stmt);
@@ -339,19 +339,19 @@ bce_error_t get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd)
         }
 
         // populate child aliases
-        rc = get_db_command_aliases(conn, sub_cmd);
+        rc = load_db_command_aliases(conn, sub_cmd);
         if (rc != SQLITE_OK) {
             goto done;
         }
 
         // populate child args
-        rc = get_db_command_args(conn, sub_cmd);
+        rc = load_db_command_args(conn, sub_cmd);
         if (rc != SQLITE_OK) {
             goto done;
         }
 
         // populate child sub-cmds
-        rc = get_db_sub_commands(conn, sub_cmd);
+        rc = load_db_sub_commands(conn, sub_cmd);
         if (rc != SQLITE_OK) {
             goto done;
         }
@@ -370,9 +370,12 @@ bce_error_t get_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd)
     }
 }
 
-int get_db_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
-    if (parent_cmd == NULL) {
-        return -1;
+bce_error_t load_db_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
+    if (!conn) {
+        return ERR_NO_DATABASE_CONNECTION;
+    }
+    if (!parent_cmd) {
+        return ERR_INVALID_CMD;
     }
 
     // ensure cmd->args is fresh
@@ -409,19 +412,26 @@ int get_db_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
         } else {
             memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
         }
-        rc = get_db_command_opts(conn, arg);
+        rc = load_db_command_opts(conn, arg);
 
         ll_append_item(parent_cmd->args, arg);
 
         step = sqlite3_step(stmt);
     }
 
-    return rc;
+    if (rc == SQLITE_OK) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
+    }
 }
 
-int get_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg) {
-    if (parent_arg == NULL) {
-        return -1;
+bce_error_t load_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg) {
+    if (!conn) {
+        return ERR_NO_DATABASE_CONNECTION;
+    }
+    if (!parent_arg) {
+        return ERR_INVALID_ARG;
     }
 
     // ensure arg->opts is fresh
@@ -447,7 +457,11 @@ int get_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg) {
         step = sqlite3_step(stmt);
     }
 
-    return rc;
+    if (rc == SQLITE_OK) {
+        return ERR_NONE;
+    } else {
+        return ERR_SQLITE_ERROR;
+    }
 }
 
 bce_command_t *create_bce_command(void) {

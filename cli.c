@@ -209,7 +209,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
 
     // get a list of the top-level commands in source database
     linked_list_t *cmd_names = ll_create(NULL);
-    rc = get_db_command_names(src_db, cmd_names);
+    rc = load_db_command_names(src_db, cmd_names);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to query commands. error: %d, database: %s\n", rc, filename);
         err = ERR_SQLITE_ERROR;
@@ -223,7 +223,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
         bce_command_t *cmd = create_bce_command();
 
         // read cmd from src database
-        rc = get_db_command(src_db, cmd, cmd_name);
+        rc = load_db_command(src_db, cmd, cmd_name);
         if (rc != SQLITE_OK) {
             fprintf(stderr, "Unable to query command: %s. error: %d\n", cmd_name, rc);
             err = ERR_SQLITE_ERROR;
@@ -291,9 +291,9 @@ static int process_export_sqlite(const char *command_name, const char *filename)
 
     // load the command hierarchy
     bce_command_t *completion_command = create_bce_command();
-    rc = get_db_command(src_db, completion_command, command_name);
+    rc = load_db_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "get_db_command() returned %d\n", rc);
+        fprintf(stderr, "load_db_command() returned %d\n", rc);
         err = ERR_SQLITE_ERROR;
         goto done;
     }
@@ -415,9 +415,9 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
     // load the command hierarchy
     prepare_statement_cache(src_db);
     bce_command_t *completion_command = create_bce_command();
-    rc = get_db_command(src_db, completion_command, command_name);
+    rc = load_db_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "get_db_command() returned %d\n", rc);
+        fprintf(stderr, "load_db_command() returned %d\n", rc);
         err = ERR_INVALID_CMD;
         goto done;
     }
