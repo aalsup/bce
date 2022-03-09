@@ -14,7 +14,16 @@ linked_list_t *ll_create(void *(*free_func)(void *)) {
     if (list) {
         list->size = 0;
         list->head = NULL;
+        list->unique = false;
         list->free_node_func = free_func;
+    }
+    return list;
+}
+
+linked_list_t *ll_create_unique(void *(*free_func)(void *)) {
+    linked_list_t *list = ll_create(free_func);
+    if (list) {
+        list->unique = true;
     }
     return list;
 }
@@ -56,36 +65,32 @@ linked_list_t *ll_destroy(linked_list_t *list) {
  */
 bool ll_append_item(linked_list_t *list, const void *data) {
     if (list) {
-        // create a new node
-        linked_list_node_t *node = malloc(sizeof(linked_list_node_t));
-        if (node) {
-            node->id = node_id_seq++;
-            node->data = (void *) data;
-            node->next = NULL;
-            // find the end of the list
-            linked_list_node_t *last = list->head;
-            if (!last) {
-                list->head = node;
-            } else {
-                while (last->next) {
-                    last = last->next;
-                }
-                last->next = node;
-            }
-            list->size++;
-            return true;
+        bool should_append_item = true;
+        // if unique, check for item
+        if (list->unique) {
+            should_append_item = !ll_is_string_in_list(list, (const char *) data);
         }
-    }
-    return false;
-}
 
-/*
- * Add the item to the end of the list, if it isn't already present.
- */
-bool ll_append_item_unique(linked_list_t *list, const char *data) {
-    if (list) {
-        if (!ll_is_string_in_list(list, data)) {
-            return ll_append_item(list, data);
+        // create a new node
+        if (should_append_item) {
+            linked_list_node_t *node = malloc(sizeof(linked_list_node_t));
+            if (node) {
+                node->id = node_id_seq++;
+                node->data = (void *) data;
+                node->next = NULL;
+                // find the end of the list
+                linked_list_node_t *last = list->head;
+                if (!last) {
+                    list->head = node;
+                } else {
+                    while (last->next) {
+                        last = last->next;
+                    }
+                    last->next = node;
+                }
+                list->size++;
+                return true;
+            }
         }
     }
     return false;

@@ -16,16 +16,17 @@ typedef struct linked_list_node_t {
 typedef struct linked_list_t {
     size_t size;
     linked_list_node_t *head;
+    bool unique;
     ll_free_node_func free_node_func;
 } linked_list_t;
 
 linked_list_t *ll_create(ll_free_node_func free_func);
 
+linked_list_t *ll_create_unique(ll_free_node_func free_func);
+
 linked_list_t *ll_destroy(linked_list_t *list);
 
 bool ll_append_item(linked_list_t *list, const void *data);
-
-bool ll_append_item_unique(linked_list_t *list, const char *data);
 
 bool ll_remove_item(linked_list_t *list, const linked_list_node_t *node);
 

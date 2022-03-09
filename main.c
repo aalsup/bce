@@ -13,9 +13,11 @@
 
 bce_error_t process_completion(void);
 
-void collect_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd);
+void collect_primary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word);
 
-void prioritize_recommendations(linked_list_t *recommendation_list, const char *current_word, const char *previous_word);
+void collect_secondary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word);
+
+bce_command_arg_t *get_current_arg(const bce_command_t *cmd, const char *current_word);
 
 void print_recommendations(const linked_list_t *recommendation_list);
 
@@ -137,9 +139,9 @@ bce_error_t process_completion(void) {
 #endif
 
     // build the command recommendations
-    linked_list_t *recommendation_list = ll_create(NULL);
-    collect_recommendations(recommendation_list, completion_command);
-    prioritize_recommendations(recommendation_list, current_word, previous_word);
+    linked_list_t *recommendation_list = ll_create_unique(NULL);
+    collect_primary_recommendations(recommendation_list, completion_command, current_word, previous_word);
+    collect_secondary_recommendations(recommendation_list, completion_command, current_word, previous_word);
 
 #ifdef DEBUG
     printf("\nRecommendations (Prioritized)\n");
@@ -156,8 +158,26 @@ bce_error_t process_completion(void) {
     return err;
 }
 
-// For example: `kubectl get pods <tab>` should show args/opts for `pods`, then `get`, and finally `kubectl`
-void collect_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd) {
+void collect_primary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
+    if (!recommendation_list || !cmd) {
+        return;
+    }
+
+    bce_command_arg_t *arg = get_current_arg(cmd, current_word);
+
+    if (arg->opts) {
+        linked_list_node_t *opt_node = arg->opts->head;
+        while (opt_node) {
+            char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
+            bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
+            strncat(data, opt->name, NAME_FIELD_SIZE);
+            ll_append_item(recommendation_list, data);
+            opt_node = opt_node->next;
+        }
+    } 
+}
+
+void collect_secondary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
     if (!cmd) {
         return;
     }
@@ -192,7 +212,7 @@ void collect_recommendations(linked_list_t *recommendation_list, const bce_comma
                 }
                 ll_append_item(recommendation_list, data);
             }
-            collect_recommendations(recommendation_list, sub_cmd);
+            collect_secondary_recommendations(recommendation_list, sub_cmd, current_word, previous_word);
             sub_cmd_node = sub_cmd_node->next;
         }
     }
@@ -221,12 +241,10 @@ void collect_recommendations(linked_list_t *recommendation_list, const bce_comma
                     if (arg->opts) {
                         linked_list_node_t *opt_node = arg->opts->head;
                         while (opt_node) {
+                            char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
                             bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
-                            if (opt) {
-                                char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
-                                strncat(data, opt->name, NAME_FIELD_SIZE);
-                                ll_append_item(recommendation_list, data);
-                            }
+                            strncat(data, opt->name, NAME_FIELD_SIZE);
+                            ll_append_item(recommendation_list, data);
                             opt_node = opt_node->next;
                         }
                     }
@@ -237,12 +255,48 @@ void collect_recommendations(linked_list_t *recommendation_list, const bce_comma
     }
 }
 
-void prioritize_recommendations(linked_list_t *recommendation_list, const char *current_word, const char *previous_word) {
-    if (!recommendation_list) {
-        return;
+bce_command_arg_t *get_current_arg(const bce_command_t *cmd, const char *current_word) {
+    if (!cmd || !current_word) {
+        return NULL;
     }
 
-     // TODO: How to do this?
+    bce_command_arg_t *found_arg = NULL;
+
+    if (cmd->args) {
+        linked_list_node_t *arg_node = cmd->args->head;
+        while (arg_node) {
+            bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
+            if (arg) {
+                if (arg->is_present_on_cmdline) {
+                    if ((strncmp(arg->long_name, current_word, NAME_FIELD_SIZE) == 0) ||
+                            (strncmp(arg->short_name, current_word, SHORTNAME_FIELD_SIZE) == 0)) {
+                        found_arg = arg;
+                        break;
+                    }
+                }
+            }
+            arg_node = arg_node->next;
+        }
+    }
+
+    if (found_arg) {
+        return found_arg;
+    }
+
+    // recurse for sub-commands
+    if (cmd->sub_commands) {
+        linked_list_node_t *sub_node = cmd->sub_commands->head;
+        while (sub_node) {
+            bce_command_t *sub = (bce_command_t *) sub_node->data;
+            found_arg = get_current_arg(sub, current_word);
+            if (found_arg) {
+                break;
+            }
+            sub_node = sub_node->next;
+        }
+    }
+
+    return found_arg;
 }
 
 void print_recommendations(const linked_list_t *recommendation_list) {
