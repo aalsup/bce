@@ -163,6 +163,7 @@ void collect_primary_recommendations(linked_list_t *recommendation_list, const b
         return;
     }
 
+    // if a current argument is selected, its options should be displayed 1st
     bce_command_arg_t *arg = get_current_arg(cmd, current_word);
 
     if (arg->opts) {
@@ -178,7 +179,7 @@ void collect_primary_recommendations(linked_list_t *recommendation_list, const b
 }
 
 void collect_secondary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
-    if (!cmd) {
+    if (!recommendation_list || !cmd) {
         return;
     }
 
