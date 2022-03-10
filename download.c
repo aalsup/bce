@@ -38,7 +38,7 @@ bool download_file(const char *url, const char *filename) {
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
 
     /* Switch on full protocol/debug output while testing */
-    curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
 
     /* disable progress meter, set to 0L to enable it */
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
