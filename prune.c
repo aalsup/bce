@@ -141,29 +141,36 @@ static void prune_arguments(bce_command_t *cmd, const linked_list_t *word_list) 
         }
     }
 }
-void collect_primary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
+bool collect_required_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
     if (!recommendation_list || !cmd) {
-        return;
+        return false;
     }
+
+    bool result = false;
 
     // if a current argument is selected, its options should be displayed 1st
     bce_command_arg_t *arg = get_current_arg(cmd, current_word);
 
-    if (arg->opts) {
-        linked_list_node_t *opt_node = arg->opts->head;
-        while (opt_node) {
-            char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
-            bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
-            strncat(data, opt->name, NAME_FIELD_SIZE);
-            ll_append_item(recommendation_list, data);
-            opt_node = opt_node->next;
+    if (arg) {
+        if (arg->opts) {
+            result = true;
+            linked_list_node_t *opt_node = arg->opts->head;
+            while (opt_node) {
+                char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
+                bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
+                strncat(data, opt->name, NAME_FIELD_SIZE);
+                ll_append_item(recommendation_list, data);
+                opt_node = opt_node->next;
+            }
         }
     }
+
+    return result;
 }
 
-void collect_secondary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
+bool collect_secondary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
     if (!recommendation_list || !cmd) {
-        return;
+        return false;
     }
 
     // collect all the sub-commands
@@ -237,6 +244,8 @@ void collect_secondary_recommendations(linked_list_t *recommendation_list, const
             arg_node = arg_node->next;
         }
     }
+
+    return true;
 }
 
 bce_command_arg_t *get_current_arg(const bce_command_t *cmd, const char *current_word) {

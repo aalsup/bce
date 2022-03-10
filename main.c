@@ -142,8 +142,10 @@ bce_error_t process_completion(void) {
 
     // build the command recommendations
     linked_list_t *recommendation_list = ll_create_unique(NULL);
-    collect_primary_recommendations(recommendation_list, completion_command, current_word, previous_word);
-    collect_secondary_recommendations(recommendation_list, completion_command, current_word, previous_word);
+    bool has_required = collect_required_recommendations(recommendation_list, completion_command, current_word, previous_word);
+    if (!has_required) {
+        collect_secondary_recommendations(recommendation_list, completion_command, current_word, previous_word);
+    }
 
 #ifdef DEBUG
     printf("\nRecommendations (Prioritized)\n");
