@@ -168,7 +168,7 @@ bool collect_required_recommendations(linked_list_t *recommendation_list, const 
     return result;
 }
 
-bool collect_secondary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
+bool collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
     if (!recommendation_list || !cmd) {
         return false;
     }
@@ -203,7 +203,7 @@ bool collect_secondary_recommendations(linked_list_t *recommendation_list, const
                 }
                 ll_append_item(recommendation_list, data);
             }
-            collect_secondary_recommendations(recommendation_list, sub_cmd, current_word, previous_word);
+            collect_optional_recommendations(recommendation_list, sub_cmd, current_word, previous_word);
             sub_cmd_node = sub_cmd_node->next;
         }
     }

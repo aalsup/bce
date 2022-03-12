@@ -40,7 +40,7 @@ static json_object *bce_command_arg_to_json(const bce_command_arg_t *arg);
 
 static json_object *bce_command_opt_to_json(const bce_command_opt_t *opt);
 
-bce_error_t process_cli(const int argc, const char **argv) {
+bce_error_t process_cli_impl(const int argc, const char **argv) {
     if (argc <= 1) {
         // called from BASH (for completion help)
         return ERR_NONE;

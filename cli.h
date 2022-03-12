@@ -31,6 +31,6 @@ static const char *URL_ARG_SHORTNAME = "-u";
 
 void show_usage(void);
 
-bce_error_t process_cli(int argc, const char **argv);
+bce_error_t process_cli_impl(int argc, const char **argv);
 
 #endif // BCE_CLI_H

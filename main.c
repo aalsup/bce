@@ -14,6 +14,9 @@
 /* Normal BASH completion processing */
 bce_error_t process_completion(void);
 
+/* CLI options, such as 'import', 'export' */
+bce_error_t process_cli(int argc, const char **argv);
+
 /* Display the recommendations to stdout */
 void print_recommendations(const linked_list_t *recommendation_list);
 
@@ -29,6 +32,10 @@ int main(int argc, char **argv) {
     }
 
     return result;
+}
+
+bce_error_t process_cli(int argc, const char **argv) {
+    return process_cli_impl(argc, argv);
 }
 
 /* Program called from BASH shell, for completion assistance to user */
@@ -144,11 +151,15 @@ bce_error_t process_completion(void) {
     linked_list_t *recommendation_list = ll_create_unique(NULL);
     bool has_required = collect_required_recommendations(recommendation_list, completion_command, current_word, previous_word);
     if (!has_required) {
-        collect_secondary_recommendations(recommendation_list, completion_command, current_word, previous_word);
+        collect_optional_recommendations(recommendation_list, completion_command, current_word, previous_word);
     }
 
 #ifdef DEBUG
-    printf("\nRecommendations (Prioritized)\n");
+    if (has_required) {
+        printf("\nRecommendations (Required)\n");
+    } else {
+        printf("\nRecommendations (Optional)\n");
+    }
 #endif
     print_recommendations(recommendation_list);
     recommendation_list = ll_destroy(recommendation_list);

@@ -10,7 +10,7 @@ void prune_command(bce_command_t *cmd, const completion_input_t *input);
 bool collect_required_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word);
 
 /* Collect remaining recommendations */
-bool collect_secondary_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word);
+bool collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word);
 
 /* Determine if the user's cursor is positioned at a `command_arg` */
 bce_command_arg_t *get_current_arg(const bce_command_t *cmd, const char *current_word);
