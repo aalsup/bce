@@ -18,9 +18,9 @@ typedef struct bce_command_t {
     char uuid[UUID_FIELD_SIZE + 1];
     char name[NAME_FIELD_SIZE + 1];
     char parent_cmd_uuid[UUID_FIELD_SIZE + 1];
-    struct linked_list_t *aliases;
-    struct linked_list_t *sub_commands;
-    struct linked_list_t *args;
+    struct linked_list_t *aliases;          /* bce_command_alias_t */
+    struct linked_list_t *sub_commands;     /* bce_command_t */
+    struct linked_list_t *args              /* bce_command_arg_t */;
     bool is_present_on_cmdline;
 } bce_command_t;
 

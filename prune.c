@@ -36,24 +36,39 @@ static void prune_sub_commands(bce_command_t *cmd, const linked_list_t *word_lis
     linked_list_node_t *check_node = sub_cmds->head;
     while (check_node) {
         bce_command_t *sub_cmd = (bce_command_t *) check_node->data;
-        // check if cmd_name is in word_list
-        sub_cmd->is_present_on_cmdline = ll_is_string_in_list(word_list, sub_cmd->name);
-        if (!sub_cmd->is_present_on_cmdline) {
-            // try harder - examine the aliases
-            sub_cmd->is_present_on_cmdline = ll_is_any_in_list(word_list, sub_cmd->aliases);
-        }
-        if (sub_cmd->is_present_on_cmdline) {
-            // remove the sub_command's siblings
-            linked_list_node_t *candidate_node = sub_cmds->head;
-            while (candidate_node) {
-                if (candidate_node->id == check_node->id) {
-                    // skip
-                    candidate_node = candidate_node->next;
-                } else {
-                    // remove candidate_node
-                    linked_list_node_t *next_node = candidate_node->next;
-                    ll_remove_item(sub_cmds, candidate_node);
-                    candidate_node = next_node;
+        if (sub_cmd) {
+            // check if cmd_name is in word_list
+            sub_cmd->is_present_on_cmdline = ll_is_string_in_list(word_list, sub_cmd->name);
+            if (!sub_cmd->is_present_on_cmdline) {
+                // try harder - examine the aliases
+                if (sub_cmd->aliases && (sub_cmd->aliases->size > 0)) {
+                    linked_list_node_t *check_alias_node = sub_cmd->aliases->head;
+                    while (check_alias_node) {
+                        bce_command_alias_t *alias = (bce_command_alias_t *)check_alias_node->data;
+                        bool found_alias = ll_is_string_in_list(word_list, alias->name);
+                        if (found_alias) {
+                            sub_cmd->is_present_on_cmdline = true;
+                            break;
+                        }
+                        check_alias_node = check_alias_node->next;
+                    }
+                    sub_cmd->is_present_on_cmdline = ll_is_any_in_list(word_list, sub_cmd->aliases);
+
+                }
+            }
+            if (sub_cmd->is_present_on_cmdline) {
+                // remove the sub_command's siblings
+                linked_list_node_t *candidate_node = sub_cmds->head;
+                while (candidate_node) {
+                    if (candidate_node->id == check_node->id) {
+                        // skip
+                        candidate_node = candidate_node->next;
+                    } else {
+                        // remove candidate_node
+                        linked_list_node_t *next_node = candidate_node->next;
+                        ll_remove_item(sub_cmds, candidate_node);
+                        candidate_node = next_node;
+                    }
                 }
             }
         }
