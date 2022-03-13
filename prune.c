@@ -141,7 +141,9 @@ static void prune_arguments(bce_command_t *cmd, const linked_list_t *word_list) 
         }
     }
 }
-bool collect_required_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
+
+bool collect_required_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd,
+                                      const char *current_word, const char *previous_word) {
     if (!recommendation_list || !cmd) {
         return false;
     }
@@ -150,9 +152,13 @@ bool collect_required_recommendations(linked_list_t *recommendation_list, const 
 
     // if a current argument is selected, its options should be displayed 1st
     bce_command_arg_t *arg = get_current_arg(cmd, current_word);
+    if (!arg) {
+        return result;
+    }
 
-    if (arg) {
-        if (arg->opts) {
+    if (arg->opts && (arg->opts->size > 0)) {
+        // if the arg_type is NONE, don't expect options
+        if (strncmp(arg->arg_type, "NONE", CMD_TYPE_FIELD_SIZE) != 0) {
             result = true;
             linked_list_node_t *opt_node = arg->opts->head;
             while (opt_node) {
@@ -168,7 +174,8 @@ bool collect_required_recommendations(linked_list_t *recommendation_list, const 
     return result;
 }
 
-bool collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word, const char *previous_word) {
+bool collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word,
+                                 const char *previous_word) {
     if (!recommendation_list || !cmd) {
         return false;
     }
