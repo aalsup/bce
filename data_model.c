@@ -178,7 +178,7 @@ void print_command_tree(const bce_command_t *cmd, const int level) {
                 printf("  arg: %s (%s): %s\n", arg->long_name, arg->short_name, arg->arg_type);
 
                 // print opts
-                if (arg->opts) {
+                if (arg->opts && (arg->opts->size > 0)) {
                     linked_list_node_t *opt_node = arg->opts->head;
                     while (opt_node) {
                         bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
@@ -713,7 +713,7 @@ bce_error_t write_db_command_arg(struct sqlite3 *conn, const bce_command_arg_t *
     }
 
     // write each of the opts
-    if (arg->opts) {
+    if (arg->opts && (arg->opts->size > 0)) {
         linked_list_node_t *node = arg->opts->head;
         while (node) {
             bce_command_opt_t *opt = (bce_command_opt_t *) node->data;

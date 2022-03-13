@@ -696,7 +696,7 @@ static json_object *bce_command_arg_to_json(const bce_command_arg_t *arg) {
     json_object_object_add(j_arg, "long_name", json_object_new_string(arg->long_name));
     json_object_object_add(j_arg, "short_name", json_object_new_string(arg->short_name));
     struct json_object *j_opts = json_object_new_array();
-    if (arg->opts) {
+    if (arg->opts && (arg->opts->size > 0)) {
         linked_list_node_t *opt_node = arg->opts->head;
         while (opt_node) {
             bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;

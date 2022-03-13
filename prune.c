@@ -98,7 +98,7 @@ static void prune_arguments(bce_command_t *cmd, const linked_list_t *word_list) 
     }
 
     linked_list_t *args = cmd->args;
-    if (args) {
+    if (args && (args->size > 0)) {
         linked_list_node_t *arg_node = args->head;
         while (arg_node) {
             bool arg_removed = false;
@@ -107,7 +107,7 @@ static void prune_arguments(bce_command_t *cmd, const linked_list_t *word_list) 
             if (ll_is_string_in_list(word_list, arg->short_name) || ll_is_string_in_list(word_list, arg->long_name)) {
                 arg->is_present_on_cmdline = true;
                 // check if the arg has options
-                if (arg->opts) {
+                if (arg->opts && (arg->opts->size > 0)) {
                     linked_list_t *opts = arg->opts;
                     bool should_remove_arg = false;
                     if (opts->size == 0) {
@@ -236,7 +236,7 @@ bool collect_optional_recommendations(linked_list_t *recommendation_list, const 
                     ll_append_item(recommendation_list, arg_str);
                 } else {
                     // collect all the options
-                    if (arg->opts) {
+                    if (arg->opts && (arg->opts->size > 0)) {
                         linked_list_node_t *opt_node = arg->opts->head;
                         while (opt_node) {
                             char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
