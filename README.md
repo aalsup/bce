@@ -167,25 +167,13 @@ $ bce --import --format json --url "https://example.com/my-command.json"
 
 ### Future capabilities
 
-1. **Improve the order of recommendations**
-
-The cursor position could be used to determine which cmd/arg/opt is most
-likely what the user is looking for help with.
-
-2. **More consistent response/error function results**
-
-BCE is scattered with different error-code expectations everywhere.
-In some cases, functions return `SQLITE_xyz` error codes. In other
-cases `ERR_xyz` codes defined in `error.h`. Additionally, the use of
-error-codes is inconsistent.
-
-3. **Provide a mechanism to easily create new completion data**
+1. **Provide a mechanism to easily create new completion data**
 
 Currently, there is no easy way to populate the database for a
 new command. Need to consider some approaches for creating new records
 for commands, sub-commands, arguments, and options.
 
-4. **Multiple completion databases**
+2. **Multiple completion databases**
 
 Currently, the application utilizes a single SQLite database. This is probably fine, but it does require import/export
 logic in order to load new completion information. Alternatively, we could use discrete SQLite database files for each
@@ -194,12 +182,12 @@ clean way to import/export configurations, since each command is self-contained 
 would present a challenge for aliases. How would the application know which DB to open if the command-line contains 
 an alias (rather than the actual command name).
 
-5. **Check user's history for recommendations**
+3. **Check user's history for recommendations**
 
 For options (child of argument), it would be helpful to look back through BASH history
 to check if a particular value was mostly recently used.
 
-6. **Improve Cmake config**
+4. **Improve Cmake config**
 
 The cmake configuration has been cobbled together. It _works_; however, there are modern cmake features that aren't
 being used. For example, `target_link_libraries` are supposedly superior to the older `link_libraries`.
