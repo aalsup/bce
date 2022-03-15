@@ -15,7 +15,7 @@ completion_input_t *create_completion_input(bce_error_t *err) {
         *err = ERR_MISSING_ENV_COMP_POINT;
         return NULL;
     }
-    completion_input_t *input = (completion_input_t *) malloc(sizeof(completion_input_t));
+    completion_input_t *input = malloc(sizeof(completion_input_t));
     input->line[0] = '\0';
     strncat(input->line, line, MAX_LINE_SIZE);
     input->cursor_pos = (int) strtol(str_cursor_pos, (char **) NULL, 10);
