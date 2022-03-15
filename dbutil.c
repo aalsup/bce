@@ -173,7 +173,7 @@ bool read_file_into_buffer(const char *filename, char **ppbuffer) {
 
 bce_error_t exec_sql_script(struct sqlite3 *conn, const char *filename) {
     bce_error_t result = ERR_NONE;
-    char **sql_data = (char **) malloc(sizeof(char));
+    char **sql_data = (char **) malloc(sizeof(char *));
     if (read_file_into_buffer(filename, sql_data)) {
         int rc;
 

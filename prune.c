@@ -177,7 +177,7 @@ bool collect_required_recommendations(linked_list_t *recommendation_list, const 
             result = true;
             linked_list_node_t *opt_node = arg->opts->head;
             while (opt_node) {
-                char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
+                char *data = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
                 bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
                 strncat(data, opt->name, NAME_FIELD_SIZE);
                 ll_append_item(recommendation_list, data);
@@ -201,7 +201,7 @@ bool collect_optional_recommendations(linked_list_t *recommendation_list, const 
         while (sub_cmd_node) {
             bce_command_t *sub_cmd = (bce_command_t *) sub_cmd_node->data;
             if (sub_cmd && !sub_cmd->is_present_on_cmdline) {
-                char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
+                char *data = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
                 strncat(data, sub_cmd->name, NAME_FIELD_SIZE);
                 if (sub_cmd->aliases) {
                     char *shortest = NULL;
@@ -237,7 +237,7 @@ bool collect_optional_recommendations(linked_list_t *recommendation_list, const 
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
             if (arg) {
                 if (!arg->is_present_on_cmdline) {
-                    char *arg_str = calloc(MAX_LINE_SIZE, sizeof(char));
+                    char *arg_str = calloc(MAX_LINE_SIZE + 1, sizeof(char));
                     if (strlen(arg->long_name) > 0) {
                         strncat(arg_str, arg->long_name, NAME_FIELD_SIZE);
                         if (strlen(arg->short_name) > 0) {
@@ -254,7 +254,7 @@ bool collect_optional_recommendations(linked_list_t *recommendation_list, const 
                     if (arg->opts && (arg->opts->size > 0)) {
                         linked_list_node_t *opt_node = arg->opts->head;
                         while (opt_node) {
-                            char *data = calloc(NAME_FIELD_SIZE, sizeof(char));
+                            char *data = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
                             bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
                             strncat(data, opt->name, NAME_FIELD_SIZE);
                             ll_append_item(recommendation_list, data);
