@@ -217,8 +217,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
     }
 
     // iterate over the commands
-    linked_list_node_t *node = cmd_names->head;
-    while (node) {
+    for (linked_list_node_t *node = cmd_names->head; node != NULL; node = node->next) {
         char *cmd_name = (char *) node->data;
         bce_command_t *cmd = create_bce_command();
 
@@ -250,8 +249,6 @@ static bce_error_t process_import_sqlite(const char *filename) {
 
         // cleanup
         cmd = free_bce_command(cmd);
-
-        node = node->next;
     }
 
     // commit transaction
@@ -636,14 +633,12 @@ static json_object *bce_command_to_json(const bce_command_t *cmd) {
     // array of aliases
     struct json_object *j_aliases = json_object_new_array();
     if (cmd->aliases) {
-        linked_list_node_t *alias_node = cmd->aliases->head;
-        while (alias_node) {
+        for (linked_list_node_t *alias_node = cmd->aliases->head; alias_node != NULL; alias_node = alias_node->next) {
             bce_command_alias_t *alias = (bce_command_alias_t *) alias_node->data;
             if (alias) {
                 json_object *j_alias = bce_command_alias_to_json(alias);
                 json_object_array_add(j_aliases, j_alias);
             }
-            alias_node = alias_node->next;
         }
     }
     json_object_object_add(j_command, "aliases", j_aliases);
@@ -651,14 +646,12 @@ static json_object *bce_command_to_json(const bce_command_t *cmd) {
     // array of args
     struct json_object *j_args = json_object_new_array();
     if (cmd->args) {
-        linked_list_node_t *arg_node = cmd->args->head;
-        while (arg_node) {
+        for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
             if (arg) {
                 json_object *j_arg = bce_command_arg_to_json(arg);
                 json_object_array_add(j_args, j_arg);
             }
-            arg_node = arg_node->next;
         }
     }
     json_object_object_add(j_command, "args", j_args);
@@ -666,14 +659,12 @@ static json_object *bce_command_to_json(const bce_command_t *cmd) {
     // array of sub-commands (recurse)
     struct json_object *j_subs = json_object_new_array();
     if (cmd->sub_commands) {
-        linked_list_node_t *sub_node = cmd->sub_commands->head;
-        while (sub_node) {
+        for (linked_list_node_t *sub_node = cmd->sub_commands->head; sub_node != NULL; sub_node = sub_node->next) {
             bce_command_t *sub_cmd = (bce_command_t *) sub_node->data;
             if (sub_cmd) {
                 json_object *j_sub = bce_command_to_json(sub_cmd);
                 json_object_array_add(j_subs, j_sub);
             }
-            sub_node = sub_node->next;
         }
     }
     json_object_object_add(j_command, "sub_commands", j_subs);
@@ -696,9 +687,8 @@ static json_object *bce_command_arg_to_json(const bce_command_arg_t *arg) {
     json_object_object_add(j_arg, "long_name", json_object_new_string(arg->long_name));
     json_object_object_add(j_arg, "short_name", json_object_new_string(arg->short_name));
     struct json_object *j_opts = json_object_new_array();
-    if (arg->opts && (arg->opts->size > 0)) {
-        linked_list_node_t *opt_node = arg->opts->head;
-        while (opt_node) {
+    if (arg->opts) {
+        for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
             bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
             if (opt) {
                 // convert the option to json
@@ -706,7 +696,6 @@ static json_object *bce_command_arg_to_json(const bce_command_arg_t *arg) {
                 // append to the json array
                 json_object_array_add(j_opts, j_opt);
             }
-            opt_node = opt_node->next;
         }
     }
     json_object_object_add(j_arg, "opts", j_opts);

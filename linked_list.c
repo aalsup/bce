@@ -145,13 +145,11 @@ bool ll_is_string_in_list(const linked_list_t *list, const char *str) {
     }
 
     size_t len = strlen(str);
-    linked_list_node_t *node = list->head;
-    while (node) {
+    for (linked_list_node_t *node = list->head; node != NULL; node = node->next) {
         const char *data = (char *) node->data;
         if (strncmp(str, data, len) == 0) {
             return true;
         }
-        node = node->next;
     }
     return false;
 }
@@ -164,13 +162,11 @@ bool ll_is_any_in_list(const linked_list_t *search_list, const linked_list_t *st
         return false;
     }
 
-    linked_list_node_t *node = str_list->head;
-    while (node) {
+    for (linked_list_node_t *node = str_list->head; node != NULL; node = node->next) {
         const char *str = (char *) node->data;
         if (ll_is_string_in_list(search_list, str)) {
             return true;
         }
-        node = node->next;
     }
     return false;
 }

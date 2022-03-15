@@ -158,18 +158,15 @@ void print_command_tree(const bce_command_t *cmd, const int level) {
             printf("  ");
         }
         printf("  aliases: ");
-        linked_list_node_t *alias_node = cmd->aliases->head;
-        while (alias_node != NULL) {
+        for (linked_list_node_t *alias_node = cmd->aliases->head; alias_node != NULL; alias_node = alias_node->next) {
             bce_command_alias_t *alias = (bce_command_alias_t *) alias_node->data;
             printf("%s ", alias->name);
-            alias_node = alias_node->next;
         }
         printf("\n");
     }
 
     if (cmd->args) {
-        linked_list_node_t *arg_node = cmd->args->head;
-        while (arg_node) {
+        for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
             if (arg) {
                 for (int i = 0; i < level; i++) {
@@ -178,9 +175,8 @@ void print_command_tree(const bce_command_t *cmd, const int level) {
                 printf("  arg: %s (%s): %s\n", arg->long_name, arg->short_name, arg->arg_type);
 
                 // print opts
-                if (arg->opts && (arg->opts->size > 0)) {
-                    linked_list_node_t *opt_node = arg->opts->head;
-                    while (opt_node) {
+                if (arg->opts) {
+                    for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
                         bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
                         if (opt) {
                             for (int i = 0; i < level; i++) {
@@ -188,20 +184,16 @@ void print_command_tree(const bce_command_t *cmd, const int level) {
                             }
                             printf("    opt: %s\n", opt->name);
                         }
-                        opt_node = opt_node->next;
                     }
                 }
             }
-            arg_node = arg_node->next;
         }
     }
 
     if (cmd->sub_commands) {
-        linked_list_node_t *node = cmd->sub_commands->head;
-        while (node) {
+        for (linked_list_node_t *node = cmd->sub_commands->head; node != NULL; node = node->next) {
             bce_command_t *sub_cmd = (bce_command_t *) node->data;
             print_command_tree(sub_cmd, level + 1);
-            node = node->next;
         }
     }
 }
@@ -592,8 +584,7 @@ bce_error_t write_db_command(struct sqlite3 *conn, const bce_command_t *cmd) {
 
     // insert the aliases
     if (cmd->aliases) {
-        linked_list_node_t *node = cmd->aliases->head;
-        while (node) {
+        for (linked_list_node_t *node = cmd->aliases->head; node != NULL; node = node->next) {
             bce_command_alias_t *alias = (bce_command_alias_t *) node->data;
             if (alias) {
                 rc = write_db_command_alias(conn, alias);
@@ -601,14 +592,12 @@ bce_error_t write_db_command(struct sqlite3 *conn, const bce_command_t *cmd) {
                     goto done;
                 }
             }
-            node = node->next;
         }
     }
 
     // insert each sub-command
     if (cmd->sub_commands) {
-        linked_list_node_t *node = cmd->sub_commands->head;
-        while (node) {
+        for (linked_list_node_t *node = cmd->sub_commands->head; node != NULL; node = node->next) {
             bce_command_t *subcmd = (bce_command_t *) node->data;
             if (subcmd) {
                 rc = write_db_command(conn, subcmd);
@@ -616,14 +605,12 @@ bce_error_t write_db_command(struct sqlite3 *conn, const bce_command_t *cmd) {
                     goto done;
                 }
             }
-            node = node->next;
         }
     }
 
     // insert each of the command_args
     if (cmd->args) {
-        linked_list_node_t *node = cmd->args->head;
-        while (node) {
+        for (linked_list_node_t *node = cmd->args->head; node != NULL; node = node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) node->data;
             if (arg) {
                 rc = write_db_command_arg(conn, arg);
@@ -631,7 +618,6 @@ bce_error_t write_db_command(struct sqlite3 *conn, const bce_command_t *cmd) {
                     goto done;
                 }
             }
-            node = node->next;
         }
     }
 
@@ -713,9 +699,8 @@ bce_error_t write_db_command_arg(struct sqlite3 *conn, const bce_command_arg_t *
     }
 
     // write each of the opts
-    if (arg->opts && (arg->opts->size > 0)) {
-        linked_list_node_t *node = arg->opts->head;
-        while (node) {
+    if (arg->opts) {
+        for (linked_list_node_t *node = arg->opts->head; node != NULL; node = node->next) {
             bce_command_opt_t *opt = (bce_command_opt_t *) node->data;
             if (opt) {
                 rc = write_db_command_opt(conn, opt);
@@ -723,7 +708,6 @@ bce_error_t write_db_command_arg(struct sqlite3 *conn, const bce_command_arg_t *
                     goto done;
                 }
             }
-            node = node->next;
         }
     }
 
