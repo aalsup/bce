@@ -235,9 +235,7 @@ void print_recommendations(const linked_list_t *recommendation_list) {
         return;
     }
 
-    linked_list_node_t *node = recommendation_list->head;
-    while (node) {
+    for (linked_list_node_t *node = recommendation_list->head; node != NULL; node = node->next) {
         printf("%s\n", (char *) node->data);
-        node = node->next;
     }
 }
