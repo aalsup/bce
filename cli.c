@@ -9,7 +9,6 @@
 #include "uuid4.h"
 #include "download.h"
 
-static const size_t CMD_NAME_SIZE = 50;
 static const size_t URL_SIZE = 1024;
 
 static bce_error_t process_import_sqlite(const char *filename);
@@ -49,7 +48,7 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
     // collect the command-line arguments
     operation_t op = OP_NONE;
     char filename[FILENAME_MAX + 1];
-    char command_name[CMD_NAME_SIZE + 1];
+    char command_name[NAME_FIELD_SIZE + 1];
     char url[URL_SIZE + 1];
     format_t format = FORMAT_SQLITE;
     for (int i = 1; i < argc; i++) {
@@ -66,7 +65,7 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
             // next parameter should be the command name
             if ((i + 1) < argc) {
                 command_name[0] = '\0';
-                strncat(command_name, argv[++i], CMD_NAME_SIZE);
+                strncat(command_name, argv[++i], NAME_FIELD_SIZE);
             } else {
                 op = OP_NONE;
                 break;
@@ -95,9 +94,9 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
             // next parameter should be the format
             if ((i + 1) < argc) {
                 i++;
-                if (strncmp("json", argv[i], CMD_NAME_SIZE) == 0) {
+                if (strncmp("json", argv[i], NAME_FIELD_SIZE) == 0) {
                     format = FORMAT_JSON;
-                } else if (strncmp("sqlite", argv[i], CMD_NAME_SIZE) == 0) {
+                } else if (strncmp("sqlite", argv[i], NAME_FIELD_SIZE) == 0) {
                     format = FORMAT_SQLITE;
                 } else {
                     op = OP_NONE;
