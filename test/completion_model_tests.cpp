@@ -16,13 +16,13 @@ TEST_CASE("create schema") {
     // ensure database file does not exist
     remove(database_file);
 
-    sqlite3 *conn = open_database(database_file, &rc);
+    sqlite3 *conn = db_open(database_file, &rc);
     CHECK(rc == SQLITE_OK);
 
-    int schema_version = get_schema_version(conn);
+    int schema_version = db_get_schema_version(conn);
     CHECK(schema_version == 0);
 
-    err = create_schema(conn);
+    err = db_create_schema(conn);
     CHECK(err == ERR_NONE);
 
     remove(database_file);
@@ -35,10 +35,10 @@ TEST_CASE("load data") {
     // ensure database file does not exist
     remove(database_file);
 
-    sqlite3 *conn = open_database(database_file, &rc);
+    sqlite3 *conn = db_open(database_file, &rc);
     CHECK(rc == SQLITE_OK);
     if (conn != NULL) {
-        bce_error_t result = exec_sql_script(conn, "test/kubectl_data.sql");
+        bce_error_t result = db_exec_sql_script(conn, "test/kubectl_data.sql");
         CHECK(result == ERR_NONE);
     }
 }

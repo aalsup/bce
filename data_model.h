@@ -6,6 +6,8 @@
 #include "linked_list.h"
 #include "error.h"
 
+#define DB_SCHEMA_VERSION      1
+
 #define UUID_FIELD_SIZE        36
 #define NAME_FIELD_SIZE        50
 #define SHORTNAME_FIELD_SIZE   5
@@ -47,48 +49,55 @@ typedef struct bce_command_opt_t {
     char name[NAME_FIELD_SIZE + 1];
 } bce_command_opt_t;
 
-bce_error_t prepare_statement_cache(struct sqlite3 *conn);
+bce_command_t *bce_command_new(void);
 
-bce_error_t free_statement_cache(struct sqlite3 *conn);
+bce_command_alias_t *bce_command_alias_new(void);
 
-bce_error_t load_db_command_names(struct sqlite3 *conn, linked_list_t *cmd_names);
+bce_command_arg_t *bce_command_arg_new(void);
 
-bce_error_t load_db_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name);
+bce_command_opt_t *bce_command_opt_new(void);
 
-bce_error_t load_db_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd);
+bce_command_t *bce_command_free(bce_command_t *cmd);
 
-bce_error_t load_db_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd);
+bce_command_alias_t *bce_command_alias_free(bce_command_alias_t *alias);
 
-bce_error_t load_db_command_args(struct sqlite3 *conn, bce_command_t *parent_cmd);
+bce_command_arg_t *bce_command_arg_free(bce_command_arg_t *arg);
 
-bce_error_t load_db_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg);
+bce_command_opt_t *bce_command_opt_free(bce_command_opt_t *opt);
 
-bce_command_t *create_bce_command(void);
+/* Create a cache of prepared statements which are used for loading command-data hierarchy */
+bce_error_t db_prepare_stmt_cache(struct sqlite3 *conn);
 
-bce_command_alias_t *create_bce_command_alias(void);
+/* Free the cached prepared statements, when done loading the command-data hierarchy */
+bce_error_t db_free_stmt_cache(struct sqlite3 *conn);
 
-bce_command_arg_t *create_bce_command_arg(void);
+/* Query to root command names stored in SQLite */
+bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd_names);
 
-bce_command_opt_t *create_bce_command_opt(void);
+/* Query a specific command in SQLite */
+bce_error_t db_query_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name);
 
-bce_command_t *free_bce_command(bce_command_t *cmd);
+/* Query the command aliases */
+bce_error_t db_query_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd);
 
-bce_command_alias_t *free_bce_command_alias(bce_command_alias_t *alias);
+/* Query the sub-commands */
+bce_error_t db_query_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd);
 
-bce_command_arg_t *free_bce_command_arg(bce_command_arg_t *arg);
+/* Query the command args */
+bce_error_t db_query_command_args(struct sqlite3 *conn, bce_command_t *parent_cmd);
 
-bce_command_opt_t *free_bce_command_opt(bce_command_opt_t *opt);
+/* Query the argument options */
+bce_error_t db_query_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg);
 
-void print_command_tree(const bce_command_t *cmd, int level);
+bce_error_t db_store_command(struct sqlite3 *conn, const bce_command_t *completion_command);
 
-bce_error_t write_db_command(struct sqlite3 *conn, const bce_command_t *completion_command);
+bce_error_t db_store_command_alias(struct sqlite3 *conn, const bce_command_alias_t *alias);
 
-bce_error_t write_db_command_alias(struct sqlite3 *conn, const bce_command_alias_t *alias);
+bce_error_t db_store_command_arg(struct sqlite3 *conn, const bce_command_arg_t *arg);
 
-bce_error_t write_db_command_arg(struct sqlite3 *conn, const bce_command_arg_t *arg);
+bce_error_t db_store_command_opt(struct sqlite3 *conn, const bce_command_opt_t *opt);
 
-bce_error_t write_db_command_opt(struct sqlite3 *conn, const bce_command_opt_t *opt);
-
-bce_error_t delete_db_command(struct sqlite3 *conn, const char *command_name);
+/* Delete the command from the database (recursively deletes all child records) */
+bce_error_t db_delete_command(struct sqlite3 *conn, const char *command_name);
 
 #endif // BCE_DATA_MODEL_H

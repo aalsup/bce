@@ -20,6 +20,8 @@ bce_error_t process_cli(int argc, const char **argv);
 /* Display the recommendations to stdout */
 void print_recommendations(const linked_list_t *recommendation_list);
 
+void print_command_tree(const bce_command_t *cmd, int level);
+
 int main(int argc, char **argv) {
     int result = 0;
 
@@ -50,25 +52,25 @@ bce_error_t process_completion(void) {
     printf("SQLite version %s\n", sqlite3_libversion());
 #endif
 
-    sqlite3 *conn = open_database(BCE_DB__FILENAME, &rc);
+    sqlite3 *conn = db_open(BCE_DB__FILENAME, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Error %d opening database", rc);
         err = ERR_OPEN_DATABASE;
         goto done;
     }
 
-    int schema_version = get_schema_version(conn);
+    int schema_version = db_get_schema_version(conn);
     if (schema_version == 0) {
         // create the schema
-        err = create_schema(conn);
+        err = db_create_schema(conn);
         if (err != ERR_NONE) {
             fprintf(stderr, "Unable to create database schema\n");
             goto done;
         }
-        schema_version = get_schema_version(conn);
+        schema_version = db_get_schema_version(conn);
     }
-    if (schema_version != SCHEMA_VERSION) {
-        fprintf(stderr, "Schema version %d does not match expected version %d\n", schema_version, SCHEMA_VERSION);
+    if (schema_version != DB_SCHEMA_VERSION) {
+        fprintf(stderr, "Schema version %d does not match expected version %d\n", schema_version, DB_SCHEMA_VERSION);
         err = ERR_DATABASE_SCHEMA_VERSION_MISMATCH;
         goto done;
     }
@@ -111,7 +113,7 @@ bce_error_t process_completion(void) {
     }
 
     // load the statement cache (prevent re-parsing statements)
-    rc = prepare_statement_cache(conn);
+    rc = db_prepare_stmt_cache(conn);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to load statement cache. err=%d\n", rc);
         err = ERR_SQLITE_ERROR;
@@ -119,10 +121,10 @@ bce_error_t process_completion(void) {
     }
 
     // search for the command directly (load all descendents)
-    bce_command_t *completion_command = create_bce_command();
-    rc = load_db_command(conn, completion_command, command_name);
+    bce_command_t *completion_command = bce_command_new();
+    rc = db_query_command(conn, completion_command, command_name);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "load_db_command() returned %d\n", rc);
+        fprintf(stderr, "db_query_command() returned %d\n", rc);
         err = ERR_SQLITE_ERROR;
         goto done;
     }
@@ -169,11 +171,63 @@ bce_error_t process_completion(void) {
     // dispose of everything
     input = free_completion_input(input);
     recommendation_list = ll_destroy(recommendation_list);
-    completion_command = free_bce_command(completion_command);
-    rc = free_statement_cache(conn);
+    completion_command = bce_command_free(completion_command);
+    rc = db_free_stmt_cache(conn);
     sqlite3_close(conn);
 
     return err;
+}
+
+void print_command_tree(const bce_command_t *cmd, const int level) {
+    // indent
+    for (int i = 0; i < level; i++) {
+        printf("  ");
+    }
+    printf("command: %s\n", cmd->name);
+
+    if (cmd->aliases && (cmd->aliases->size > 0)) {
+        for (int i = 0; i < level; i++) {
+            printf("  ");
+        }
+        printf("  aliases: ");
+        for (linked_list_node_t *alias_node = cmd->aliases->head; alias_node != NULL; alias_node = alias_node->next) {
+            bce_command_alias_t *alias = (bce_command_alias_t *) alias_node->data;
+            printf("%s ", alias->name);
+        }
+        printf("\n");
+    }
+
+    if (cmd->args) {
+        for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
+            bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
+            if (arg) {
+                for (int i = 0; i < level; i++) {
+                    printf("  ");
+                }
+                printf("  arg: %s (%s): %s\n", arg->long_name, arg->short_name, arg->arg_type);
+
+                // print opts
+                if (arg->opts) {
+                    for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
+                        bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
+                        if (opt) {
+                            for (int i = 0; i < level; i++) {
+                                printf("  ");
+                            }
+                            printf("    opt: %s\n", opt->name);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (cmd->sub_commands) {
+        for (linked_list_node_t *node = cmd->sub_commands->head; node != NULL; node = node->next) {
+            bce_command_t *sub_cmd = (bce_command_t *) node->data;
+            print_command_tree(sub_cmd, level + 1);
+        }
+    }
 }
 
 void print_recommendations(const linked_list_t *recommendation_list) {

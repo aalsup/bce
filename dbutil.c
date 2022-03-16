@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sqlite3.h>
 #include "error.h"
+#include "data_model.h"
 
 static const char *SCHEMA_VERSION_SQL =
         " PRAGMA user_version ";
@@ -72,7 +73,7 @@ static const char *CREATE_COMPLETION_COMMAND_OPT_SQL =
         " CREATE UNIQUE INDEX command_opt_arg_name_idx "
         "    ON command_opt (cmd_arg_uuid, name); ";
 
-sqlite3 *open_database(const char *filename, int *result) {
+sqlite3 *db_open(const char *filename, int *result) {
     char *err_msg = 0;
     sqlite3 *conn;
 
@@ -104,7 +105,41 @@ sqlite3 *open_database(const char *filename, int *result) {
     return conn;
 }
 
-int get_schema_version(struct sqlite3 *conn) {
+sqlite3 *db_open_with_xa(const char *filename, int *rc) {
+    // open the completion database
+    sqlite3 *conn = db_open(filename, rc);
+    if (*rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", *rc, filename);
+        return NULL;
+    }
+
+    // check schema version
+    int schema_version = db_get_schema_version(conn);
+    if (schema_version == 0) {
+        // create the schema
+        if (!db_create_schema(conn)) {
+            fprintf(stderr, "Unable to create database schema. database: %s\n", filename);
+            return NULL;
+        }
+        schema_version = db_get_schema_version(conn);
+    }
+    if (schema_version != DB_SCHEMA_VERSION) {
+        fprintf(stderr, "Schema version mismatch. database: %s, expected: %d, found: %d\n", filename, DB_SCHEMA_VERSION,
+                schema_version);
+        return NULL;
+    }
+
+    // explicitly start a transaction, since this will be done automatically (per statement) otherwise
+    *rc = sqlite3_exec(conn, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    if (*rc != SQLITE_OK) {
+        fprintf(stderr, "Unable to begin transaction, error: %d, database: %s\n", *rc, filename);
+        return NULL;
+    }
+
+    return conn;
+}
+
+int db_get_schema_version(struct sqlite3 *conn) {
     int version = 0;
     sqlite3_stmt *stmt;
     // try to find the command by name
@@ -119,7 +154,7 @@ int get_schema_version(struct sqlite3 *conn) {
     return version;
 }
 
-bce_error_t create_schema(struct sqlite3 *conn) {
+bce_error_t db_create_schema(struct sqlite3 *conn) {
     int rc;
 
     rc = sqlite3_exec(conn, CREATE_COMPLETION_COMMAND_SQL, 0, 0, NULL);
@@ -171,9 +206,9 @@ bool read_file_into_buffer(const char *filename, char **ppbuffer) {
     return false;
 }
 
-bce_error_t exec_sql_script(struct sqlite3 *conn, const char *filename) {
+bce_error_t db_exec_sql_script(struct sqlite3 *conn, const char *filename) {
     bce_error_t result = ERR_NONE;
-    char **sql_data = malloc(sizeof(char *));
+    char **sql_data = calloc(1, sizeof(char *));
     if (read_file_into_buffer(filename, sql_data)) {
         int rc;
 
@@ -185,8 +220,10 @@ bce_error_t exec_sql_script(struct sqlite3 *conn, const char *filename) {
         fprintf(stderr, "Error reading file: %s\n", filename);
         result = ERR_READ_FILE;
     }
-    free((void *) *sql_data);
-    free((void *) sql_data);
+    // free the data in the buffer
+    free(*sql_data);
+    // free the buffer ptr
+    free(sql_data);
     return result;
 }
 

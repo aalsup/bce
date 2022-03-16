@@ -192,7 +192,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
     bce_error_t err = 0;
 
     // open the source database
-    sqlite3 *src_db = open_db_with_xa(filename, &rc);
+    sqlite3 *src_db = db_open_with_xa(filename, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
         err = ERR_OPEN_DATABASE;
@@ -200,7 +200,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
     }
 
     // open dest database
-    sqlite3 *dest_db = open_db_with_xa(BCE_DB__FILENAME, &rc);
+    sqlite3 *dest_db = db_open_with_xa(BCE_DB__FILENAME, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
         err = ERR_OPEN_DATABASE;
@@ -209,7 +209,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
 
     // get a list of the top-level commands in source database
     linked_list_t *cmd_names = ll_create(NULL);
-    rc = load_db_command_names(src_db, cmd_names);
+    rc = db_query_root_command_names(src_db, cmd_names);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to query commands. error: %d, database: %s\n", rc, filename);
         err = ERR_SQLITE_ERROR;
@@ -219,10 +219,10 @@ static bce_error_t process_import_sqlite(const char *filename) {
     // iterate over the commands
     for (linked_list_node_t *node = cmd_names->head; node != NULL; node = node->next) {
         char *cmd_name = (char *) node->data;
-        bce_command_t *cmd = create_bce_command();
+        bce_command_t *cmd = bce_command_new();
 
         // read cmd from src database
-        rc = load_db_command(src_db, cmd, cmd_name);
+        rc = db_query_command(src_db, cmd, cmd_name);
         if (rc != SQLITE_OK) {
             fprintf(stderr, "Unable to query command: %s. error: %d\n", cmd_name, rc);
             err = ERR_SQLITE_ERROR;
@@ -230,7 +230,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
         }
 
         // delete cmd (recurse) from dest database
-        rc = delete_db_command(dest_db, cmd_name);
+        rc = db_delete_command(dest_db, cmd_name);
         if (rc != SQLITE_OK) {
             fprintf(stderr, "Unable to delete the command before importing. command %s, error: %d\n", cmd_name, rc);
             err = ERR_SQLITE_ERROR;
@@ -241,14 +241,14 @@ static bce_error_t process_import_sqlite(const char *filename) {
         rc = sqlite3_exec(dest_db, "VACUUM", NULL, NULL, NULL);
 
         // write cmd to dest database
-        rc = write_db_command(dest_db, cmd);
+        rc = db_store_command(dest_db, cmd);
         if (rc != SQLITE_OK) {
             err = ERR_SQLITE_ERROR;
             goto done;
         }
 
         // cleanup
-        cmd = free_bce_command(cmd);
+        cmd = bce_command_free(cmd);
     }
 
     // commit transaction
@@ -270,7 +270,7 @@ static int process_export_sqlite(const char *command_name, const char *filename)
     bce_error_t err = 0;
 
     // open the source database
-    sqlite3 *src_db = open_db_with_xa(BCE_DB__FILENAME, &rc);
+    sqlite3 *src_db = db_open_with_xa(BCE_DB__FILENAME, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
         err = ERR_OPEN_DATABASE;
@@ -279,7 +279,7 @@ static int process_export_sqlite(const char *command_name, const char *filename)
 
     // open the destination database
     remove(filename);
-    sqlite3 *dest_db = open_db_with_xa(filename, &rc);
+    sqlite3 *dest_db = db_open_with_xa(filename, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, filename);
         err = ERR_OPEN_DATABASE;
@@ -287,15 +287,15 @@ static int process_export_sqlite(const char *command_name, const char *filename)
     }
 
     // load the command hierarchy
-    bce_command_t *completion_command = create_bce_command();
-    rc = load_db_command(src_db, completion_command, command_name);
+    bce_command_t *completion_command = bce_command_new();
+    rc = db_query_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "load_db_command() returned %d\n", rc);
+        fprintf(stderr, "db_query_command() returned %d\n", rc);
         err = ERR_SQLITE_ERROR;
         goto done;
     }
 
-    rc = write_db_command(dest_db, completion_command);
+    rc = db_store_command(dest_db, completion_command);
     if (rc != SQLITE_OK) {
         err = ERR_SQLITE_ERROR;
         goto done;
@@ -314,7 +314,7 @@ static int process_export_sqlite(const char *command_name, const char *filename)
         fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
     }
     if (completion_command) {
-        completion_command = free_bce_command(completion_command);
+        completion_command = bce_command_free(completion_command);
     }
     sqlite3_close(src_db);
     sqlite3_close(dest_db);
@@ -362,7 +362,7 @@ static bce_error_t process_import_json_file(const char *json_filename) {
     bce_command_t *command = bce_command_from_json(NULL, j_command);
 
     // open the database
-    sqlite3 *dest_db = open_db_with_xa(db_filename, &rc);
+    sqlite3 *dest_db = db_open_with_xa(db_filename, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, db_filename);
         err = ERR_OPEN_DATABASE;
@@ -370,7 +370,7 @@ static bce_error_t process_import_json_file(const char *json_filename) {
     }
 
     // delete cmd (recurse) from dest database
-    rc = delete_db_command(dest_db, command->name);
+    rc = db_delete_command(dest_db, command->name);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to delete the command before importing. command %s, error: %d\n", command->name, rc);
         err = ERR_SQLITE_ERROR;
@@ -378,7 +378,7 @@ static bce_error_t process_import_json_file(const char *json_filename) {
     }
 
     // insert cmd data
-    rc = write_db_command(dest_db, command);
+    rc = db_store_command(dest_db, command);
     if (rc != SQLITE_OK) {
         err = ERR_SQLITE_ERROR;
         goto done;
@@ -402,7 +402,7 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
     bce_error_t err = ERR_NONE;
 
     // open the source database
-    sqlite3 *src_db = open_db_with_xa(BCE_DB__FILENAME, &rc);
+    sqlite3 *src_db = db_open_with_xa(BCE_DB__FILENAME, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
         err = ERR_OPEN_DATABASE;
@@ -410,15 +410,15 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
     }
 
     // load the command hierarchy
-    prepare_statement_cache(src_db);
-    bce_command_t *completion_command = create_bce_command();
-    rc = load_db_command(src_db, completion_command, command_name);
+    db_prepare_stmt_cache(src_db);
+    bce_command_t *completion_command = bce_command_new();
+    rc = db_query_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "load_db_command() returned %d\n", rc);
+        fprintf(stderr, "db_query_command() returned %d\n", rc);
         err = ERR_INVALID_CMD;
         goto done;
     }
-    free_statement_cache(src_db);
+    db_free_stmt_cache(src_db);
 
     // convert model object to json
     json_object *j_command = json_object_new_object();
@@ -426,6 +426,7 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
     json_object_object_add(j_command, "command", j_command_body);
     int json_flags = JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_NOSLASHESCAPE;
     json_object_to_file_ext(filename, j_command, json_flags);
+    // free the json_object
     json_object_put(j_command);
 
     done:
@@ -433,7 +434,7 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
         fprintf(stderr, "Export did not complete successfully. error: %d\n", err);
     }
     if (completion_command) {
-        completion_command = free_bce_command(completion_command);
+        completion_command = bce_command_free(completion_command);
     }
     sqlite3_close(src_db);
     return err;
@@ -449,7 +450,7 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
 }
  */
 static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, const struct json_object *j_command) {
-    bce_command_t *bce_command = create_bce_command();
+    bce_command_t *bce_command = bce_command_new();
     json_object *j_obj = NULL;
 
     if (parent_cmd_uuid) {
@@ -512,7 +513,7 @@ static bce_command_t *bce_command_from_json(const char *parent_cmd_uuid, const s
 }
  */
 static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, const struct json_object *j_alias) {
-    bce_command_alias_t *bce_alias = create_bce_command_alias();
+    bce_command_alias_t *bce_alias = bce_command_alias_new();
     json_object *j_obj = NULL;
 
     strncat(bce_alias->cmd_uuid, cmd_uuid, UUID_FIELD_SIZE);
@@ -544,7 +545,7 @@ static bce_command_alias_t *bce_command_alias_from_json(const char *cmd_uuid, co
 }
  */
 static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, const struct json_object *j_arg) {
-    bce_command_arg_t *bce_arg = create_bce_command_arg();
+    bce_command_arg_t *bce_arg = bce_command_arg_new();
     json_object *j_obj = NULL;
 
     strncat(bce_arg->cmd_uuid, cmd_uuid, UUID_FIELD_SIZE);
@@ -599,7 +600,7 @@ static bce_command_arg_t *bce_command_arg_from_json(const char *cmd_uuid, const 
 }
  */
 static bce_command_opt_t *bce_command_opt_from_json(const char *arg_uuid, const struct json_object *j_opt) {
-    bce_command_opt_t *bce_opt = create_bce_command_opt();
+    bce_command_opt_t *bce_opt = bce_command_opt_new();
     json_object *j_obj = NULL;
 
     j_obj = json_object_object_get(j_opt, "uuid");
@@ -707,39 +708,5 @@ static json_object *bce_command_opt_to_json(const bce_command_opt_t *opt) {
     json_object_object_add(j_opt, "uuid", json_object_new_string(opt->uuid));
     json_object_object_add(j_opt, "name", json_object_new_string(opt->name));
     return j_opt;
-}
-
-static sqlite3 *open_db_with_xa(const char *filename, int *rc) {
-    // open the completion database
-    sqlite3 *conn = open_database(filename, rc);
-    if (*rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", *rc, filename);
-        return NULL;
-    }
-
-    // check schema version
-    int schema_version = get_schema_version(conn);
-    if (schema_version == 0) {
-        // create the schema
-        if (!create_schema(conn)) {
-            fprintf(stderr, "Unable to create database schema. database: %s\n", filename);
-            return NULL;
-        }
-        schema_version = get_schema_version(conn);
-    }
-    if (schema_version != SCHEMA_VERSION) {
-        fprintf(stderr, "Schema version mismatch. database: %s, expected: %d, found: %d\n", filename, SCHEMA_VERSION,
-                schema_version);
-        return NULL;
-    }
-
-    // explicitly start a transaction, since this will be done automatically (per statement) otherwise
-    *rc = sqlite3_exec(conn, "BEGIN TRANSACTION;", NULL, NULL, NULL);
-    if (*rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to begin transaction, error: %d, database: %s\n", *rc, filename);
-        return NULL;
-    }
-
-    return conn;
 }
 
