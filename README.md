@@ -83,8 +83,8 @@ can be overridden by running `cmake -DSQLITE_STATIC=ON ...`.
 #### Example run configuration
 
 ```
-Executable: bash_completion_extension
-Working Directory: /Users/<yada>/Projects/bash_complete_extension
+Executable: bce
+Working Directory: /Users/<yada>/Projects/bce
 Environment Variables: COMP_LINE="kubectl --namespace=public get pods -o wide";COMP_POINT=16
 ```
 
@@ -92,7 +92,7 @@ Environment Variables: COMP_LINE="kubectl --namespace=public get pods -o wide";C
 
 ```
 Target: tests
-Working Directory: /Users/<yada>/Projects/bash_complete_extension
+Working Directory: /Users/<yada>/Projects/bce
 ```
 
 ## High-level design
@@ -169,9 +169,9 @@ $ bce --import --format json --url "https://example.com/my-command.json"
 
 1. **Provide a mechanism to easily create new completion data**
 
-Currently, there is no easy way to populate the database for a
-new command. Need to consider some approaches for creating new records
-for commands, sub-commands, arguments, and options.
+Currently, there is no easy way to populate the database for a new command. 
+Need to consider some approaches for creating new records for commands, sub-commands, arguments, and options.
+Perhaps `YAML` import would be easier to work with, compared to `JSON`.
 
 2. **Multiple completion databases**
 
