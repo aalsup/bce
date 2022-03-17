@@ -70,31 +70,6 @@ $ sudo dnf install -y json-c-devel
 $ sudo dnf install -y libcurl-devel
 ```
 
-## Build/Run configuration
-
-The project should build and run as-is. However, without passing in
-the expected environment variables, nothing interesting will be displayed.
-
-Currently, the `json-c` library is statically linked within the application, so 
-users won't need to install `json-c`. On the other hand, `sqlite3` is almost
-universally available as a dynlib, so it is dynamically linked at runtime. This
-can be overridden by running `cmake -DSQLITE_STATIC=ON ...`.
-
-#### Example run configuration
-
-```
-Executable: bce
-Working Directory: /Users/<yada>/Projects/bce
-Environment Variables: COMP_LINE="kubectl --namespace=public get pods -o wide";COMP_POINT=16
-```
-
-#### Example test configuration
-
-```
-Target: tests
-Working Directory: /Users/<yada>/Projects/bce
-```
-
 ## High-level design
 
 Logically, the representation of a `command` is as follows:
@@ -165,6 +140,30 @@ $ bce --import --format json --url "https://example.com/my-command.json"
 }
 ```
 
+## Build/Run configuration
+
+The project should build and run as-is. However, without passing in
+the expected environment variables, nothing interesting will be displayed.
+
+Currently, the `json-c` library is statically linked within the application, so
+users won't need to install `json-c`. On the other hand, `sqlite3` is almost
+universally available as a dynlib, so it is dynamically linked at runtime. This
+can be overridden by running `cmake -DSQLITE_STATIC=ON ...`.
+
+#### Example run configuration
+
+```
+Executable: bce
+Working Directory: /Users/<yada>/Projects/bce
+Environment Variables: COMP_LINE="kubectl --namespace=public get pods -o wide";COMP_POINT=16
+```
+
+#### Example test configuration
+
+```
+Target: tests
+Working Directory: /Users/<yada>/Projects/bce
+```
 ### Future capabilities
 
 1. **Provide a mechanism to easily create new completion data**
