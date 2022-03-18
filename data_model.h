@@ -14,7 +14,7 @@
 #define CMD_TYPE_FIELD_SIZE    20
 #define DESCRIPTION_FIELD_SIZE 200
 
-#define BCE_DB__FILENAME "completion.db"
+#define BCE_DB_FILENAME "completion.db"
 
 typedef struct bce_command_t {
     char uuid[UUID_FIELD_SIZE + 1];

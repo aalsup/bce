@@ -199,9 +199,9 @@ static bce_error_t process_import_sqlite(const char *filename) {
     }
 
     // open dest database
-    sqlite3 *dest_db = db_open_with_xa(BCE_DB__FILENAME, &rc);
+    sqlite3 *dest_db = db_open_with_xa(BCE_DB_FILENAME, &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB_FILENAME);
         err = ERR_OPEN_DATABASE;
         goto done;
     }
@@ -253,7 +253,7 @@ static bce_error_t process_import_sqlite(const char *filename) {
     // commit transaction
     rc = sqlite3_exec(dest_db, "COMMIT;", NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to commit transaction, error: %d, database: %s\n", rc, BCE_DB__FILENAME);
+        fprintf(stderr, "Unable to commit transaction, error: %d, database: %s\n", rc, BCE_DB_FILENAME);
         err = ERR_SQLITE_ERROR;
         goto done;
     }
@@ -269,9 +269,9 @@ static int process_export_sqlite(const char *command_name, const char *filename)
     bce_error_t err = 0;
 
     // open the source database
-    sqlite3 *src_db = db_open_with_xa(BCE_DB__FILENAME, &rc);
+    sqlite3 *src_db = db_open_with_xa(BCE_DB_FILENAME, &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB_FILENAME);
         err = ERR_OPEN_DATABASE;
         goto done;
     }
@@ -348,7 +348,7 @@ static bce_error_t process_import_json_url(const char *url) {
 static bce_error_t process_import_json_file(const char *json_filename) {
     bce_error_t err = ERR_NONE;
     int rc = SQLITE_OK;
-    const char *db_filename = BCE_DB__FILENAME;
+    const char *db_filename = BCE_DB_FILENAME;
     if (uuid4_init() != UUID4_ESUCCESS) {
         fprintf(stderr, "UUID init failure\n");
         err = ERR_UUID_ERR;
@@ -401,9 +401,9 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
     bce_error_t err = ERR_NONE;
 
     // open the source database
-    sqlite3 *src_db = db_open_with_xa(BCE_DB__FILENAME, &rc);
+    sqlite3 *src_db = db_open_with_xa(BCE_DB_FILENAME, &rc);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB__FILENAME);
+        fprintf(stderr, "Unable to open database. error: %d, database: %s\n", rc, BCE_DB_FILENAME);
         err = ERR_OPEN_DATABASE;
         goto done;
     }

@@ -56,7 +56,7 @@ bce_error_t process_completion(void) {
     printf("SQLite version %s\n", sqlite3_libversion());
 #endif
 
-    sqlite3 *conn = db_open(BCE_DB__FILENAME, &rc);
+    sqlite3 *conn = db_open(BCE_DB_FILENAME, &rc);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Error %d opening database", rc);
         err = ERR_OPEN_DATABASE;
