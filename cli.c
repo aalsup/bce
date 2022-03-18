@@ -58,7 +58,7 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
             op = OP_HELP;
             break;
         }
-        // export
+            // export
         else if ((strncmp(EXPORT_ARG_LONGNAME, argv[i], strlen(EXPORT_ARG_LONGNAME)) == 0)
                  || (strncmp(EXPORT_ARG_SHORTNAME, argv[i], strlen(EXPORT_ARG_SHORTNAME)) == 0)) {
             op = OP_EXPORT;
@@ -71,12 +71,12 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
                 break;
             }
         }
-        // import
+            // import
         else if ((strncmp(IMPORT_ARG_LONGNAME, argv[i], strlen(IMPORT_ARG_LONGNAME)) == 0)
                  || (strncmp(IMPORT_ARG_SHORTNAME, argv[i], strlen(IMPORT_ARG_SHORTNAME)) == 0)) {
             op = OP_IMPORT;
         }
-        // filename
+            // filename
         else if ((strncmp(FILE_ARG_LONGNAME, argv[i], strlen(FILE_ARG_LONGNAME)) == 0)
                  || (strncmp(FILE_ARG_SHORTNAME, argv[i], strlen(FILE_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the filename
@@ -88,7 +88,7 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
                 break;
             }
         }
-        // format
+            // format
         else if ((strncmp(FORMAT_ARG_LONGNAME, argv[i], strlen(FORMAT_ARG_LONGNAME)) == 0)
                  || (strncmp(FORMAT_ARG_SHORTNAME, argv[i], strlen(FORMAT_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the format
@@ -107,7 +107,7 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
                 break;
             }
         }
-        // url
+            // url
         else if ((strncmp(URL_ARG_LONGNAME, argv[i], strlen(URL_ARG_LONGNAME)) == 0)
                  || (strncmp(URL_ARG_SHORTNAME, argv[i], strlen(URL_ARG_SHORTNAME)) == 0)) {
             // next parameter should be the URL
@@ -635,10 +635,8 @@ static json_object *bce_command_to_json(const bce_command_t *cmd) {
     if (cmd->aliases) {
         for (linked_list_node_t *alias_node = cmd->aliases->head; alias_node != NULL; alias_node = alias_node->next) {
             bce_command_alias_t *alias = (bce_command_alias_t *) alias_node->data;
-            if (alias) {
-                json_object *j_alias = bce_command_alias_to_json(alias);
-                json_object_array_add(j_aliases, j_alias);
-            }
+            json_object *j_alias = bce_command_alias_to_json(alias);
+            json_object_array_add(j_aliases, j_alias);
         }
     }
     json_object_object_add(j_command, "aliases", j_aliases);
@@ -648,10 +646,8 @@ static json_object *bce_command_to_json(const bce_command_t *cmd) {
     if (cmd->args) {
         for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
-            if (arg) {
-                json_object *j_arg = bce_command_arg_to_json(arg);
-                json_object_array_add(j_args, j_arg);
-            }
+            json_object *j_arg = bce_command_arg_to_json(arg);
+            json_object_array_add(j_args, j_arg);
         }
     }
     json_object_object_add(j_command, "args", j_args);
@@ -661,10 +657,8 @@ static json_object *bce_command_to_json(const bce_command_t *cmd) {
     if (cmd->sub_commands) {
         for (linked_list_node_t *sub_node = cmd->sub_commands->head; sub_node != NULL; sub_node = sub_node->next) {
             bce_command_t *sub_cmd = (bce_command_t *) sub_node->data;
-            if (sub_cmd) {
-                json_object *j_sub = bce_command_to_json(sub_cmd);
-                json_object_array_add(j_subs, j_sub);
-            }
+            json_object *j_sub = bce_command_to_json(sub_cmd);
+            json_object_array_add(j_subs, j_sub);
         }
     }
     json_object_object_add(j_command, "sub_commands", j_subs);
@@ -690,12 +684,10 @@ static json_object *bce_command_arg_to_json(const bce_command_arg_t *arg) {
     if (arg->opts) {
         for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
             bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
-            if (opt) {
-                // convert the option to json
-                json_object *j_opt = bce_command_opt_to_json(opt);
-                // append to the json array
-                json_object_array_add(j_opts, j_opt);
-            }
+            // convert the option to json
+            json_object *j_opt = bce_command_opt_to_json(opt);
+            // append to the json array
+            json_object_array_add(j_opts, j_opt);
         }
     }
     json_object_object_add(j_arg, "opts", j_opts);

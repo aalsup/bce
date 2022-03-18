@@ -64,7 +64,7 @@ linked_list_t *ll_destroy(linked_list_t *list) {
  * Appends a new node to the end of the list.
  */
 bool ll_append_item(linked_list_t *list, const void *data) {
-    if (list) {
+    if (list && data) {
         bool should_append_item = true;
         // if unique, check for item
         if (list->unique) {

@@ -43,7 +43,7 @@ static void prune_sub_commands(bce_command_t *cmd, const linked_list_t *word_lis
                 // try harder - examine the aliases
                 if (sub_cmd->aliases) {
                     for (linked_list_node_t *check_alias_node = sub_cmd->aliases->head; check_alias_node != NULL; check_alias_node = check_alias_node->next) {
-                        bce_command_alias_t *alias = (bce_command_alias_t *)check_alias_node->data;
+                        bce_command_alias_t *alias = (bce_command_alias_t *) check_alias_node->data;
                         bool found_alias = ll_is_string_in_list(word_list, alias->name);
                         if (found_alias) {
                             sub_cmd->is_present_on_cmdline = true;
@@ -181,7 +181,8 @@ bool collect_required_recommendations(linked_list_t *recommendation_list, const 
     return result;
 }
 
-bool collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word,
+bool
+collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word,
                                  const char *previous_word) {
     if (!recommendation_list || !cmd) {
         return false;
@@ -191,7 +192,7 @@ bool collect_optional_recommendations(linked_list_t *recommendation_list, const 
     if (cmd->sub_commands) {
         for (linked_list_node_t *sub_cmd_node = cmd->sub_commands->head; sub_cmd_node != NULL; sub_cmd_node = sub_cmd_node->next) {
             bce_command_t *sub_cmd = (bce_command_t *) sub_cmd_node->data;
-            if (sub_cmd && !sub_cmd->is_present_on_cmdline) {
+            if (!sub_cmd->is_present_on_cmdline) {
                 char *data = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
                 strncat(data, sub_cmd->name, NAME_FIELD_SIZE);
                 if (sub_cmd->aliases) {
@@ -222,29 +223,27 @@ bool collect_optional_recommendations(linked_list_t *recommendation_list, const 
     if (cmd->args) {
         for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
-            if (arg) {
-                if (!arg->is_present_on_cmdline) {
-                    char *arg_str = calloc(MAX_LINE_SIZE + 1, sizeof(char));
-                    if (strlen(arg->long_name) > 0) {
-                        strncat(arg_str, arg->long_name, NAME_FIELD_SIZE);
-                        if (strlen(arg->short_name) > 0) {
-                            strcat(arg_str, " (");
-                            strncat(arg_str, arg->short_name, SHORTNAME_FIELD_SIZE);
-                            strcat(arg_str, ")");
-                        }
-                    } else {
+            if (!arg->is_present_on_cmdline) {
+                char *arg_str = calloc(MAX_LINE_SIZE + 1, sizeof(char));
+                if (strlen(arg->long_name) > 0) {
+                    strncat(arg_str, arg->long_name, NAME_FIELD_SIZE);
+                    if (strlen(arg->short_name) > 0) {
+                        strcat(arg_str, " (");
                         strncat(arg_str, arg->short_name, SHORTNAME_FIELD_SIZE);
+                        strcat(arg_str, ")");
                     }
-                    ll_append_item(recommendation_list, arg_str);
                 } else {
-                    // collect all the options
-                    if (arg->opts) {
-                        for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
-                            char *data = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
-                            bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
-                            strncat(data, opt->name, NAME_FIELD_SIZE);
-                            ll_append_item(recommendation_list, data);
-                        }
+                    strncat(arg_str, arg->short_name, SHORTNAME_FIELD_SIZE);
+                }
+                ll_append_item(recommendation_list, arg_str);
+            } else {
+                // collect all the options
+                if (arg->opts) {
+                    for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
+                        char *data = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
+                        bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
+                        strncat(data, opt->name, NAME_FIELD_SIZE);
+                        ll_append_item(recommendation_list, data);
                     }
                 }
             }
@@ -264,13 +263,11 @@ bce_command_arg_t *get_current_arg(const bce_command_t *cmd, const char *current
     if (cmd->args) {
         for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
-            if (arg) {
-                if (arg->is_present_on_cmdline) {
-                    if ((strncmp(arg->long_name, current_word, NAME_FIELD_SIZE) == 0) ||
-                        (strncmp(arg->short_name, current_word, SHORTNAME_FIELD_SIZE) == 0)) {
-                        found_arg = arg;
-                        break;
-                    }
+            if (arg->is_present_on_cmdline) {
+                if ((strncmp(arg->long_name, current_word, NAME_FIELD_SIZE) == 0) ||
+                    (strncmp(arg->short_name, current_word, SHORTNAME_FIELD_SIZE) == 0)) {
+                    found_arg = arg;
+                    break;
                 }
             }
         }

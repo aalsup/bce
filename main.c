@@ -20,7 +20,11 @@ bce_error_t process_cli(int argc, const char **argv);
 /* Display the recommendations to stdout */
 void print_recommendations(const linked_list_t *recommendation_list);
 
+#ifdef DEBUG
+
 void print_command_tree(const bce_command_t *cmd, int level);
+
+#endif
 
 int main(int argc, char **argv) {
     int result = 0;
@@ -151,7 +155,8 @@ bce_error_t process_completion(void) {
 
     // build the command recommendations
     linked_list_t *recommendation_list = ll_create_unique(NULL);
-    bool has_required = collect_required_recommendations(recommendation_list, completion_command, current_word, previous_word);
+    bool has_required = collect_required_recommendations(recommendation_list, completion_command, current_word,
+                                                         previous_word);
     if (!has_required) {
         collect_optional_recommendations(recommendation_list, completion_command, current_word, previous_word);
     }
@@ -178,6 +183,18 @@ bce_error_t process_completion(void) {
     return err;
 }
 
+void print_recommendations(const linked_list_t *recommendation_list) {
+    if (!recommendation_list) {
+        return;
+    }
+
+    for (linked_list_node_t *node = recommendation_list->head; node != NULL; node = node->next) {
+        printf("%s\n", (char *) node->data);
+    }
+}
+
+#ifdef DEBUG
+
 void print_command_tree(const bce_command_t *cmd, const int level) {
     // indent
     for (int i = 0; i < level; i++) {
@@ -200,23 +217,19 @@ void print_command_tree(const bce_command_t *cmd, const int level) {
     if (cmd->args) {
         for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
-            if (arg) {
-                for (int i = 0; i < level; i++) {
-                    printf("  ");
-                }
-                printf("  arg: %s (%s): %s\n", arg->long_name, arg->short_name, arg->arg_type);
+            for (int i = 0; i < level; i++) {
+                printf("  ");
+            }
+            printf("  arg: %s (%s): %s\n", arg->long_name, arg->short_name, arg->arg_type);
 
-                // print opts
-                if (arg->opts) {
-                    for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
-                        bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
-                        if (opt) {
-                            for (int i = 0; i < level; i++) {
-                                printf("  ");
-                            }
-                            printf("    opt: %s\n", opt->name);
-                        }
+            // print opts
+            if (arg->opts) {
+                for (linked_list_node_t *opt_node = arg->opts->head; opt_node != NULL; opt_node = opt_node->next) {
+                    bce_command_opt_t *opt = (bce_command_opt_t *) opt_node->data;
+                    for (int i = 0; i < level; i++) {
+                        printf("  ");
                     }
+                    printf("    opt: %s\n", opt->name);
                 }
             }
         }
@@ -230,12 +243,4 @@ void print_command_tree(const bce_command_t *cmd, const int level) {
     }
 }
 
-void print_recommendations(const linked_list_t *recommendation_list) {
-    if (!recommendation_list) {
-        return;
-    }
-
-    for (linked_list_node_t *node = recommendation_list->head; node != NULL; node = node->next) {
-        printf("%s\n", (char *) node->data);
-    }
-}
+#endif // DEBUG

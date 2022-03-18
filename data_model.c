@@ -535,11 +535,9 @@ bce_error_t db_store_command(struct sqlite3 *conn, const bce_command_t *completi
     if (completion_command->aliases) {
         for (linked_list_node_t *node = completion_command->aliases->head; node != NULL; node = node->next) {
             bce_command_alias_t *alias = (bce_command_alias_t *) node->data;
-            if (alias) {
-                rc = db_store_command_alias(conn, alias);
-                if (rc != SQLITE_OK) {
-                    goto done;
-                }
+            rc = db_store_command_alias(conn, alias);
+            if (rc != SQLITE_OK) {
+                goto done;
             }
         }
     }
@@ -548,11 +546,9 @@ bce_error_t db_store_command(struct sqlite3 *conn, const bce_command_t *completi
     if (completion_command->sub_commands) {
         for (linked_list_node_t *node = completion_command->sub_commands->head; node != NULL; node = node->next) {
             bce_command_t *subcmd = (bce_command_t *) node->data;
-            if (subcmd) {
-                rc = db_store_command(conn, subcmd);
-                if (rc != SQLITE_OK) {
-                    goto done;
-                }
+            rc = db_store_command(conn, subcmd);
+            if (rc != SQLITE_OK) {
+                goto done;
             }
         }
     }
@@ -561,11 +557,9 @@ bce_error_t db_store_command(struct sqlite3 *conn, const bce_command_t *completi
     if (completion_command->args) {
         for (linked_list_node_t *node = completion_command->args->head; node != NULL; node = node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) node->data;
-            if (arg) {
-                rc = db_store_command_arg(conn, arg);
-                if (rc != SQLITE_OK) {
-                    goto done;
-                }
+            rc = db_store_command_arg(conn, arg);
+            if (rc != SQLITE_OK) {
+                goto done;
             }
         }
     }
@@ -651,11 +645,9 @@ bce_error_t db_store_command_arg(struct sqlite3 *conn, const bce_command_arg_t *
     if (arg->opts) {
         for (linked_list_node_t *node = arg->opts->head; node != NULL; node = node->next) {
             bce_command_opt_t *opt = (bce_command_opt_t *) node->data;
-            if (opt) {
-                rc = db_store_command_opt(conn, opt);
-                if (rc != SQLITE_OK) {
-                    goto done;
-                }
+            rc = db_store_command_opt(conn, opt);
+            if (rc != SQLITE_OK) {
+                goto done;
             }
         }
     }
