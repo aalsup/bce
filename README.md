@@ -188,5 +188,5 @@ to check if a particular value was mostly recently used.
 
 4. **Improve Cmake config**
 
-The cmake configuration has been cobbled together. It _works_; however, there are modern cmake features that aren't
-being used. For example, `target_link_libraries` are supposedly superior to the older `link_libraries`.
+The cmake configuration has been cobbled together. It _works_; however, there are cmake features that aren't
+being used optimally.

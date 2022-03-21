@@ -38,7 +38,7 @@ target_include_directories(bce PRIVATE /usr/include)
 if (${MACOSX})
     target_link_directories(bce PRIVATE /usr/local/lib)
 else ()
-    target_link_directories(bce PRIVATE /usr/lib640)
+    target_link_directories(bce PRIVATE /usr/lib64)
 endif ()
 
 # Specifying '/usr/local/lib' strangely doesn't work on MacOS. Use 'find_library' instead.

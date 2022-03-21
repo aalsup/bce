@@ -52,15 +52,15 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
     char url[URL_SIZE + 1];
     format_t format = FORMAT_SQLITE;
     for (int i = 1; i < argc; i++) {
-        // help
         if ((strncmp(HELP_ARG_LONGNAME, argv[i], strlen(HELP_ARG_LONGNAME)) == 0)
+            // *** help ***
             || (strncmp(HELP_ARG_SHORTNAME, argv[i], strlen(HELP_ARG_SHORTNAME)) == 0)) {
             op = OP_HELP;
             break;
         }
-            // export
         else if ((strncmp(EXPORT_ARG_LONGNAME, argv[i], strlen(EXPORT_ARG_LONGNAME)) == 0)
                  || (strncmp(EXPORT_ARG_SHORTNAME, argv[i], strlen(EXPORT_ARG_SHORTNAME)) == 0)) {
+            // *** export ***
             op = OP_EXPORT;
             // next parameter should be the command name
             if ((i + 1) < argc) {
@@ -71,14 +71,14 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
                 break;
             }
         }
-            // import
         else if ((strncmp(IMPORT_ARG_LONGNAME, argv[i], strlen(IMPORT_ARG_LONGNAME)) == 0)
                  || (strncmp(IMPORT_ARG_SHORTNAME, argv[i], strlen(IMPORT_ARG_SHORTNAME)) == 0)) {
+            // *** import ***
             op = OP_IMPORT;
         }
-            // filename
         else if ((strncmp(FILE_ARG_LONGNAME, argv[i], strlen(FILE_ARG_LONGNAME)) == 0)
                  || (strncmp(FILE_ARG_SHORTNAME, argv[i], strlen(FILE_ARG_SHORTNAME)) == 0)) {
+            // *** filename ***
             // next parameter should be the filename
             if ((i + 1) < argc) {
                 filename[0] = '\0';
@@ -88,9 +88,9 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
                 break;
             }
         }
-            // format
         else if ((strncmp(FORMAT_ARG_LONGNAME, argv[i], strlen(FORMAT_ARG_LONGNAME)) == 0)
                  || (strncmp(FORMAT_ARG_SHORTNAME, argv[i], strlen(FORMAT_ARG_SHORTNAME)) == 0)) {
+            // *** format ***
             // next parameter should be the format
             if ((i + 1) < argc) {
                 i++;
@@ -107,9 +107,9 @@ bce_error_t process_cli_impl(const int argc, const char **argv) {
                 break;
             }
         }
-            // url
         else if ((strncmp(URL_ARG_LONGNAME, argv[i], strlen(URL_ARG_LONGNAME)) == 0)
                  || (strncmp(URL_ARG_SHORTNAME, argv[i], strlen(URL_ARG_SHORTNAME)) == 0)) {
+            // *** url ***
             // next parameter should be the URL
             if ((i + 1) < argc) {
                 url[0] = '\0';
