@@ -104,9 +104,9 @@ linked_list_t *bash_input_to_list(const char *cmd_line, const size_t max_len) {
         NADA, IN_WORD, IN_QUOTE, IN_DBL_QUOTE
     } state = NADA;
 
-    const char *p;          // pointer to the current character
-    char *start_of_word;    // pointer to the start of a word
-    size_t c_count = 0;     // num of parsed characters (don't exceed max_len)
+    const char *p;                  // pointer to the current character
+    char *start_of_word = NULL;     // pointer to the start of a word
+    size_t c_count = 0;             // num of parsed characters (don't exceed max_len)
 
     for (p = cmd_line; *p != '\0'; p++) {
         bool got_word = false;

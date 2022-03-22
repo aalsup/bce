@@ -90,12 +90,10 @@ bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd
     // try to find the command by name
     int rc = sqlite3_prepare_v3(conn, ROOT_COMMAND_NAMES_SQL, -1, 0, &stmt, NULL);
     if (rc == SQLITE_OK) {
-        int step = sqlite3_step(stmt);
-        while (step == SQLITE_ROW) {
+        for (int step = sqlite3_step(stmt); step == SQLITE_ROW; step = sqlite3_step(stmt)) {
             char *cmd_name = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
             strncat(cmd_name, (const char *) sqlite3_column_text(stmt, 0), NAME_FIELD_SIZE);
             ll_append_item(cmd_names, cmd_name);
-            step = sqlite3_step(stmt);
         }
     }
 
@@ -190,8 +188,7 @@ bce_error_t db_query_command_aliases(struct sqlite3 *conn, bce_command_t *parent
     }
 
     sqlite3_bind_text(stmt, 1, parent_cmd->uuid, -1, NULL);
-    int step = sqlite3_step(stmt);
-    while (step == SQLITE_ROW) {
+    for (int step = sqlite3_step(stmt); step == SQLITE_ROW; step = sqlite3_step(stmt)) {
         bce_command_alias_t *alias = bce_command_alias_new();
         strncat(alias->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
         strncat(alias->cmd_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
@@ -199,20 +196,11 @@ bce_error_t db_query_command_aliases(struct sqlite3 *conn, bce_command_t *parent
 
         // add this alias to the parent
         ll_append_item(parent_cmd->aliases, alias);
-
-        step = sqlite3_step(stmt);
     }
 
     done:
     if (stmt) {
         sqlite3_finalize(stmt);
-    }
-    if (err == ERR_NONE) {
-        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
-            err = ERR_NONE;
-        } else {
-            err = ERR_SQLITE_ERROR;
-        }
     }
     return err;
 }
@@ -230,8 +218,7 @@ bce_error_t db_query_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cm
     }
 
     sqlite3_bind_text(stmt, 1, parent_cmd->uuid, -1, NULL);
-    int step = sqlite3_step(stmt);
-    while (step == SQLITE_ROW) {
+    for (int step = sqlite3_step(stmt); step == SQLITE_ROW; step = sqlite3_step(stmt)) {
         // create bce_command_t
         bce_command_t *sub_cmd = bce_command_new();
         strncat(sub_cmd->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
@@ -262,20 +249,11 @@ bce_error_t db_query_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cm
 
         // add this sub_cmd to the parent
         ll_append_item(parent_cmd->sub_commands, sub_cmd);
-
-        step = sqlite3_step(stmt);
     }
 
     done:
     if (stmt) {
         sqlite3_finalize(stmt);
-    }
-    if (err == ERR_NONE) {
-        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
-            err = ERR_NONE;
-        } else {
-            err = ERR_SQLITE_ERROR;
-        }
     }
     return err;
 }
@@ -306,8 +284,7 @@ bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
     }
 
     sqlite3_bind_text(stmt, 1, command_uuid, -1, NULL);
-    int step = sqlite3_step(stmt);
-    while (step == SQLITE_ROW) {
+    for (int step = sqlite3_step(stmt); step == SQLITE_ROW; step = sqlite3_step(stmt)) {
         bce_command_arg_t *arg = bce_command_arg_new();
         // ca.uuid, ca.cmd_uuid, ca.arg_type, ca.long_name, ca.short_name
         strncat(arg->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
@@ -331,20 +308,11 @@ bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
         rc = db_query_command_opts(conn, arg);
 
         ll_append_item(parent_cmd->args, arg);
-
-        step = sqlite3_step(stmt);
     }
 
     done:
     if (stmt) {
         sqlite3_finalize(stmt);
-    }
-    if (err == ERR_NONE) {
-        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
-            err = ERR_NONE;
-        } else {
-            err = ERR_SQLITE_ERROR;
-        }
     }
     return err;
 }
@@ -374,28 +342,18 @@ bce_error_t db_query_command_opts(struct sqlite3 *conn, bce_command_arg_t *paren
 
     char *arg_uuid = parent_arg->uuid;
     sqlite3_bind_text(stmt, 1, arg_uuid, -1, NULL);
-    int step = sqlite3_step(stmt);
-    while (step == SQLITE_ROW) {
+    for (int step = sqlite3_step(stmt); step == SQLITE_ROW; step = sqlite3_step(stmt)) {
         bce_command_opt_t *opt = bce_command_opt_new();
         // co.uuid, co.cmd_arg_uuid, co.name
         strncat(opt->uuid, (const char *) sqlite3_column_text(stmt, 0), UUID_FIELD_SIZE);
         strncat(opt->cmd_arg_uuid, (const char *) sqlite3_column_text(stmt, 1), UUID_FIELD_SIZE);
         strncat(opt->name, (const char *) sqlite3_column_text(stmt, 2), NAME_FIELD_SIZE);
         ll_append_item(parent_arg->opts, opt);
-
-        step = sqlite3_step(stmt);
     }
 
     done:
     if (stmt) {
         sqlite3_finalize(stmt);
-    }
-    if (err == ERR_NONE) {
-        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
-            err = ERR_NONE;
-        } else {
-            err = ERR_SQLITE_ERROR;
-        }
     }
     return err;
 }
