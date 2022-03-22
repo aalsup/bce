@@ -1,8 +1,19 @@
 #include "input.h"
-#include "data_model.h"
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 #include "error.h"
+
+bool is_space_or_equals(int c) {
+    if (isspace(c)) {
+        return true;
+    } else {
+        if (c == '=') {
+            return true;
+        }
+    }
+    return false;
+}
 
 completion_input_t *create_completion_input(bce_error_t *err) {
     const char *line = getenv(BASH_LINE_VAR);
@@ -96,11 +107,78 @@ bool get_previous_word(const completion_input_t *input, char *dest, size_t bufsi
  *
  * TODO: How to handle nested, escaped quotes?
  */
-linked_list_t *bash_input_to_list(const char *str, const size_t max_len) {
-    // POSIX whitespace characters and equals
-    char delim[] = " \t\r\n\v\f=";
+linked_list_t *bash_input_to_list(const char *cmd_line, const size_t max_len) {
+    linked_list_t *list = ll_create(NULL);
+    const char *p;
+    char *start_of_word;
+    int c;
+    size_t counter = 0;
+    enum states {DULL, IN_WORD, IN_QUOTE, IN_DBL_QUOTE} state = DULL;
+    bool collect_word = false;
 
-    linked_list_t *list = ll_string_to_list(str, delim, max_len);
+    for (p = cmd_line; *p != '\0'; p++) {
+        c = (unsigned char) *p;  // convert to unsigned char for is* functions
+        switch (state) {
+            case DULL:  // not in a word or quotes
+                if (isspace(c)) {
+                    // ignore
+                    continue;
+                }
+                // not a space - transition to new state
+                if (c == '"') {
+                    state = IN_DBL_QUOTE;
+                    start_of_word = (char *) p + 1;  // word starts at next char
+                    continue;
+                } else if (c == '\'') {
+                    state = IN_QUOTE;
+                    start_of_word = (char *) p + 1;  // word starts at next char
+                    continue;
+                } else {
+                    state = IN_WORD;
+                    start_of_word = (char *) p;
+                    continue;
+                }
+            case IN_WORD:
+               // keep going until we get a space
+               if (is_space_or_equals(c)) {
+                   collect_word = true;
+               }
+            case IN_QUOTE:
+                // keep going until get a quote
+                if (c == '\'') {
+                    collect_word = true;
+                }
+            case IN_DBL_QUOTE:
+                if (c == '"') {
+                    collect_word = true;
+                }
+        }
+        if (collect_word) {
+            // collect the word we just read
+            size_t len = p - start_of_word;
+            char *word = calloc(len + 1, sizeof(char));
+            strncat(word, start_of_word, len);
+            ll_append_item(list, word);
+            // change state
+            state = DULL;
+            collect_word = false;
+        }
+        // make sure we only compare up to `max_len` characters
+        counter++;
+        if (counter >= max_len) {
+            break;
+        }
+    }
 
+    // check if we have 1 remaining word to include
+    if (state != DULL) {
+        size_t len = strlen(start_of_word);
+        char *word = calloc(len + 1, sizeof(char));
+        strncat(word, start_of_word, len);
+        ll_append_item(list, word);
+
+    }
+
+    // tokenize based on POSIX whitespace characters and equals
     return list;
 }
