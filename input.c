@@ -144,7 +144,7 @@ linked_list_t *bash_input_to_list(const char *cmd_line, const size_t max_len) {
                 break;
         }
         if (got_word) {
-            // collect the word we just read (from *start_of_word .. *p)
+            // collect the word we just read, from start_of_word..p (exclusive)
             size_t word_len = p - start_of_word;
             char *word = calloc(word_len + 1, sizeof(char));
             strncat(word, start_of_word, word_len);
