@@ -65,6 +65,7 @@ else ()
     target_link_libraries(bce PRIVATE curl)
 endif ()
 
+# TODO: Would `find_package(SQLite3)` offer any advantages?
 # SQLite: dynamic link
 target_link_libraries(bce PRIVATE sqlite3)
 

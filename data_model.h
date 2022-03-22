@@ -12,8 +12,9 @@
 #define NAME_FIELD_SIZE        50
 #define SHORTNAME_FIELD_SIZE   5
 #define CMD_TYPE_FIELD_SIZE    20
-#define DESCRIPTION_FIELD_SIZE 200
+#define DESCRIPTION_FIELD_SIZE 1024
 
+// TODO: Figure out the proper location for the database file
 #define BCE_DB_FILENAME "completion.db"
 
 typedef struct bce_command_t {
