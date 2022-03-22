@@ -2,7 +2,6 @@
 #include "linked_list.h"
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
 
@@ -76,8 +75,6 @@ static const char *COMMAND_DELETE_SQL =
         " AND parent_cmd IS NULL ";
 
 bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
-    bce_error_t err = ERR_NONE;
-
     if (!conn) {
         return ERR_NO_DATABASE_CONNECTION;
     }
@@ -97,9 +94,8 @@ bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd
         }
     }
 
-    if (rc == SQLITE_OK) {
-        err = ERR_NONE;
-    } else {
+    bce_error_t err = ERR_NONE;
+    if (rc != SQLITE_OK) {
         err = ERR_SQLITE_ERROR;
     }
     return err;
@@ -121,6 +117,7 @@ bce_error_t db_query_command(struct sqlite3 *conn, bce_command_t *cmd, const cha
     sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v3(conn, COMMAND_READ_SQL, -1, prep_flags, &stmt, NULL);
     if (rc != SQLITE_OK) {
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -167,11 +164,6 @@ bce_error_t db_query_command(struct sqlite3 *conn, bce_command_t *cmd, const cha
     if (stmt) {
         sqlite3_finalize(stmt);
     }
-    if (err == ERR_NONE) {
-        if (rc != SQLITE_OK) {
-            err = ERR_SQLITE_ERROR;
-        }
-    }
     return err;
 }
 
@@ -184,6 +176,7 @@ bce_error_t db_query_command_aliases(struct sqlite3 *conn, bce_command_t *parent
     sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v3(conn, COMMAND_ALIAS_READ_SQL, -1, prep_flags, &stmt, NULL);
     if (rc != SQLITE_OK) {
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -214,6 +207,7 @@ bce_error_t db_query_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cm
     sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v3(conn, SUB_COMMAND_READ_SQL, -1, prep_flags, &stmt, NULL);
     if (rc != SQLITE_OK) {
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -280,6 +274,7 @@ bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v3(conn, COMMAND_ARG_READ_SQL, -1, prep_flags, &stmt, NULL);
     if (rc != SQLITE_OK) {
+        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -305,7 +300,10 @@ bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
         } else {
             memset(arg->short_name, 0, SHORTNAME_FIELD_SIZE + 1);
         }
-        rc = db_query_command_opts(conn, arg);
+        err = db_query_command_opts(conn, arg);
+        if (err != ERR_NONE) {
+            goto done;
+        }
 
         ll_append_item(parent_cmd->args, arg);
     }

@@ -287,16 +287,15 @@ static int process_export_sqlite(const char *command_name, const char *filename)
 
     // load the command hierarchy
     bce_command_t *completion_command = bce_command_new();
-    rc = db_query_command(src_db, completion_command, command_name);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "db_query_command() returned %d\n", rc);
-        err = ERR_SQLITE_ERROR;
+    err = db_query_command(src_db, completion_command, command_name);
+    if (err != ERR_NONE) {
+        fprintf(stderr, "db_query_command() returned %d\n", err);
         goto done;
     }
 
-    rc = db_store_command(dest_db, completion_command);
-    if (rc != SQLITE_OK) {
-        err = ERR_SQLITE_ERROR;
+    err = db_store_command(dest_db, completion_command);
+    if (err != ERR_NONE) {
+        fprintf(stderr, "db_store_command() returned %d\n", err);
         goto done;
     }
 
@@ -410,10 +409,9 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
 
     // load the command hierarchy
     bce_command_t *completion_command = bce_command_new();
-    rc = db_query_command(src_db, completion_command, command_name);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "db_query_command() returned %d\n", rc);
-        err = ERR_INVALID_CMD;
+    err = db_query_command(src_db, completion_command, command_name);
+    if (err != ERR_NONE) {
+        fprintf(stderr, "db_query_command() returned %d\n", err);
         goto done;
     }
 
