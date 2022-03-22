@@ -106,7 +106,7 @@ linked_list_t *bash_input_to_list(const char *cmd_line, const size_t max_len) {
 
     const char *p;          // pointer to the current character
     char *start_of_word;    // pointer to the start of a word
-    size_t counter = 0;     // num of parsed characters (don't exceed max_len)
+    size_t c_count = 0;     // num of parsed characters (don't exceed max_len)
 
     for (p = cmd_line; *p != '\0'; p++) {
         bool got_word = false;
@@ -115,21 +115,21 @@ linked_list_t *bash_input_to_list(const char *cmd_line, const size_t max_len) {
             case NADA:  // not in a word or quotes
                 if (isspace(c)) {
                     // ignore
-                    continue;
+                    break;
                 }
                 // not a space - transition to new state
                 if (c == '\'') {
                     state = IN_QUOTE;
                     start_of_word = (char *) p + 1;  // word starts at next char
-                    continue;
+                    break;
                 } else if (c == '"') {
                     state = IN_DBL_QUOTE;
                     start_of_word = (char *) p + 1;  // word starts at next char
-                    continue;
+                    break;
                 } else {
                     state = IN_WORD;
                     start_of_word = (char *) p;
-                    continue;
+                    break;
                 }
             case IN_WORD:
                 // keep going until we get a space
@@ -155,15 +155,17 @@ linked_list_t *bash_input_to_list(const char *cmd_line, const size_t max_len) {
             start_of_word = NULL;
         }
         // make sure we only compare up to `max_len` characters
-        counter++;
-        if (counter >= max_len) {
+        c_count++;
+        if (c_count >= max_len) {
             break;
         }
     }
 
     // check if we have a remaining word in the buffer
     if ((state != NADA) && (start_of_word)) {
-        size_t word_len = strlen(start_of_word);
+        // make sure we don't consider more characters than allowed
+        // `(p + 1) - start_of_word` gets all characters (inclusive)
+        size_t word_len = (p + 1) - start_of_word;
         char *word = calloc(word_len + 1, sizeof(char));
         strncat(word, start_of_word, word_len);
         ll_append_item(list, word);
