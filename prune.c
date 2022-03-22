@@ -14,7 +14,7 @@ static void prune_arguments(bce_command_t *cmd, const linked_list_t *word_list);
  */
 void prune_command(bce_command_t *cmd, const completion_input_t *input) {
     // build a list of words from the command line
-    linked_list_t *word_list = ll_string_to_list(input->line, " ", MAX_LINE_SIZE);
+    linked_list_t *word_list = ll_string_to_list(input->line, " ", MAX_CMD_LINE_SIZE);
 
     prune_arguments(cmd, word_list);
     prune_sub_commands(cmd, word_list);
@@ -224,7 +224,7 @@ collect_optional_recommendations(linked_list_t *recommendation_list, const bce_c
         for (linked_list_node_t *arg_node = cmd->args->head; arg_node != NULL; arg_node = arg_node->next) {
             bce_command_arg_t *arg = (bce_command_arg_t *) arg_node->data;
             if (!arg->is_present_on_cmdline) {
-                char *arg_str = calloc(MAX_LINE_SIZE + 1, sizeof(char));
+                char *arg_str = calloc(MAX_CMD_LINE_SIZE + 1, sizeof(char));
                 if (strlen(arg->long_name) > 0) {
                     strncat(arg_str, arg->long_name, NAME_FIELD_SIZE);
                     if (strlen(arg->short_name) > 0) {

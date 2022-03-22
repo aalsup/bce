@@ -48,9 +48,9 @@ bce_error_t process_cli(int argc, const char **argv) {
 bce_error_t process_completion(void) {
     bce_error_t err = ERR_NONE;    // custom error values
     int rc = 0;     // SQLite return values
-    char command_name[MAX_LINE_SIZE + 1];
-    char current_word[MAX_LINE_SIZE + 1];
-    char previous_word[MAX_LINE_SIZE + 1];
+    char command_name[MAX_CMD_LINE_SIZE + 1];
+    char current_word[MAX_CMD_LINE_SIZE + 1];
+    char previous_word[MAX_CMD_LINE_SIZE + 1];
 
 #ifdef DEBUG
     printf("SQLite version %s\n", sqlite3_libversion());
@@ -98,13 +98,13 @@ bce_error_t process_completion(void) {
     }
 
     // load the data provided by environment
-    if (!get_command_from_input(input, command_name, MAX_LINE_SIZE)) {
+    if (!get_command_from_input(input, command_name, MAX_CMD_LINE_SIZE)) {
         fprintf(stderr, "Unable to determine command\n");
         err = ERR_INVALID_CMD_NAME;
         goto done;
     }
-    get_current_word(input, current_word, MAX_LINE_SIZE);
-    get_previous_word(input, previous_word, MAX_LINE_SIZE);
+    get_current_word(input, current_word, MAX_CMD_LINE_SIZE);
+    get_previous_word(input, previous_word, MAX_CMD_LINE_SIZE);
 
 #ifdef DEBUG
     printf("input: %s\n", input->line);
