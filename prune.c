@@ -181,9 +181,8 @@ bool collect_required_recommendations(linked_list_t *recommendation_list, const 
     return result;
 }
 
-bool
-collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd, const char *current_word,
-                                 const char *previous_word) {
+bool collect_optional_recommendations(linked_list_t *recommendation_list, const bce_command_t *cmd,
+                                      const char *current_word, const char *previous_word) {
     if (!recommendation_list || !cmd) {
         return false;
     }
