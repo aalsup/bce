@@ -607,7 +607,7 @@ bce_error_t db_store_command_arg(struct sqlite3 *conn, const bce_command_arg_t *
 
     done:
     sqlite3_finalize(stmt);
-    if ((rc == SQLITE_DONE) || (rc = SQLITE_OK)) {
+    if ((rc == SQLITE_DONE) || (rc == SQLITE_OK)) {
         return ERR_NONE;
     } else {
         return ERR_SQLITE_ERROR;
@@ -638,7 +638,7 @@ bce_error_t db_store_command_opt(struct sqlite3 *conn, const bce_command_opt_t *
 
     done:
     sqlite3_finalize(stmt);
-    if ((rc == SQLITE_DONE) || (rc = SQLITE_OK)) {
+    if ((rc == SQLITE_DONE) || (rc == SQLITE_OK)) {
         return ERR_NONE;
     } else {
         return ERR_SQLITE_ERROR;
@@ -666,7 +666,7 @@ bce_error_t db_delete_command(struct sqlite3 *conn, const char *command_name) {
 
     done:
     sqlite3_finalize(stmt);
-    if ((rc == SQLITE_DONE) || (rc = SQLITE_OK)) {
+    if ((rc == SQLITE_DONE) || (rc == SQLITE_OK)) {
         return ERR_NONE;
     } else {
         return ERR_SQLITE_ERROR;
