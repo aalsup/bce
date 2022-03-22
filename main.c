@@ -63,6 +63,11 @@ bce_error_t process_completion(void) {
         goto done;
     }
 
+#ifdef DEBUG
+    // enable extended error codes
+    sqlite3_extended_result_codes(conn, 1);
+#endif
+
     int schema_version = db_get_schema_version(conn);
     if (schema_version == 0) {
         // create the schema
@@ -116,20 +121,12 @@ bce_error_t process_completion(void) {
         goto done;
     }
 
-    // load the statement cache (prevent re-parsing statements)
-    rc = db_prepare_stmt_cache(conn);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Unable to load statement cache. err=%d\n", rc);
-        err = ERR_SQLITE_ERROR;
-        goto done;
-    }
-
     // search for the command directly (load all descendents)
     bce_command_t *completion_command = bce_command_new();
-    rc = db_query_command(conn, completion_command, command_name);
-    if (rc != SQLITE_OK) {
+    err = db_query_command(conn, completion_command, command_name);
+    if (err != ERR_NONE) {
+        rc = sqlite3_extended_errcode(conn);
         fprintf(stderr, "db_query_command() returned %d\n", rc);
-        err = ERR_SQLITE_ERROR;
         goto done;
     }
 
@@ -177,7 +174,6 @@ bce_error_t process_completion(void) {
     input = free_completion_input(input);
     recommendation_list = ll_destroy(recommendation_list);
     completion_command = bce_command_free(completion_command);
-    rc = db_free_stmt_cache(conn);
     sqlite3_close(conn);
 
     return err;

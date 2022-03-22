@@ -65,12 +65,6 @@ bce_command_arg_t *bce_command_arg_free(bce_command_arg_t *arg);
 
 bce_command_opt_t *bce_command_opt_free(bce_command_opt_t *opt);
 
-/* Create a cache of prepared statements which are used for loading command-data hierarchy */
-bce_error_t db_prepare_stmt_cache(struct sqlite3 *conn);
-
-/* Free the cached prepared statements, when done loading the command-data hierarchy */
-bce_error_t db_free_stmt_cache(struct sqlite3 *conn);
-
 /* Query to root command names stored in SQLite */
 bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd_names);
 

@@ -409,7 +409,6 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
     }
 
     // load the command hierarchy
-    db_prepare_stmt_cache(src_db);
     bce_command_t *completion_command = bce_command_new();
     rc = db_query_command(src_db, completion_command, command_name);
     if (rc != SQLITE_OK) {
@@ -417,7 +416,6 @@ static bce_error_t process_export_json(const char *command_name, const char *fil
         err = ERR_INVALID_CMD;
         goto done;
     }
-    db_free_stmt_cache(src_db);
 
     // convert model object to json
     json_object *j_command = json_object_new_object();

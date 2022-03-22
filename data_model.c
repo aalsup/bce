@@ -75,79 +75,9 @@ static const char *COMMAND_DELETE_SQL =
         " WHERE name = ?1 "
         " AND parent_cmd IS NULL ";
 
-// cache statements that are used multiple times (prevent extra parse SQL operations)
-static sqlite3_stmt *bce_command_read_stmt;
-static sqlite3_stmt *bce_command_alias_read_stmt;
-static sqlite3_stmt *bce_sub_command_read_stmt;
-static sqlite3_stmt *bce_command_arg_read_stmt;
-static sqlite3_stmt *bce_command_opt_read_stmt;
-
-bce_error_t db_prepare_stmt_cache(struct sqlite3 *conn) {
-    int rc;
-    unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
-
-    rc = sqlite3_prepare_v3(conn, COMMAND_READ_SQL, -1, prep_flags, &bce_command_read_stmt, NULL);
-    if (rc != SQLITE_OK) {
-        goto done;
-    }
-    rc = sqlite3_prepare_v3(conn, COMMAND_ALIAS_READ_SQL, -1, prep_flags, &bce_command_alias_read_stmt, NULL);
-    if (rc != SQLITE_OK) {
-        goto done;
-    }
-    rc = sqlite3_prepare_v3(conn, SUB_COMMAND_READ_SQL, -1, prep_flags, &bce_sub_command_read_stmt, NULL);
-    if (rc != SQLITE_OK) {
-        goto done;
-    }
-    rc = sqlite3_prepare_v3(conn, COMMAND_ARG_READ_SQL, -1, prep_flags, &bce_command_arg_read_stmt, NULL);
-    if (rc != SQLITE_OK) {
-        goto done;
-    }
-    rc = sqlite3_prepare_v3(conn, COMMAND_OPT_READ_SQL, -1, prep_flags, &bce_command_opt_read_stmt, NULL);
-    if (rc != SQLITE_OK) {
-        goto done;
-    }
-
-    done:
-    if (rc == SQLITE_OK) {
-        return ERR_NONE;
-    } else {
-        return ERR_SQLITE_ERROR;
-    }
-}
-
-bce_error_t db_free_stmt_cache(struct sqlite3 *conn) {
-    int rc;
-
-    if (bce_command_read_stmt) {
-        rc = sqlite3_finalize(bce_command_read_stmt);
-        bce_command_read_stmt = NULL;
-    }
-    if (bce_command_alias_read_stmt) {
-        rc = sqlite3_finalize(bce_command_alias_read_stmt);
-        bce_command_alias_read_stmt = NULL;
-    }
-    if (bce_sub_command_read_stmt) {
-        rc = sqlite3_finalize(bce_sub_command_read_stmt);
-        bce_sub_command_read_stmt = NULL;
-    }
-    if (bce_command_arg_read_stmt) {
-        rc = sqlite3_finalize(bce_command_arg_read_stmt);
-        bce_command_arg_read_stmt = NULL;
-    }
-    if (bce_command_opt_read_stmt) {
-        rc = sqlite3_finalize(bce_command_opt_read_stmt);
-        bce_command_opt_read_stmt = NULL;
-    }
-
-    if (rc == SQLITE_OK) {
-        return ERR_NONE;
-    } else {
-        return ERR_SQLITE_ERROR;
-    }
-}
-
-
 bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd_names) {
+    bce_error_t err = ERR_NONE;
+
     if (!conn) {
         return ERR_NO_DATABASE_CONNECTION;
     }
@@ -160,7 +90,7 @@ bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd
     // try to find the command by name
     int rc = sqlite3_prepare_v3(conn, ROOT_COMMAND_NAMES_SQL, -1, 0, &stmt, NULL);
     if (rc == SQLITE_OK) {
-        int step = sqlite3_step(bce_command_read_stmt);
+        int step = sqlite3_step(stmt);
         while (step == SQLITE_ROW) {
             char *cmd_name = calloc(NAME_FIELD_SIZE + 1, sizeof(char));
             strncat(cmd_name, (const char *) sqlite3_column_text(stmt, 0), NAME_FIELD_SIZE);
@@ -170,14 +100,17 @@ bce_error_t db_query_root_command_names(struct sqlite3 *conn, linked_list_t *cmd
     }
 
     if (rc == SQLITE_OK) {
-        return ERR_NONE;
+        err = ERR_NONE;
     } else {
-        return ERR_SQLITE_ERROR;
+        err = ERR_SQLITE_ERROR;
     }
+    return err;
 }
 
 bce_error_t db_query_command(struct sqlite3 *conn, bce_command_t *cmd, const char *command_name) {
     int rc;
+    bce_error_t err = ERR_NONE;
+    unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
 
     memset(cmd->uuid, 0, UUID_FIELD_SIZE + 1);
     memset(cmd->name, 0, NAME_FIELD_SIZE + 1);
@@ -186,9 +119,12 @@ bce_error_t db_query_command(struct sqlite3 *conn, bce_command_t *cmd, const cha
     cmd->sub_commands = NULL;
     cmd->args = NULL;
 
-    // pull statement from cache
-    sqlite3_stmt *stmt = bce_command_read_stmt;
-    rc = sqlite3_reset(stmt);
+    // prepare SQL statement
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v3(conn, COMMAND_READ_SQL, -1, prep_flags, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        goto done;
+    }
 
     // try to find the command by name
     sqlite3_bind_text(stmt, 1, command_name, -1, NULL);
@@ -211,38 +147,47 @@ bce_error_t db_query_command(struct sqlite3 *conn, bce_command_t *cmd, const cha
         cmd->args = ll_create(free_arg);
 
         // populate child aliases
-        rc = db_query_command_aliases(conn, cmd);
-        if (rc != SQLITE_OK) {
+        err = db_query_command_aliases(conn, cmd);
+        if (err != ERR_NONE) {
             goto done;
         }
 
         // populate child args
-        rc = db_query_command_args(conn, cmd);
-        if (rc != SQLITE_OK) {
+        err = db_query_command_args(conn, cmd);
+        if (err != ERR_NONE) {
             goto done;
         }
 
         // populate child sub-cmds
-        rc = db_query_sub_commands(conn, cmd);
-        if (rc != SQLITE_OK) {
+        err = db_query_sub_commands(conn, cmd);
+        if (err != ERR_NONE) {
             goto done;
         }
     }
 
     done:
-    if (rc == SQLITE_OK) {
-        return ERR_NONE;
-    } else {
-        return ERR_SQLITE_ERROR;
+    if (stmt) {
+        sqlite3_finalize(stmt);
     }
+    if (err == ERR_NONE) {
+        if (rc != SQLITE_OK) {
+            err = ERR_SQLITE_ERROR;
+        }
+    }
+    return err;
 }
 
-int db_query_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
+bce_error_t db_query_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
     int rc;
+    bce_error_t err = ERR_NONE;
+    unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
 
-    // pull statement from cache
-    sqlite3_stmt *stmt = bce_command_alias_read_stmt;
-    rc = sqlite3_reset(stmt);
+    // prepare SQL statement
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v3(conn, COMMAND_ALIAS_READ_SQL, -1, prep_flags, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        goto done;
+    }
 
     sqlite3_bind_text(stmt, 1, parent_cmd->uuid, -1, NULL);
     int step = sqlite3_step(stmt);
@@ -258,13 +203,31 @@ int db_query_command_aliases(struct sqlite3 *conn, bce_command_t *parent_cmd) {
         step = sqlite3_step(stmt);
     }
 
-    return rc;
+    done:
+    if (stmt) {
+        sqlite3_finalize(stmt);
+    }
+    if (err == ERR_NONE) {
+        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
+            err = ERR_NONE;
+        } else {
+            err = ERR_SQLITE_ERROR;
+        }
+    }
+    return err;
 }
 
 bce_error_t db_query_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cmd) {
-    // pull statement from cache
-    sqlite3_stmt *stmt = bce_sub_command_read_stmt;
-    int rc = sqlite3_reset(stmt);
+    int rc;
+    bce_error_t err = ERR_NONE;
+    unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
+
+    // prepare SQL statement
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v3(conn, SUB_COMMAND_READ_SQL, -1, prep_flags, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        goto done;
+    }
 
     sqlite3_bind_text(stmt, 1, parent_cmd->uuid, -1, NULL);
     int step = sqlite3_step(stmt);
@@ -280,20 +243,20 @@ bce_error_t db_query_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cm
         }
 
         // populate child aliases
-        rc = db_query_command_aliases(conn, sub_cmd);
-        if (rc != SQLITE_OK) {
+        err = db_query_command_aliases(conn, sub_cmd);
+        if (err != ERR_NONE) {
             goto done;
         }
 
         // populate child args
-        rc = db_query_command_args(conn, sub_cmd);
-        if (rc != SQLITE_OK) {
+        err = db_query_command_args(conn, sub_cmd);
+        if (err != ERR_NONE) {
             goto done;
         }
 
         // populate child sub-cmds
-        rc = db_query_sub_commands(conn, sub_cmd);
-        if (rc != SQLITE_OK) {
+        err = db_query_sub_commands(conn, sub_cmd);
+        if (err != ERR_NONE) {
             goto done;
         }
 
@@ -304,11 +267,17 @@ bce_error_t db_query_sub_commands(struct sqlite3 *conn, bce_command_t *parent_cm
     }
 
     done:
-    if (rc == SQLITE_OK) {
-        return ERR_NONE;
-    } else {
-        return ERR_SQLITE_ERROR;
+    if (stmt) {
+        sqlite3_finalize(stmt);
     }
+    if (err == ERR_NONE) {
+        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
+            err = ERR_NONE;
+        } else {
+            err = ERR_SQLITE_ERROR;
+        }
+    }
+    return err;
 }
 
 bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
@@ -319,6 +288,8 @@ bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
         return ERR_INVALID_CMD;
     }
 
+    bce_error_t err = ERR_NONE;
+
     // ensure cmd->args is fresh
     parent_cmd->args = ll_destroy(parent_cmd->args);
     ll_free_node_func free_arg = (ll_free_node_func) &bce_command_arg_free;
@@ -327,8 +298,12 @@ bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
     char *command_uuid = parent_cmd->uuid;
 
     // pull statement from cache
-    sqlite3_stmt *stmt = bce_command_arg_read_stmt;
-    int rc = sqlite3_reset(stmt);
+    unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v3(conn, COMMAND_ARG_READ_SQL, -1, prep_flags, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        goto done;
+    }
 
     sqlite3_bind_text(stmt, 1, command_uuid, -1, NULL);
     int step = sqlite3_step(stmt);
@@ -360,11 +335,18 @@ bce_error_t db_query_command_args(sqlite3 *conn, bce_command_t *parent_cmd) {
         step = sqlite3_step(stmt);
     }
 
-    if (rc == SQLITE_OK) {
-        return ERR_NONE;
-    } else {
-        return ERR_SQLITE_ERROR;
+    done:
+    if (stmt) {
+        sqlite3_finalize(stmt);
     }
+    if (err == ERR_NONE) {
+        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
+            err = ERR_NONE;
+        } else {
+            err = ERR_SQLITE_ERROR;
+        }
+    }
+    return err;
 }
 
 bce_error_t db_query_command_opts(struct sqlite3 *conn, bce_command_arg_t *parent_arg) {
@@ -375,14 +357,20 @@ bce_error_t db_query_command_opts(struct sqlite3 *conn, bce_command_arg_t *paren
         return ERR_INVALID_ARG;
     }
 
+    bce_error_t err = ERR_NONE;
+
     // ensure arg->opts is fresh
     parent_arg->opts = ll_destroy(parent_arg->opts);
     ll_free_node_func free_opt = (ll_free_node_func) &bce_command_opt_free;
     parent_arg->opts = ll_create(free_opt);
 
     // pull statement from cache
-    sqlite3_stmt *stmt = bce_command_opt_read_stmt;
-    int rc = sqlite3_reset(stmt);
+    unsigned int prep_flags = SQLITE_PREPARE_PERSISTENT;
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v3(conn, COMMAND_OPT_READ_SQL, -1, prep_flags, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        goto done;
+    }
 
     char *arg_uuid = parent_arg->uuid;
     sqlite3_bind_text(stmt, 1, arg_uuid, -1, NULL);
@@ -398,11 +386,18 @@ bce_error_t db_query_command_opts(struct sqlite3 *conn, bce_command_arg_t *paren
         step = sqlite3_step(stmt);
     }
 
-    if (rc == SQLITE_OK) {
-        return ERR_NONE;
-    } else {
-        return ERR_SQLITE_ERROR;
+    done:
+    if (stmt) {
+        sqlite3_finalize(stmt);
     }
+    if (err == ERR_NONE) {
+        if ((rc == SQLITE_OK) && (step == SQLITE_DONE)) {
+            err = ERR_NONE;
+        } else {
+            err = ERR_SQLITE_ERROR;
+        }
+    }
+    return err;
 }
 
 bce_command_t *bce_command_new(void) {
