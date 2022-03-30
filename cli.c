@@ -322,7 +322,12 @@ static int process_export_sqlite(const char *command_name, const char *filename)
 static bce_error_t process_import_json_url(const char *url) {
     bce_error_t err = ERR_NONE;
     char json_filename[L_tmpnam + 1];
-    mkstemp(json_filename);
+    json_filename[0] = '\0';
+    char *dummy = tmpnam(json_filename);
+    if (dummy == NULL) {
+        err = ERR_CREATE_TEMP_FILE;
+        goto done;
+    }
 
     // check url
     if ((url == NULL) || (strlen(url) == 0)) {
@@ -340,7 +345,9 @@ static bce_error_t process_import_json_url(const char *url) {
     err = process_import_json_file(json_filename);
 
     done:
-    remove(json_filename);
+    if (strlen(json_filename) > 0) {
+        remove(json_filename);
+    }
     return err;
 }
 

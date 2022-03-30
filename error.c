@@ -46,6 +46,8 @@ char *get_bce_error_msg(const bce_error_t err) {
             break;
         case ERR_INVALID_URL:
             break;
+        case ERR_CREATE_TEMP_FILE:
+            break;
     }
     return msg;
 }

@@ -22,6 +22,7 @@ typedef enum {
     ERR_INVALID_URL = -106,
     ERR_DOWNLOAD_ERR = -107,
     ERR_UUID_ERR = -108,
+    ERR_CREATE_TEMP_FILE = -109,
 } bce_error_t;
 
 char *get_bce_error_msg(const bce_error_t err);
