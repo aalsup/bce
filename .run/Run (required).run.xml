@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run (required)" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="bce" TARGET_NAME="bce" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="bce" RUN_TARGET_NAME="bce">
+    <envs>
+      <env name="COMP_LINE" value="kubectl --namespace=public get pods -o " />
+      <env name="COMP_POINT" value="39" />
+    </envs>
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
